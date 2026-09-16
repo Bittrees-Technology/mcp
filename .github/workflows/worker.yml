@@ -1,0 +1,33 @@
+name: Standalone MCP automation worker
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mcp-automation-worker
+  cancel-in-progress: false
+jobs:
+  tick:
+    if: vars.MCP_WORKER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment: mcp-production
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Process already-enabled automation work
+        env:
+          MCP_WORKER_TOKEN: ${{ secrets.MCP_WORKER_TOKEN }}
+        run: |
+          node --input-type=module <<'JS'
+          if (!process.env.MCP_WORKER_TOKEN) throw new Error('Missing dedicated worker credential');
+          const response = await fetch('https://mcp.bittrees.org/internal/tick', {
+            method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120000),
+            headers: {Authorization: `Bearer ${process.env.MCP_WORKER_TOKEN}`}
+          });
+          if (!response.ok) throw new Error(`MCP worker failed (${response.status})`);
+          console.log('MCP worker completed');
+          JS

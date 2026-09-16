@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mcp.bittrees.org/schemas/project-manifest.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "version",
+    "project"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "agent.bittrees.project.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "project": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,79}$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "lanes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "availability": {
+          "type": "string"
+        },
+        "repositoryUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "publicUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "sourceEvidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "affiliation": {
+          "enum": [
+            "bittrees",
+            "related",
+            "pending"
+          ]
+        },
+        "approval": {
+          "enum": [
+            "approved",
+            "pending"
+          ]
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "affiliationEvidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "repositoryController": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "accountableContact": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "contactStatus": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "repositoryController",
+            "accountableContact",
+            "contactStatus"
+          ],
+          "additionalProperties": false
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "observedAt": {
+              "type": "string"
+            },
+            "manifestPath": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "revision",
+            "observedAt",
+            "manifestPath"
+          ],
+          "additionalProperties": false
+        },
+        "lifecycle": {
+          "enum": [
+            "planned",
+            "preview",
+            "active",
+            "deprecated",
+            "removed"
+          ]
+        },
+        "health": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string"
+            },
+            "checkedAt": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "status",
+            "checkedAt"
+          ],
+          "additionalProperties": false
+        },
+        "adapter": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "catalog-resource"
+            },
+            "status": {
+              "type": "string"
+            },
+            "privateReads": {
+              "const": "not-implemented"
+            },
+            "actions": {
+              "const": "not-implemented"
+            }
+          },
+          "required": [
+            "type",
+            "status",
+            "privateReads",
+            "actions"
+          ],
+          "additionalProperties": false
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "kind",
+              "scope",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "authScopes": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "implementationPolicy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "summary",
+        "lanes",
+        "availability",
+        "repositoryUrl",
+        "publicUrl",
+        "sourceEvidence",
+        "aliases",
+        "affiliation",
+        "approval",
+        "components",
+        "affiliationEvidence",
+        "owner",
+        "source",
+        "lifecycle",
+        "health",
+        "adapter",
+        "capabilities",
+        "authScopes"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

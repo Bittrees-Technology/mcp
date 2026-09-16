@@ -1,0 +1,50 @@
+name: Reconcile approved project manifests
+on:
+  repository_dispatch:
+    types: [bittrees-catalog-source-updated]
+  schedule:
+    - cron: '19 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: project-catalog-reconciliation
+  cancel-in-progress: false
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Reconcile allowlisted manifests at immutable commits
+        run: node scripts/sync-project-catalog.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Verify resulting catalog and gateway
+        if: success()
+        run: npm test
+      - name: Keep reconciliation and rollback evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catalog-sync-${{ github.run_id }}
+          path: output/catalog-sync/
+          retention-days: 30
+      - name: Publish reviewed-policy metadata only
+        if: success() && vars.CATALOG_AUTO_PUBLISH == 'true'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/bittrees-projects.json data/catalog-sync-status.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Refresh approved public project catalog'
+            git push origin HEAD:main
+          fi

@@ -1,0 +1,1691 @@
+{
+  "schema": "agent.bittrees.project-registry.v2",
+  "version": 2,
+  "reviewedAt": "2026-09-16T16:45:00Z",
+  "scope": "Reviewed Bittrees and related products, plus visibly pending inventory candidates. Approval covers public catalog resources only.",
+  "authorityCaveat": "Registry inclusion supports discovery and review routing only. It does not grant an agent authority to deploy, transact, spend, sign, govern, or mutate another project.",
+  "projects": [
+    {
+      "id": "agent",
+      "name": "Bittrees Agent Gateway",
+      "summary": "Source-grounded onboarding, discovery, contribution, and review gateway for AI agents working across Bittrees projects.",
+      "lanes": [
+        "discovery",
+        "research",
+        "inc-ops-governance",
+        "capital-treasury",
+        "awareness"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/agent",
+      "publicUrl": "https://agent.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog",
+        "https://agent.bittrees.org/api/health"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/agent/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "1f56a091d12ee346998871df0c3557ed847007be",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bitlogic",
+      "name": "Bitlogic",
+      "summary": "EVM-compatible accounting and bookkeeping workspace with contracts, role-gated operations, and onchain finance workflows.",
+      "lanes": [
+        "inc-ops-governance",
+        "capital-treasury"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/bobofbuilding/bitlogic",
+      "publicUrl": "https://accounting.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog",
+        "live public site"
+      ],
+      "aliases": [],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/bobofbuilding/bitlogic/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "bobofbuilding",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "890224aedd249adee78bfc2b4f746b22cf0f0beb",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": [],
+      "implementationPolicy": "discovery-only; feature backlog deferred by owner"
+    },
+    {
+      "id": "bittrees-capital",
+      "name": "Bittrees Capital",
+      "summary": "Bittrees token, portfolio, treasury, controls, swap, liquidity, and lending visibility application.",
+      "lanes": [
+        "capital-treasury"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/Bittrees-Capital",
+      "publicUrl": "https://capital.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "bittrees.org hub README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [
+        "Bittrees-Technology/btree-erc20"
+      ],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/Bittrees-Capital/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "bcb7fe9004d7491ba96bf79c2b3331d7b25c4782",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bittrees-gov",
+      "name": "Bittrees Governance",
+      "summary": "Governance application for Snapshot proposals and voting, BGOV flows, and wallet-signed forum activity.",
+      "lanes": [
+        "inc-ops-governance"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/Bittrees-Inc",
+      "publicUrl": "https://gov.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [
+        "Bittrees-Technology/bittrees-bgov-contract",
+        "Bittrees-Technology/archive-bittrees-bgov-contract"
+      ],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/Bittrees-Inc/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "d5cd6119f77030271b397f4f2253757d26db0a01",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bittrees-org",
+      "name": "Bittrees.org Hub",
+      "summary": "Public organization hub connecting Bittrees governance, research, and capital products.",
+      "lanes": [
+        "awareness",
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/Bittrees-Org",
+      "publicUrl": "https://bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/Bittrees-Org/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "6b0f5855e138a579aa25255d8cee676271283c65",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bittrees-research",
+      "name": "Bittrees Research",
+      "summary": "Members research, governance, messaging, and token-flow application for the Bittrees Research community.",
+      "lanes": [
+        "research",
+        "inc-ops-governance"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/Bittrees-Research",
+      "publicUrl": "https://research.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [
+        "Bittrees-Technology/bittrees-research-brgov-contract",
+        "Bittrees-Technology/bittrees-research-contract"
+      ],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/Bittrees-Research/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "9afceaab8eb4f8b79aff43b0194a5758bec15597",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bittrees-vault",
+      "name": "Bittrees Vault",
+      "summary": "Uniswap v3 liquidity and swap frontend for BTREE and BIT tokens.",
+      "lanes": [
+        "capital-treasury"
+      ],
+      "availability": "repository",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/bittrees-vault",
+      "publicUrl": null,
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/bittrees-vault/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "5d5f084e2dfb2b2fd9e0bcc30215daedb53b44ed",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bounties",
+      "name": "Bounties",
+      "summary": "Wallet-only marketplace for scoped service work, deliverables, acceptance criteria, ERC20 escrow, and settlement.",
+      "lanes": [
+        "discovery",
+        "inc-ops-governance"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/bounties",
+      "publicUrl": "https://bounties.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/bounties/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "b1e6da001acb11da0e47f10d6d3db70c75b0802d",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "chat",
+      "name": "Chirpy",
+      "summary": "Wallet-native cross-platform chat for personal spaces and configurable token-gated communities.",
+      "lanes": [
+        "awareness",
+        "inc-ops-governance"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/chirpy",
+      "publicUrl": "https://chirpy.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [
+        "chirpy"
+      ],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/chirpy/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "ce742f4d0f098724abed037e31c975e016b37715",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "crypto-directory",
+      "name": "CryptoDirectory",
+      "summary": "Static, source-maintained directory of active onchain companies and projects.",
+      "lanes": [
+        "research",
+        "awareness"
+      ],
+      "availability": "repository",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/crypto-directory",
+      "publicUrl": null,
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/crypto-directory/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "f05872180c3c02e9b97d6695048697f6c1aa9c07",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "id-agent-control-center",
+      "name": "ID Agents Control Center",
+      "summary": "Desktop workspace for running and coordinating private AI-agent teams with a bundled Manager and Brain runtime.",
+      "lanes": [
+        "discovery",
+        "inc-ops-governance"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/bobofbuilding/idacc",
+      "publicUrl": "https://idacc.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "official GitHub release",
+        "IDACC project catalog",
+        "live public site"
+      ],
+      "aliases": [
+        "idacc",
+        "idacc-site",
+        "id-agents",
+        "brain"
+      ],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [
+        "Bittrees-Technology/idacc-site",
+        "bobofbuilding/id-agents",
+        "bobofbuilding/brain"
+      ],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/bobofbuilding/idacc/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "bobofbuilding",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "4a7436c66ceb08614b362ce989fd6cb50dc03c2b",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "nftfactory",
+      "name": "NFTFactory",
+      "summary": "Creator platform for NFT publishing, profiles, moderation, and marketplace workflows.",
+      "lanes": [
+        "awareness",
+        "inc-ops-governance"
+      ],
+      "availability": "protected-preview",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/nftfactory",
+      "publicUrl": "https://nftfactory.org",
+      "sourceEvidence": [
+        "repository README",
+        "repository deployment health route",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/nftfactory/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "f1e415bd73f48324bc7c043d46cdc10740d0f637",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "skillmesh",
+      "name": "SkillMesh",
+      "summary": "Decentralized AI-agent capability network with onchain identity, executable skill publishing, MCP, OpenAPI, and A2A surfaces.",
+      "lanes": [
+        "discovery",
+        "inc-ops-governance"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/bobofbuilding/skillmesh",
+      "publicUrl": "https://skillmesh.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "related",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/bobofbuilding/skillmesh/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "bobofbuilding",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "d1d8d628f652cd909db8d6f3d712418a1d3195f0",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": [],
+      "implementationPolicy": "discovery-only; feature backlog deferred by owner"
+    },
+    {
+      "id": "tcp",
+      "name": "Token Compute Partnership",
+      "summary": "Bittrees compute-load planning product for operating renewable-power facilities in Portugal and Spain.",
+      "lanes": [
+        "research",
+        "inc-ops-governance",
+        "capital-treasury"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/tcp",
+      "publicUrl": "https://tcp.bittrees.org",
+      "sourceEvidence": [
+        "repository README",
+        "IDACC project catalog"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Reviewed pre-existing Bittrees gateway catalog; includes this product for ecosystem discovery.",
+        "https://github.com/Bittrees-Technology/tcp/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "0fd80c9c5dc7fc9cb55fb5dc5449628d3d80b8ec",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "roles",
+      "name": "Bittrees Roles",
+      "summary": "Member directory and permission-policy workspace; no live role grants.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/roles",
+      "publicUrl": "https://roles.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/roles/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/roles/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "834e12819972b5d75690167ae93b9c144ce78a1b",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "insights",
+      "name": "Bittrees Insights",
+      "summary": "Private analytics with per-product authorization.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/insights",
+      "publicUrl": "https://insights.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/insights/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/insights/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "5de85c5760ecd7474e08586557845c5fe3703d00",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "crm",
+      "name": "Bittrees CRM",
+      "summary": "Workspace-scoped contacts, projects and relationship management.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/crm",
+      "publicUrl": "https://crm.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/crm/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/crm/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "499e776c780a307dcc383a66cf68a559c3fc4542",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "autonote",
+      "name": "AutoNote",
+      "summary": "Private meeting transcripts and notes; sharing requires consent.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/autonote",
+      "publicUrl": "https://autonote.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/autonote/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/autonote/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "45eeafdf61ea6e68071e57dd8dd05801b91c4f0f",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "mercado",
+      "name": "Mercado",
+      "summary": "Product offers and quote management.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/mercado",
+      "publicUrl": "https://mercado.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/mercado/blob/main/README.md"
+      ],
+      "aliases": [
+        "marcada"
+      ],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/mercado/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "efe756cf533c90f85752b38c29bec7c92405708a",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "ecrypt",
+      "name": "eCrypt",
+      "summary": "Wallet-gated encrypted text; no public decryption access.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/ecrypt",
+      "publicUrl": "https://ecrypt.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/ecrypt/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/ecrypt/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "734313daffee3b1b745010ea66b8a67d3ff02dfc",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "cryptoalegre",
+      "name": "Cryptoalegre",
+      "summary": "Cultural and educational association resources.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/cryptoalegre",
+      "publicUrl": "https://cryptoalegre.vercel.app",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/cryptoalegre/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/cryptoalegre/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "a6e5506c1081ab9f3d3152804063a51c422a4f57",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "the-verse",
+      "name": "The Verse",
+      "summary": "Persistent voxel universe development project.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/the-verse",
+      "publicUrl": "https://verse.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/the-verse/blob/main/README.md"
+      ],
+      "aliases": [
+        "the-verse-website"
+      ],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [
+        "Bittrees-Technology/the-verse-website"
+      ],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/the-verse/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "affc95c7715d0df048969205c8955edc27d273cd",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "builders-advocacy-group",
+      "name": "Builders Advocacy Group",
+      "summary": "Community and membership resources.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/Builders-Advocacy-Group",
+      "publicUrl": "https://voxelsadvocacy.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/Builders-Advocacy-Group/blob/main/README.md"
+      ],
+      "aliases": [
+        "bag"
+      ],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [
+        "Bittrees-Technology/bag-membership",
+        "Bittrees-Technology/archived-bag-membership",
+        "Bittrees-Technology/archive-bittrees-nft-deployer-ui-for-bag"
+      ],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/Builders-Advocacy-Group/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "93cb751cf753c15fdcb6c45783d44c5ed9b1f4be",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "metatokens",
+      "name": "Metatokens",
+      "summary": "ERC-1155 extension research; adapter fit pending.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/metatokens",
+      "publicUrl": null,
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/metatokens/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/metatokens/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "800ad65bc342b9be883f455265f261c62fedeac0",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "treeswap",
+      "name": "TreeSwap",
+      "summary": "Lightning and Bittrees BIT swap project; endpoints unverified.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": "https://github.com/bobofbuilding/treeswap",
+      "publicUrl": null,
+      "sourceEvidence": [
+        "https://github.com/bobofbuilding/treeswap/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/bobofbuilding/treeswap/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "bobofbuilding",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "52da2ef19d026bd86dd3d1f716bb371c35ca63c6",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "bbrf-pt",
+      "name": "BBRF PT",
+      "summary": "Repository discovered; purpose and affiliation require review.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": "https://github.com/bobofbuilding/bbrf-pt",
+      "publicUrl": null,
+      "sourceEvidence": [
+        "https://github.com/bobofbuilding/bbrf-pt/blob/main/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/bobofbuilding/bbrf-pt/blob/main/README.md"
+      ],
+      "owner": {
+        "repositoryController": "bobofbuilding",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "39f8cf835ff230a8ca3e5b678291db1823715e3b",
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "wallet",
+      "name": "Wallet",
+      "summary": "Local wallet project; canonical repository and endpoint need verification.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": null,
+      "publicUrl": null,
+      "sourceEvidence": [
+        "plans/node-bittrees-product-plan.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "Owner confirmation pending"
+      ],
+      "owner": {
+        "repositoryController": null,
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": null,
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "planned",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "mail",
+      "name": "Mail",
+      "summary": "Private mail integration; canonical repository and adapter unverified.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": null,
+      "publicUrl": null,
+      "sourceEvidence": [
+        "plans/node-bittrees-product-plan.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "Owner confirmation pending"
+      ],
+      "owner": {
+        "repositoryController": null,
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": null,
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "planned",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "mycloud",
+      "name": "MyCloud",
+      "summary": "Private file service; source and endpoints require review.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": null,
+      "publicUrl": null,
+      "sourceEvidence": [
+        "plans/node-bittrees-product-plan.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [],
+      "affiliationEvidence": [
+        "Owner confirmation pending"
+      ],
+      "owner": {
+        "repositoryController": null,
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": null,
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "planned",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "node",
+      "name": "Bittrees Node",
+      "summary": "Service inventory and operations portal proposed in the Node plan.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "repository",
+      "repositoryUrl": null,
+      "publicUrl": null,
+      "sourceEvidence": [
+        "plans/node-bittrees-product-plan.md"
+      ],
+      "aliases": [],
+      "affiliation": "pending",
+      "approval": "pending",
+      "components": [
+        "bobofbuilding/ipsf-node"
+      ],
+      "affiliationEvidence": [
+        "Owner confirmation pending"
+      ],
+      "owner": {
+        "repositoryController": null,
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": null,
+        "observedAt": "2026-09-16T16:45:00Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "planned",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "pending",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "pending"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "mcp",
+      "name": "Bittrees MCP",
+      "summary": "Standalone project integration, deterministic rules and public-context automation service. Production activation is pending.",
+      "lanes": [
+        "discovery",
+        "research",
+        "inc-ops-governance",
+        "capital-treasury",
+        "awareness"
+      ],
+      "availability": "protected-preview",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/mcp",
+      "publicUrl": "https://mcp.bittrees.org",
+      "sourceEvidence": [
+        "README.md",
+        "docs/EXTRACTION.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "Explicit September 16 user direction; extracted service owned by Bittrees-Technology/mcp."
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": null,
+        "observedAt": "2026-09-16T17:30:00.000Z",
+        "manifestPath": "bittrees.project.json"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    }
+  ],
+  "sync": {
+    "state": "prepared",
+    "lastSuccessAt": null,
+    "lastAttemptAt": null,
+    "errors": []
+  },
+  "excludedComponents": [
+    {
+      "repository": "Bittrees-Technology/wbtc-erc20",
+      "reason": "Development-only test token; excluded from production defaults."
+    }
+  ]
+}

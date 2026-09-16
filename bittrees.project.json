@@ -1,0 +1,60 @@
+{
+  "schema": "agent.bittrees.project-manifest.v1",
+  "version": 1,
+  "project": {
+    "id": "mcp",
+    "name": "Bittrees MCP",
+    "summary": "Standalone project integration, deterministic rules and public-context automation service. Production activation is pending.",
+    "lanes": [
+      "discovery",
+      "research",
+      "inc-ops-governance",
+      "capital-treasury",
+      "awareness"
+    ],
+    "availability": "protected-preview",
+    "repositoryUrl": "https://github.com/Bittrees-Technology/mcp",
+    "publicUrl": "https://mcp.bittrees.org",
+    "sourceEvidence": [
+      "README.md",
+      "docs/EXTRACTION.md"
+    ],
+    "aliases": [],
+    "affiliation": "bittrees",
+    "approval": "approved",
+    "components": [],
+    "affiliationEvidence": [
+      "Explicit September 16 user direction; extracted service owned by Bittrees-Technology/mcp."
+    ],
+    "owner": {
+      "repositoryController": "Bittrees-Technology",
+      "accountableContact": null,
+      "contactStatus": "pending"
+    },
+    "source": {
+      "revision": null,
+      "observedAt": "2026-09-16T17:30:00.000Z",
+      "manifestPath": "bittrees.project.json"
+    },
+    "lifecycle": "preview",
+    "health": {
+      "status": "unverified",
+      "checkedAt": null
+    },
+    "adapter": {
+      "type": "catalog-resource",
+      "status": "ready",
+      "privateReads": "not-implemented",
+      "actions": "not-implemented"
+    },
+    "capabilities": [
+      {
+        "id": "project.context",
+        "kind": "resource",
+        "scope": "public:catalog",
+        "status": "ready"
+      }
+    ],
+    "authScopes": []
+  }
+}

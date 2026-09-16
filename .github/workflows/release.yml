@@ -1,0 +1,43 @@
+name: Standalone MCP release control
+on:
+  workflow_dispatch:
+    inputs:
+      target_deployment:
+        description: Verified immutable deployment URL in the bittrees-mcp project (also used for rollback).
+        type: string
+        required: true
+      expected_commit:
+        description: Full clean source SHA for the target deployment.
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: mcp-production-release
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: mcp-production
+    env:
+      VERCEL_TOKEN: ${{ secrets.MCP_VERCEL_TOKEN }}
+      MCP_VERCEL_PROJECT_ID: ${{ vars.MCP_VERCEL_PROJECT_ID }}
+      MCP_PREVIEW_BYPASS: ${{ secrets.MCP_PREVIEW_BYPASS }}
+      MCP_TARGET_DEPLOYMENT: ${{ inputs.target_deployment }}
+      MCP_EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm install --global vercel@54.0.0
+      - name: Verify separate service and durable storage
+        run: node scripts/release.mjs
+      - name: Assign only the MCP alias and verify live service
+        run: node scripts/release.mjs --apply
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mcp-release-evidence
+          path: output/mcp-release/

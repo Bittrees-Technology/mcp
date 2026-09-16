@@ -1,0 +1,18 @@
+{
+  "name": "@bittrees/mcp-service",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "start": "node src/service/server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node --check api/index.mjs && node --check src/service/http.mjs && node --check src/service/engine.mjs && node --check src/service/store.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
