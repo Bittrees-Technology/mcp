@@ -214,6 +214,12 @@ export function createMcpHandler({
             ),
           ),
         );
+      if (path === "/v1/workspace" && req.method === "GET") {
+        authorize(actor, "catalog:read");
+        const history = await engine.act(actor, "history");
+        const selected = selectionFromParams(new URLSearchParams("mode=ecosystem"));
+        return send(200, { ...history, permissions: actor.permissions, projects: catalogView(catalog,selected).projects.filter(p=>actor.projectIds.includes(p.id)).map(p=>({id:p.id,name:p.name,summary:p.summary})) });
+      }
       if (path === "/v1/history" && req.method === "GET")
         return send(200, await engine.act(actor, "history"));
       if (req.method === "POST" && path.startsWith("/v1/")) {

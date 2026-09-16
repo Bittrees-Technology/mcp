@@ -133,3 +133,9 @@ The service owns `/`, `/projects`, `/connect`, `/automations`, `/rules` and `/st
 ## Functions and endpoints
 
 Browse the live [functions and endpoints reference](https://mcp.bittrees.org/reference), or fetch [reference.json](https://mcp.bittrees.org/reference.json) for tool schemas, endpoint methods, permissions and supported protocol methods. Tool definitions and management routing share the same source as the reference.
+
+## Guided workspace
+
+Automations now has a single setup form: choose a named project, enter a name, choose manual/hourly/six-hourly/daily, and save paused. `POST /v1/automations/setup` creates the project profile, read-only rule and automation in one transaction; an idempotency key prevents duplicate saves. It requires automation:write, profile:write and rule:write. `GET /v1/workspace` returns only the caller’s permitted projects, permissions and owned history (catalog:read + automation:read). Existing configuration endpoints remain supported.
+
+Rules has its own named-project form, version history and enable/disable controls showing affected automations. Activity uses readable statuses and local times; raw JSON is under Technical details. Internal Automations/Rules navigation retains the access key in memory only. Disconnect/navigation out clears it. Cancellation requires confirmation; new saves remain paused.

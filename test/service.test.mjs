@@ -432,3 +432,24 @@ test("MCP management tools preserve tenant and selected-project boundaries", asy
     await f.clean();
   }
 });
+
+test('friendly setup is atomic, named, paused, scoped and retry-safe', async () => {
+ const f=await setup();
+ try {
+  const input={name:'Daily Agent update',projectId:'agent',intervalSeconds:86400,idempotencyKey:'setup-test-1'};
+  const record=await f.engine.act(actor,'automation.setup',input);
+  assert.equal(record.name,input.name);assert.equal(record.status,'paused');
+  const again=await f.engine.act(actor,'automation.setup',input);assert.equal(again.id,record.id);
+  let history=await f.engine.act(actor,'history');assert.equal(history.profiles.length,1);assert.equal(history.rules.length,1);assert.equal(history.automations.length,1);
+  assert.equal(history.rules[0].name,'Daily Agent update permission');
+  await assert.rejects(f.engine.act(actor,'automation.setup',{...input,name:'Different name'}),/already been used/);
+  await assert.rejects(f.engine.act({...actor,permissions:actor.permissions.filter(p=>p!=='rule:write')},'automation.setup',{...input,idempotencyKey:'no-rule'}),/Permission denied/);
+  await assert.rejects(f.engine.act(actor,'automation.setup',{...input,idempotencyKey:'wrong-project',projectId:'bittrees-capital'}));
+  await assert.rejects(f.engine.act(actor,'automation.setup',{...input,idempotencyKey:'wrong-interval',intervalSeconds:1}),/Choose manual/);
+  history=await f.engine.act(actor,'history');assert.equal(history.automations.length,1);assert.equal(history.rules.length,1);assert.equal(history.profiles.length,1);
+  await f.engine.act(actor,'resume',{id:record.id});await f.engine.act(actor,'enqueue',{id:record.id,idempotencyKey:'friendly-run'});await f.engine.tick(()=>actor);
+  assert.equal((await f.engine.act(actor,'history')).runs[0].status,'succeeded');
+  await f.engine.act(actor,'rule.update',{id:record.ruleId,expectedVersion:1,projectIds:['agent'],tools:['get_bittrees_project'],enabled:false});
+  const updated=(await f.engine.act(actor,'history')).rules[0];assert.equal(updated.name,'Daily Agent update permission');assert.equal(updated.versions.length,2);
+ }finally{await f.clean();}
+});

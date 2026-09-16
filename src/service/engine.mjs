@@ -23,6 +23,12 @@ function key(value) {
     throw fail("Invalid identifier");
   return value;
 }
+function displayName(value, fallback) {
+  if (value === undefined) return fallback;
+  if (typeof value !== "string" || !value.trim() || value.trim().length > 100)
+    throw fail("Choose a name between 1 and 100 characters");
+  return value.trim();
+}
 function owns(record, actor) {
   return (
     record && record.tenant === actor.tenant && record.subject === actor.subject
@@ -87,6 +93,29 @@ export class Engine {
               ? "rule:write"
               : "automation:write",
       );
+      if (operation === "automation.setup") {
+        authorize(actor, "profile:write");
+        authorize(actor, "rule:write");
+        fields(input, ["name", "projectId", "intervalSeconds", "idempotencyKey"]);
+        key(input.idempotencyKey);
+        const selection = validateSelection({schema:"agent.bittrees.selection.v1",version:1,revision:1,mode:"selected",selectedIds:[input.projectId],excludedIds:[]});
+        const project = requireSelectedProject(this.catalog, selection, input.projectId);
+        if (!actor.projectIds.includes(project.id)) throw fail("Project is outside your access", 403);
+        const name = displayName(input.name, `${project.name} update`);
+        if (input.intervalSeconds !== undefined && ![3600,21600,86400].includes(input.intervalSeconds))
+          throw fail("Choose manual, hourly, every six hours or daily");
+        const fingerprint = createHash("sha256").update(JSON.stringify([name,project.id,input.intervalSeconds??null])).digest("hex");
+        const prior = Object.values(state.automations).find(r=>owns(r,actor)&&r.setupKey===input.idempotencyKey);
+        if(prior){if(prior.setupFingerprint!==fingerprint)throw fail("This save request has already been used; refresh before creating another",409);return prior;}
+        const profile={id:randomUUID(),tenant:actor.tenant,subject:actor.subject,selection,revision:1};
+        const rule={id:randomUUID(),name:`${name} permission`,tenant:actor.tenant,subject:actor.subject,versions:[{version:1,projectIds:[project.id],tools:["get_bittrees_project"],enabled:true,createdAt:now}]};
+        const record={id:randomUUID(),name,tenant:actor.tenant,subject:actor.subject,profileId:profile.id,ruleId:rule.id,projectId:project.id,tool:"get_bittrees_project",trigger:input.intervalSeconds?{type:"schedule",intervalSeconds:input.intervalSeconds}:{type:"manual"},status:"paused",nextAt:null,createdAt:now,setupKey:input.idempotencyKey,setupFingerprint:fingerprint};
+        state.profiles[profile.id]=profile;state.rules[rule.id]=rule;state.automations[record.id]=record;
+        audit(state,actor,"profile.create",profile.id,now);
+        audit(state,actor,"rule.create",rule.id,now,{version:1});
+        audit(state,actor,"automation.create",record.id,now);
+        return record;
+      }
       if (operation === "profile.create") {
         fields(input, ["selection"]);
         const selection = validateSelection(input.selection);
@@ -115,6 +144,7 @@ export class Engine {
         fields(input, [
           "id",
           "expectedVersion",
+          "name",
           "projectIds",
           "tools",
           "enabled",
@@ -151,6 +181,7 @@ export class Engine {
           input.expectedVersion !== record.versions.length
         )
           throw fail("Rule version conflict", 409);
+        record.name = displayName(input.name, record.name ?? "Project context permission");
         record.versions.push({
           version: record.versions.length + 1,
           projectIds: input.projectIds,
@@ -165,7 +196,7 @@ export class Engine {
         return record;
       }
       if (operation === "automation.create") {
-        fields(input, ["profileId", "ruleId", "projectId", "tool", "trigger"]);
+        fields(input, ["name", "profileId", "ruleId", "projectId", "tool", "trigger"]);
         owned(state.profiles, input.profileId, actor);
         owned(state.rules, input.ruleId, actor);
         if (
@@ -186,6 +217,7 @@ export class Engine {
         if (input.trigger.type === "event") key(input.trigger.event);
         const record = {
           ...input,
+          name: displayName(input.name, "Project context update"),
           id: randomUUID(),
           tenant: actor.tenant,
           subject: actor.subject,

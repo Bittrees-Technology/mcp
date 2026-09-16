@@ -1,6 +1,7 @@
 import { ECOSYSTEM_TOOLS } from '../ecosystem/mcp.mjs';
 import { page } from '../ecosystem/site.mjs';
 export const MANAGEMENT_ROUTES = {
+ '/v1/automations/setup': 'automation.setup',
  '/v1/profiles': 'profile.create', '/v1/profiles/update': 'profile.update',
  '/v1/rules': 'rule.create', '/v1/rules/update': 'rule.update',
  '/v1/automations': 'automation.create', '/v1/automations/pause': 'pause',
@@ -8,10 +9,11 @@ export const MANAGEMENT_ROUTES = {
  '/v1/automations/trigger': 'enqueue',
 };
 const details = {
+ 'automation.setup': ['automation:write + profile:write + rule:write', 'Save a paused automation together with its project profile and read-only rule, atomically.', 'name, projectId, idempotencyKey, intervalSeconds (optional: 3600, 21600 or 86400)'],
  'profile.create': ['profile:write', 'Save a project selection.', 'selection'],
  'profile.update': ['profile:write', 'Update a saved selection with revision conflict protection.', 'id, selection, expectedRevision'],
- 'rule.create': ['rule:write', 'Create a versioned rule for allowed projects and tools.', 'projectIds, tools, enabled'],
- 'rule.update': ['rule:write', 'Append a new rule version; current rules apply at execution.', 'id, projectIds, tools, enabled, expectedVersion'],
+ 'rule.create': ['rule:write', 'Create a versioned rule for allowed projects and tools.', 'projectIds, tools, enabled, name (optional)'],
+ 'rule.update': ['rule:write', 'Append a new rule version; current rules apply at execution.', 'id, projectIds, tools, enabled, expectedVersion, name (optional)'],
  'automation.create': ['automation:write', 'Create a paused automation with a manual, schedule or event trigger.', 'profileId, ruleId, projectId, tool, trigger'],
  pause: ['automation:write', 'Pause an automation; queued work remains held.', 'id'],
  resume: ['automation:write', 'Enable an automation; a schedule starts a new interval.', 'id'],
@@ -30,6 +32,7 @@ export function serviceReference(managementTools) {
   ['GET','/schemas/project-manifest.schema.json','Public','Project manifest schema.'],
   ['GET','/schemas/selection.schema.json','Public','Connection selection schema.'],
   ['GET','/reference.json','Public','Machine-readable version of this functions and endpoints reference.'],
+  ['GET','/v1/workspace','catalog:read + automation:read','Read your allowed projects, permissions and workspace records.'],
   ['GET','/v1/history','automation:read','Your profiles, rule versions, automations, runs and audit history.'],
   ...Object.entries(MANAGEMENT_ROUTES).map(([path,op])=>['POST',path,details[op][0],details[op][1],details[op][2]]),
   ['POST','/internal/tick','Dedicated worker credential only','Process bounded batches of already-enabled work. Not a client integration endpoint.'],
