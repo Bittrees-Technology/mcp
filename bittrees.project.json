@@ -4,7 +4,7 @@
   "project": {
     "id": "mcp",
     "name": "Bittrees MCP",
-    "summary": "Standalone project integration, deterministic rules and public-context automation service. Production activation is pending.",
+    "summary": "Standalone project integration, deterministic rules and public-context automation service.",
     "lanes": [
       "discovery",
       "research",
@@ -12,7 +12,7 @@
       "capital-treasury",
       "awareness"
     ],
-    "availability": "protected-preview",
+    "availability": "public-site",
     "repositoryUrl": "https://github.com/Bittrees-Technology/mcp",
     "publicUrl": "https://mcp.bittrees.org",
     "sourceEvidence": [
@@ -36,10 +36,10 @@
       "observedAt": "2026-09-16T17:30:00.000Z",
       "manifestPath": "bittrees.project.json"
     },
-    "lifecycle": "preview",
+    "lifecycle": "active",
     "health": {
-      "status": "unverified",
-      "checkedAt": null
+      "status": "reachable",
+      "checkedAt": "2026-09-16T18:01:00.000Z"
     },
     "adapter": {
       "type": "catalog-resource",

@@ -22,13 +22,13 @@ async function vercel(args) {
   return (
     await exec(
       "vercel",
-      [
-        ...args,
+      args[0] === "curl" ? args : [
         "--scope",
         "bittrees-tech",
         ...(process.env.VERCEL_TOKEN
           ? ["--token", process.env.VERCEL_TOKEN]
           : []),
+        ...args,
       ],
       {
         maxBuffer: 2 * 1024 * 1024,
@@ -43,8 +43,9 @@ if (
   deployed.projectId !== process.env.MCP_VERCEL_PROJECT_ID ||
   deployed.readyState !== "READY" ||
   deployed.target !== "production" ||
-  deployed.meta?.gitCommitSha !== commit ||
-  deployed.meta?.gitDirty !== "0"
+  !((deployed.meta?.gitCommitSha === commit && deployed.meta?.gitDirty === "0") ||
+    (deployed.meta?.githubCommitSha === commit && deployed.meta?.githubDeployment === "1" &&
+     deployed.meta?.githubCommitOrg === "Bittrees-Technology" && deployed.meta?.githubCommitRepo === "mcp"))
 )
   throw new Error("Target identity or release metadata failed verification");
 async function verify(base) {

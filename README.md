@@ -24,8 +24,8 @@ New definitions are **paused**; an authorized explicit resume is required.
 ## Configuration and authority
 
 - `MCP_DATABASE_URL`: dedicated PostgreSQL connection with a dedicated database/user.
-  Use provider-verified TLS and rotate independently of Agent. The service creates
-  `bittrees_mcp_state`; production has no filesystem fallback.
+  Use provider-verified TLS and rotate independently of Agent. Migrations create
+  `mcp.bittrees_mcp_state`; runtime has SELECT/UPDATE only and no filesystem fallback.
 - `MCP_CREDENTIALS_JSON`: array of server-provisioned service identities. Each has
   `tokenHash` (SHA-256 of a random bearer secret), `tenant`, `subject`,
   `audience: "https://mcp.bittrees.org"`, `expiresAt` (epoch milliseconds),
@@ -127,3 +127,7 @@ health, and browser/keyboard acceptance. Catalog synchronization is prepared wit
 disabled initial sources; it is not claimed active until source and deployment
 propagation evidence are recorded. Node work is deferred; its future default is
 ecosystem with saved user overrides.
+
+## Standalone site and operations
+
+The service owns `/`, `/projects`, `/connect`, `/automations`, `/rules` and `/status`. The credential-protected workspace uses same-origin APIs and keeps tokens in page memory only. See [production operations](docs/production-operations.md) for isolated credentials, backups, restore drills, release verification and known limits.

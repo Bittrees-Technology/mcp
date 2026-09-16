@@ -8,8 +8,7 @@
       "repository": "Bittrees-Technology/mcp",
       "branch": "main",
       "manifestPath": "bittrees.project.json",
-      "enabled": false,
-      "activationRequirement": "Enable after this reviewed manifest is merged and a reconciliation run is verified."
+      "enabled": true
     }
   ]
 }
