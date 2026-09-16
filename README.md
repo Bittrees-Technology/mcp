@@ -129,3 +129,7 @@ ecosystem with saved user overrides.
 ## Standalone site and operations
 
 The service owns `/`, `/projects`, `/connect`, `/automations`, `/rules` and `/status`. The credential-protected workspace uses same-origin APIs and keeps tokens in page memory only. See [production operations](docs/production-operations.md) for isolated credentials, backups, restore drills, release verification and known limits.
+
+## Functions and endpoints
+
+Browse the live [functions and endpoints reference](https://mcp.bittrees.org/reference), or fetch [reference.json](https://mcp.bittrees.org/reference.json) for tool schemas, endpoint methods, permissions and supported protocol methods. Tool definitions and management routing share the same source as the reference.
