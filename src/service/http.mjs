@@ -13,6 +13,7 @@ import {
   renderConnectionPage,
   renderCatalogStatus,
 } from "../ecosystem/ui.mjs";
+import { home, projects, workspace } from "../ecosystem/site.mjs";
 import { fail, authorize } from "./engine.mjs";
 const ORIGIN = "https://mcp.bittrees.org";
 const MANAGEMENT_TOOLS = [
@@ -118,7 +119,7 @@ export function createMcpHandler({
         "Referrer-Policy": "no-referrer",
         "X-Frame-Options": "DENY",
         "Content-Security-Policy":
-          "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+          "default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
         "X-Robots-Tag": "noindex, nofollow",
         ...extra,
       });
@@ -146,6 +147,12 @@ export function createMcpHandler({
           throw fail("Worker authentication required", 401);
         return send(200, await engine.tick(resolveActor));
       }
+      if (["GET","HEAD"].includes(req.method) && ["/assets/site.css","/assets/workspace.js"].includes(path)) {
+        const content = await readFile(new URL(`../../public${path}`, import.meta.url), "utf8");
+        return send(200, content, path.endsWith('.css') ? 'text/css' : 'text/javascript');
+      }
+      if (["GET","HEAD"].includes(req.method) && ["/","/projects","/rules","/automations"].includes(path))
+        return send(200, path==='/'?home(catalog):path==='/projects'?projects(catalog):workspace(path.slice(1)), 'text/html');
       const actor = authenticate(req.headers, credentials);
       if (path === "/health" && ["GET", "HEAD"].includes(req.method)) {
         await engine.store.transaction(() => null);
@@ -158,7 +165,7 @@ export function createMcpHandler({
           sensitiveActions: "not-implemented",
         });
       }
-      if (path === "/mcp-docs" && ["GET", "HEAD"].includes(req.method)) return send(200, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect your client</title><style>body{font:18px/1.6 system-ui;max-width:900px;margin:auto;padding:28px;background:#f4f7f0;color:#19392b}a{color:#245e42}code{overflow-wrap:anywhere}</style></head><body><main><h1>Connect your client</h1><p>This service is in preview. Keep existing clients on their current endpoint until production activation is verified.</p><ol><li><a href="/connect">Choose your project selection</a> and download the connection configuration.</li><li>Add the URL in your agent client's remote MCP server settings. Use Streamable HTTP with JSON responses.</li><li>Run <code>list_bittrees_projects</code> to inspect your selection, then <code>get_bittrees_project</code> to read public project context.</li></ol><h2>Saved profiles and automation</h2><p>A service operator provisions a separate scoped credential. Send it in an Authorization bearer header, never a URL. Saved profile URLs reject selection overrides. New automations start paused; an authorized agent can inspect history and trigger, pause, resume or cancel them. Public catalog membership grants no execution permission.</p><p><a href="https://github.com/Bittrees-Technology/mcp/blob/main/README.md">Configuration and automation API guide</a> · <a href="/status">Service status</a> · <a href="https://agent.bittrees.org">Agent onboarding</a></p></main></body></html>`, "text/html");
+      if (path === "/mcp-docs" && ["GET", "HEAD"].includes(req.method)) return send(200, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect your client</title><style>body{font:18px/1.6 system-ui;max-width:900px;margin:auto;padding:28px;background:#f4f7f0;color:#19392b}a{color:#245e42}code{overflow-wrap:anywhere}</style></head><body><main><h1>Connect your client</h1><p>Connect to the standalone Bittrees MCP service. Existing Agent contribution clients retain their original endpoint during migration.</p><ol><li><a href="/connect">Choose your project selection</a> and download the connection configuration.</li><li>Add the URL in your agent client's remote MCP server settings. Use Streamable HTTP with JSON responses.</li><li>Run <code>list_bittrees_projects</code> to inspect your selection, then <code>get_bittrees_project</code> to read public project context.</li></ol><h2>Saved profiles and automation</h2><p>A service operator provisions a separate scoped credential. Send it in an Authorization bearer header, never a URL. Saved profile URLs reject selection overrides. New automations start paused; an authorized agent can inspect history and trigger, pause, resume or cancel them. Public catalog membership grants no execution permission.</p><p><a href="https://github.com/Bittrees-Technology/mcp/blob/main/README.md">Configuration and automation API guide</a> · <a href="/status">Service status</a> · <a href="https://agent.bittrees.org">Agent onboarding</a></p></main></body></html>`, "text/html");
       if (
         ["GET", "HEAD"].includes(req.method) &&
         ["/", "/connect", "/status"].includes(path)

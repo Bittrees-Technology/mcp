@@ -61,13 +61,18 @@ export class PostgresStore {
     this.pool = pool;
   }
   async initialize() {
+    await this.pool.query("CREATE SCHEMA IF NOT EXISTS mcp");
     await this.pool.query(
-      "CREATE TABLE IF NOT EXISTS bittrees_mcp_state (id integer PRIMARY KEY CHECK (id=1), body jsonb NOT NULL)",
+      "CREATE TABLE IF NOT EXISTS mcp.bittrees_mcp_state (id integer PRIMARY KEY CHECK (id=1), body jsonb NOT NULL)",
     );
     await this.pool.query(
-      "INSERT INTO bittrees_mcp_state(id,body) VALUES(1,$1) ON CONFLICT DO NOTHING",
+      "INSERT INTO mcp.bittrees_mcp_state(id,body) VALUES(1,$1) ON CONFLICT DO NOTHING",
       [emptyState()],
     );
+  }
+  async assertReady() {
+    const { rows } = await this.pool.query("SELECT body->>'version' AS version FROM mcp.bittrees_mcp_state WHERE id=1");
+    if (rows[0]?.version !== "1") throw new Error("Database migration required");
   }
   async transaction(fn) {
     const client = await this.pool.connect();
@@ -75,12 +80,12 @@ export class PostgresStore {
       await client.query("BEGIN");
       await client.query("SET LOCAL lock_timeout = '5s'");
       const { rows } = await client.query(
-        "SELECT body FROM bittrees_mcp_state WHERE id=1 FOR UPDATE",
+        "SELECT body FROM mcp.bittrees_mcp_state WHERE id=1 FOR UPDATE",
       );
       if (!rows.length) throw new Error("Store not initialized");
       const state = rows[0].body;
       const result = await fn(state);
-      await client.query("UPDATE bittrees_mcp_state SET body=$1 WHERE id=1", [
+      await client.query("UPDATE mcp.bittrees_mcp_state SET body=$1 WHERE id=1", [
         state,
       ]);
       await client.query("COMMIT");

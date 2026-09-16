@@ -1,5 +1,5 @@
 {
-  "schema": "agent.bittrees.project-manifest.v1",
+  "schema": "agent.bittrees.project.v1",
   "version": 1,
   "project": {
     "id": "mcp",

@@ -1,0 +1,29 @@
+name: Encrypted MCP database backup
+on:
+  schedule:
+    - cron: '41 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: mcp-production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Encrypt a consistent application snapshot
+        run: node scripts/backup.mjs
+        env:
+          MCP_DATABASE_URL: ${{ secrets.MCP_DATABASE_URL }}
+          MCP_BACKUP_KEY: ${{ secrets.MCP_BACKUP_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: encrypted-mcp-backup-${{ github.run_id }}
+          path: output/backups/*.enc
+          retention-days: 30
+          if-no-files-found: error

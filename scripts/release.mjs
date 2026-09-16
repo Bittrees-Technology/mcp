@@ -36,7 +36,7 @@ async function vercel(args) {
     )
   ).stdout;
 }
-const raw = await vercel(["inspect", target.href, "--json"]);
+const raw = await vercel(["api", `/v13/deployments/${target.hostname}`]);
 const deployed = JSON.parse(raw.slice(raw.indexOf("{")));
 if (
   deployed.name !== "bittrees-mcp" ||
@@ -52,6 +52,13 @@ async function verify(base) {
     ? { "x-vercel-protection-bypass": process.env.MCP_PREVIEW_BYPASS }
     : {};
   const request = async (path, options = {}) => {
+    if (new URL(base).hostname.endsWith('.vercel.app') && !process.env.MCP_PREVIEW_BYPASS) {
+      const args=['curl',path,'--deployment',new URL(base).hostname,'--','--silent','--show-error','--fail'];
+      if(options.method)args.push('--request',options.method);
+      for(const [key,value] of Object.entries(options.headers??{}))args.push('--header',`${key}: ${value}`);
+      if(options.body)args.push('--data',options.body);
+      return JSON.parse(await vercel(args));
+    }
     const response = await fetch(new URL(path, base), {
       ...options,
       headers: { ...headers, ...options.headers },

@@ -1,0 +1,19 @@
+name: MCP database migration
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: mcp-production
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run migrate
+        env:
+          MCP_MIGRATION_DATABASE_URL: ${{ secrets.MCP_MIGRATION_DATABASE_URL }}

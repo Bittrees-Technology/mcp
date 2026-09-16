@@ -12,7 +12,7 @@ export async function runtime(env = process.env) {
       statement_timeout: 10000,
     });
     store = new PostgresStore(pool);
-    await store.initialize();
+    await store.assertReady();
   } else if (env.NODE_ENV !== "production" && env.MCP_LOCAL_STATE) {
     store = new FileStore(env.MCP_LOCAL_STATE);
   } else
