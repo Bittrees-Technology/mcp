@@ -123,9 +123,7 @@ Agent hands off to the standalone connection page without secrets or query token
 
 Before production activation verify dedicated database backup/restore, credential
 provisioning/expiry/revocation, preview identity, real scheduled/event runs, domain,
-health, and browser/keyboard acceptance. Catalog synchronization is prepared with
-disabled initial sources; it is not claimed active until source and deployment
-propagation evidence are recorded. Node work is deferred; its future default is
+health, and browser/keyboard acceptance. Catalog synchronization is active for the approved MCP manifest source, with authenticated dispatch and six-hour reconciliation. Other projects require their own approved manifests before automatic metadata refresh is enabled. Node work is deferred; its future default is
 ecosystem with saved user overrides.
 
 ## Standalone site and operations

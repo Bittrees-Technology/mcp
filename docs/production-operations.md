@@ -13,3 +13,11 @@ Encrypted backups run every six hours and are retained as GitHub artifacts for 3
 CI tests PostgreSQL transactions, tenant/project isolation, rule denials, retry/pause/cancel and website routes. Production candidates should use `vercel deploy --prod --skip-domain` from a clean commit; scripts/release.mjs verifies the deployment's project, commit, state, durable health and scoped tools before assigning the MCP alias. Existing authenticated CLI access supports operator releases. Creation of a dedicated automated-release API token was refused by Vercel with 'Cannot create tokens for this app'; do not copy an unrelated account token or claim the GitHub release action is provisioned. The Git integration remains connected for source builds. Automated catalog publication must be verified against the deployed revision before being described as active.
 
 Browser visual acceptance is currently unavailable because the administrator policy check fails. API and server-rendered route verification do not substitute for mobile/browser visual acceptance.
+
+## Verified launch evidence — 16 September 2026
+
+Production domain mcp.bittrees.org is registered on the dedicated Vercel project, verified and reports no DNS misconfiguration. HTTPS health reports durable storage ready. All standalone site routes pass; production smoke verifies public/authenticated access, tenant separation, paused defaults, durable context execution, duplicate-trigger idempotency and current-rule denial. Smoke definitions are cancelled afterward.
+
+GitHub service checks and encrypted backup workflow pass. Manual invocation of the five-minute worker passes. Approved catalog reconciliation has published its first update (e838edd); the Vercel Git integration is responsible for deploying source changes. The scheduled reconciliation interval is six hours. Only the MCP source currently publishes an approved manifest automatically; other catalog entries remain explicitly sourced snapshots until their integrations are added.
+
+The graphical workspace has not had browser/mobile visual acceptance because the browser policy service is unavailable. Its server-rendered pages and static assets pass route tests. The dedicated GitHub release-token limitation affects manual release/rollback automation, not the already configured Vercel Git deployment integration.
