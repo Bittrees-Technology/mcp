@@ -1,3 +1,5 @@
+> Current owner decision, 19 September 2026: Bitlogic, Bittrees Vault, SkillMesh, Metatokens, Wallet, TreeSwap, Builders Advocacy Group, MyCloud and Bittrees Node are excluded from both public sites until explicit reapproval. Historical planning below does not authorize publishing them. The exclusion list is enforced during catalog validation and synchronization. Standalone MCP is owned by the MCP task; only Agent site work is delegated to work.agent.
+
 # Bittrees standalone MCP service and integration plan
 
 Prepared 16 September 2026. Implementation delegated to the existing **work.agent** task, `01a06f48-5775-72f2-9fb7-5d7f3e44637f`. This document is a proposal and implementation brief, not a claim of deployment.

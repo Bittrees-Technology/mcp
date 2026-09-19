@@ -5,6 +5,7 @@ export const PRIMARY_TRANSPORT = "https://mcp.bittrees.org/mcp";
 export const MANIFEST_SCHEMA = "agent.bittrees.project-registry.v2";
 export const PROFILE_SCHEMA = "agent.bittrees.selection.v1";
 const ID = /^[a-z0-9][a-z0-9-]{0,79}$/;
+const excludedIds = new Set(JSON.parse(readFileSync(new URL("../../data/excluded-projects.json", import.meta.url), "utf8")).ids);
 const modes = ["selected", "bittrees", "ecosystem"];
 export function scopeError(message) {
   return Object.assign(new Error(message), {
@@ -23,6 +24,8 @@ export function validateCatalog(catalog) {
   const names = new Set();
   const repositories = new Set();
   for (const p of catalog.projects) {
+    if ([p.id, ...(p.aliases ?? [])].some(id => excludedIds.has(id)))
+      throw scopeError("Project excluded from publication pending owner reapproval");
     if (
       !ID.test(p.id) ||
       typeof p.name !== "string" ||

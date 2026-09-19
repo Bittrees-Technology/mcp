@@ -218,3 +218,15 @@ test("configuration and UI use the same selection revision and do not imply live
   assert.match(html, /readonly/);
   assert.match(html, /Agent onboarding/);
 });
+
+ test("owner-excluded products cannot be published or restored by manifest sync", () => {
+  const excluded = ["bitlogic", "bittrees-vault", "skillmesh", "metatokens", "wallet", "treeswap", "builders-advocacy-group", "mycloud", "node"];
+  for (const id of excluded) {
+    assert.ok(!CATALOG.projects.some(p => p.id === id));
+    assert.equal(resolveSelection(CATALOG, profile(`mode=selected&projects=${id}`)).projects.length, 0);
+    const project = {...newProject(), id};
+    const result = reconcileCatalog(CATALOG, [{id, enabled:true, repository:"example/new-project", approvedTemplate:project}], {[id]:{project, revision:"a".repeat(40)}});
+    assert.ok(result.report.errors.length);
+    assert.ok(!result.catalog.projects.some(p => p.id === id));
+  }
+});
