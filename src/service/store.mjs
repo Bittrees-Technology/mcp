@@ -84,10 +84,11 @@ export class PostgresStore {
       );
       if (!rows.length) throw new Error("Store not initialized");
       const state = rows[0].body;
+      const before = JSON.stringify(state);
       const result = await fn(state);
-      await client.query("UPDATE mcp.bittrees_mcp_state SET body=$1 WHERE id=1", [
-        state,
-      ]);
+      if (JSON.stringify(state) !== before) {
+        await client.query("UPDATE mcp.bittrees_mcp_state SET body=$1 WHERE id=1", [state]);
+      }
       await client.query("COMMIT");
       return result;
     } catch (error) {
