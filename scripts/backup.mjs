@@ -8,7 +8,7 @@ if(process.argv.includes('--verify')){
  const blob=JSON.parse(await readFile(process.env.MCP_BACKUP_FILE,'utf8'));
  const decipher=createDecipheriv('aes-256-gcm',key,Buffer.from(blob.iv,'hex'));decipher.setAuthTag(Buffer.from(blob.tag,'hex'));
  const data=JSON.parse(Buffer.concat([decipher.update(Buffer.from(blob.ciphertext,'base64')),decipher.final()]).toString());
- if(data.schema!==1||data.state?.version!==1)throw new Error('Unsupported backup');
+ if(data.schema!==1||![1,2].includes(data.state?.version))throw new Error('Unsupported backup');
  if(process.env.MCP_RESTORE_TEST_DATABASE_URL){
   const target=new URL(process.env.MCP_RESTORE_TEST_DATABASE_URL);
   if(!['localhost','127.0.0.1'].includes(target.hostname))throw new Error('Restore drill is local-only');

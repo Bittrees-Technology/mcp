@@ -9,7 +9,7 @@ export const MANAGEMENT_ROUTES = {
  '/v1/automations/trigger': 'enqueue',
 };
 const details = {
- 'automation.setup': ['automation:write + profile:write + rule:write', 'Save a paused automation together with its project profile and read-only rule, atomically.', 'name, projectId, idempotencyKey, intervalSeconds (optional: 3600, 21600 or 86400)'],
+ 'automation.setup': ['automation:write + profile:write + rule:write', 'Save a paused public-context or separately approved AI-template automation with its project profile and rule, atomically.', 'name, projectId, idempotencyKey, connectionId (optional approved AI connection), intervalSeconds (optional: 3600, 21600 or 86400)'],
  'profile.create': ['profile:write', 'Save a project selection.', 'selection'],
  'profile.update': ['profile:write', 'Update a saved selection with revision conflict protection.', 'id, selection, expectedRevision'],
  'rule.create': ['rule:write', 'Create a versioned rule for allowed projects and tools.', 'projectIds, tools, enabled, name (optional)'],
