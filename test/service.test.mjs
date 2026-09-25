@@ -577,6 +577,12 @@ test("AI outbox releases the store for dispatch and reconciles a lost response w
     assert.equal(sends, 1);
     await f.engine.act(actor, "resume", { id: automation.id });
     const workerRun = await f.engine.act(actor, "enqueue", { id: automation.id, idempotencyKey: "ai-work" });
+    await f.store.transaction((state) => {
+      // Older unauthorized records must not consume the worker's entire batch.
+      for (let n = 0; n < 20; n++) state.aiDispatchOutbox[`blocked-${n}`] = {
+        ...structuredClone(state.aiDispatchOutbox[input.runId]), state: "queued", lease: null,
+      };
+    });
     await f.engine.tick(() => actor);
     assert.equal(sends, 2);
     assert.equal((await f.engine.act(actor, "history")).runs.find((r) => r.id === workerRun.id).status, "uncertain");

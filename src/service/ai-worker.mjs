@@ -52,7 +52,9 @@ export class AiWorker {
   }
   async tick() {
     const ids = await this.store.transaction((state) => Object.entries(state.aiDispatchOutbox ?? {})
-      .filter(([, entry]) => ["queued", "uncertain", "dispatching"].includes(entry.state))
+      .filter(([, entry]) => ["queued", "uncertain", "dispatching"].includes(entry.state) &&
+        (!entry.lease || entry.lease.expiresAt <= this.clock()) &&
+        this.authorized(state, entry.intent, entry.state === "queued" ? "dispatch" : "inspect"))
       .slice(0, 20).map(([id]) => id));
     for (const id of ids) {
       try { await this.outbox.process(id); } catch { /* Current authority may have been withdrawn. */ }
