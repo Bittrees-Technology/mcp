@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { createServer } from "node:http";
 import { once } from "node:events";
 import { createHash } from "node:crypto";
-import { FileStore, PostgresStore } from "../src/service/store.mjs";
+import { FileStore, PostgresStore, migrateFileStore } from "../src/service/store.mjs";
 import { Engine } from "../src/service/engine.mjs";
 import { createMcpHandler } from "../src/service/http.mjs";
 import { selectionFromParams } from "../src/ecosystem/catalog.mjs";
@@ -340,6 +340,8 @@ test(
     const store = new PostgresStore(pool);
     try {
       await store.initialize();
+      // This is the exact UPDATE issued by an already-running version-one writer.
+      await assert.rejects(pool.query("UPDATE mcp.bittrees_mcp_state SET body=body WHERE id=1"), /writer upgrade required/);
       await store.transaction((s) => {
         Object.assign(s, {
           profiles: {},
@@ -452,4 +454,146 @@ test('friendly setup is atomic, named, paused, scoped and retry-safe', async () 
   await f.engine.act(actor,'rule.update',{id:record.ruleId,expectedVersion:1,projectIds:['agent'],tools:['get_bittrees_project'],enabled:false});
   const updated=(await f.engine.act(actor,'history')).rules[0];assert.equal(updated.name,'Daily Agent update permission');assert.equal(updated.versions.length,2);
  }finally{await f.clean();}
+});
+
+
+test("AI outbox releases the store for dispatch and reconciles a lost response without resending", async () => {
+  const { AiDispatchOutbox, aiCommandId } = await import("../src/service/ai-outbox.mjs");
+  const { randomUUID, randomBytes } = await import("node:crypto");
+  const { AiClient } = await import("../src/service/ai-client.mjs");
+  const { AiSecrets, aiActor } = await import("../src/service/ai-secrets.mjs");
+  const { AiConnections } = await import("../src/service/ai-connections.mjs");
+  const f = await setup();
+  const now = Date.now();
+  const input = {
+    runId: "synthetic-ai-run", automationId: "synthetic-paused-rule",
+    ...aiActor(actor),
+    grantId: randomUUID(), permissionId: randomUUID(),
+    command: { id: randomUUID(), deviceId: randomUUID(), templateId: randomUUID(),
+      templateRevision: 1, issuedAt: new Date(now).toISOString(), expiresAt: new Date(now + 60000).toISOString() },
+  };
+  input.command.id = aiCommandId(input);
+  let sends = 0;
+  const clientCredential = randomBytes(32).toString("base64url");
+  const userCredential = randomBytes(32).toString("base64url");
+  const vault = new AiSecrets(randomBytes(32).toString("base64url"));
+  const binding = { tenant: input.tenant, subject: input.subject, actorId: input.actorId, id: input.grantId, phase: "granted" };
+  const sealed = vault.seal(binding, { credential: userCredential });
+  assert.throws(() => vault.open({ ...binding, subject: "another-owner" }, sealed), /unavailable/);
+  const ownerId = randomUUID();
+  let connections, pending;
+  const transport = new AiClient({
+    clientCredential,
+    resolveCredential: (intent) => connections.credentialForDispatch(actor, intent),
+    fetchImpl: async (url, options) => {
+      assert.equal(options.redirect, "error");
+      assert.equal(options.headers["x-bittrees-mcp-client"], clientCredential);
+      assert.ok(url.startsWith("https://ai.bittrees.org/mcp/"));
+      const request = JSON.parse(options.body);
+      if (url.endsWith("/begin")) {
+        assert.equal(options.headers.authorization, undefined);
+        pending = request;
+        return Response.json({ id: request.id, requestExpiresAt: now + 300000 });
+      }
+      if (url.endsWith("/redeem")) {
+        assert.equal(options.headers.authorization, undefined);
+        assert.equal(createHash("sha256").update(request.verifier).digest("base64url"), pending.challenge);
+        assert.equal(request.expectedOwnerId, ownerId);
+        return Response.json({ credential: userCredential, grant: { id: request.id, clientId: "bittrees-mcp", actor: request.actor,
+          ownerId, permissionId: input.permissionId, deviceId: input.command.deviceId, templateId: input.command.templateId,
+          templateRevision: 1, maxRuns: 2, expiresAt: now + 120000, redeemed: true, revoked: false } });
+      }
+      assert.equal(options.headers.authorization, `Bearer ${userCredential}`);
+      if (url.endsWith("/disconnect")) return Response.json({ revoked: true });
+      if (url.endsWith("/dispatch")) {
+        // Acquiring the FileStore lock proves network work is outside its transaction.
+        await f.store.transaction((state) => { state.syntheticTargetReceipt = {
+          id: request.command.id, grantId: request.grantId, permissionId: request.permissionId, state: "accepted",
+        }; });
+        sends++;
+        throw Error("synthetic lost response; must not be persisted");
+      }
+      assert.ok(url.endsWith("/receipt"));
+      return Response.json(await f.store.transaction((state) => state.syntheticTargetReceipt));
+    },
+  });
+  connections = new AiConnections(f.store, { client: transport, secrets: vault });
+  const server = createServer(createMcpHandler({ engine: f.engine, credentials: [actor], aiConnections: connections }));
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  async function connectionAction(action, body) {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/v1/ai/connections/${action}`, {
+      method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: JSON.stringify(body),
+    });
+    const result = await response.json();
+    assert.equal(response.status, 200, JSON.stringify(result));
+    return result;
+  }
+  assert.equal(JSON.stringify(transport), "{}");
+  assert.equal(JSON.stringify(sealed).includes(userCredential), false);
+  const create = () => new AiDispatchOutbox(f.store, {
+    authorize: (state, request) => state.syntheticGrantActive === true && request.actorId === input.actorId,
+    transport,
+  });
+  try {
+    const { FileStore: LegacyStore } = await import("./fixtures/legacy-store-v1.mjs");
+    const legacy = new LegacyStore(f.store.path);
+    const oldEngine = new Engine(legacy);
+    const prior = await configure(oldEngine);
+    await migrateFileStore(f.store.path);
+    assert.equal((await f.engine.act(actor, "history")).automations[0].id, prior.automation.id);
+    await assert.rejects(oldEngine.act(actor, "history"));
+    // Versioned state was provisioned by the real migration; only target data is synthetic.
+    await f.store.transaction((state) => { state.aiDispatchVersion = 1; state.aiDispatchOutbox = {}; state.aiConnections = {}; state.syntheticGrantActive = true; });
+    const prepared = await connectionAction("prepare", {});
+    input.grantId = prepared.id;
+    input.command.id = aiCommandId(input);
+    const review = await connectionAction("register", { id: prepared.id });
+    assert.equal(createHash("sha256").update(review.approvalCode).digest("hex"), pending.approvalHash);
+    assert.equal((await connectionAction("redeem", { id: prepared.id, expectedOwnerId: ownerId, confirmed: true })).status, "connected");
+    assert.equal(JSON.stringify(await connections.list(actor)).includes(userCredential), false);
+    const outbox = create();
+    await outbox.enqueue(input);
+    assert.equal((await outbox.enqueue(input)).state, "queued");
+    assert.equal((await outbox.process(input.runId)).state, "uncertain");
+    assert.equal(sends, 1);
+    assert.equal((await create().process(input.runId)).state, "accepted");
+    assert.equal(sends, 1);
+    assert.equal(await create().process(input.runId), null);
+    const next = { ...input, runId: "another-run", command: { ...input.command, id: randomUUID() } };
+    next.command.id = aiCommandId(next);
+    await outbox.enqueue(next);
+    await f.store.transaction((state) => { state.syntheticGrantActive = false; });
+    await assert.rejects(outbox.process(next.runId), /authority is not current/);
+    assert.equal(sends, 1);
+    const { AiWorker } = await import("../src/service/ai-worker.mjs");
+    const { CATALOG } = await import("../src/ecosystem/catalog.mjs");
+    f.engine.aiWorker = new AiWorker(f.store, { transport, resolveActor: () => actor, catalog: CATALOG });
+    const automation = await f.engine.act(actor, "automation.setup", {
+      name: "Approved local template", projectId: "agent", connectionId: prepared.id, idempotencyKey: "ai-setup",
+    });
+    assert.equal(automation.status, "paused");
+    await f.engine.tick(() => actor);
+    assert.equal(sends, 1);
+    await f.engine.act(actor, "resume", { id: automation.id });
+    const workerRun = await f.engine.act(actor, "enqueue", { id: automation.id, idempotencyKey: "ai-work" });
+    await f.engine.tick(() => actor);
+    assert.equal(sends, 2);
+    assert.equal((await f.engine.act(actor, "history")).runs.find((r) => r.id === workerRun.id).status, "uncertain");
+    await f.engine.act(actor, "pause", { id: automation.id });
+    await f.engine.tick(() => actor);
+    assert.equal(sends, 2);
+    assert.equal((await f.engine.act(actor, "history")).runs.find((r) => r.id === workerRun.id).status, "accepted");
+    await f.engine.act(actor, "resume", { id: automation.id });
+    const cancelledRun = await f.engine.act(actor, "enqueue", { id: automation.id, idempotencyKey: "ai-cancel" });
+    await f.engine.act(actor, "cancel", { id: automation.id });
+    await f.engine.tick(() => actor);
+    assert.equal(sends, 2);
+    assert.equal((await f.engine.act(actor, "history")).runs.find((r) => r.id === cancelledRun.id).status, "cancelled");
+    assert.equal((await connectionAction("disconnect", { id: prepared.id, confirmed: true })).status, "disconnected");
+    await assert.rejects(connections.credentialForDispatch(actor, input), /unavailable/);
+    const state = await f.store.transaction((value) => value);
+    assert.equal(JSON.stringify(state).includes(userCredential), false);
+    assert.equal(JSON.stringify(state.aiDispatchOutbox).includes("synthetic lost response"), false);
+  } finally { await new Promise((resolve) => server.close(resolve)); await f.clean(); }
 });

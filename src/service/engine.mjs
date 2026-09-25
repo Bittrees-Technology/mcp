@@ -8,7 +8,7 @@ import {
 export const fail = (message, statusCode = 400) =>
   Object.assign(new Error(message), { statusCode });
 const ID = /^[a-zA-Z0-9_-]{1,100}$/;
-const tools = ["get_bittrees_project"];
+const tools = ["get_bittrees_project", "run_ai_template"];
 function fields(value, allowed) {
   if (
     !value ||
@@ -73,12 +73,14 @@ export class Engine {
         catalogRevision: catalogRevision(catalog),
       }),
       clock = () => Date.now(),
+      aiWorker,
     } = {},
   ) {
     this.store = store;
     this.catalog = catalog;
     this.adapter = adapter;
     this.clock = clock;
+    this.aiWorker = aiWorker;
   }
   async act(actor, operation, input = {}) {
     return this.store.transaction(async (state) => {
@@ -96,7 +98,10 @@ export class Engine {
       if (operation === "automation.setup") {
         authorize(actor, "profile:write");
         authorize(actor, "rule:write");
-        fields(input, ["name", "projectId", "intervalSeconds", "idempotencyKey"]);
+        fields(input, ["name", "projectId", "intervalSeconds", "idempotencyKey", "connectionId"]);
+        const aiConnection = input.connectionId === undefined ? null : this.aiWorker?.connection(state, actor, input.connectionId);
+        if (input.connectionId !== undefined && !aiConnection) throw fail("AI connections are not configured", 409);
+        const tool = aiConnection ? "run_ai_template" : "get_bittrees_project";
         key(input.idempotencyKey);
         const selection = validateSelection({schema:"agent.bittrees.selection.v1",version:1,revision:1,mode:"selected",selectedIds:[input.projectId],excludedIds:[]});
         const project = requireSelectedProject(this.catalog, selection, input.projectId);
@@ -104,12 +109,12 @@ export class Engine {
         const name = displayName(input.name, `${project.name} update`);
         if (input.intervalSeconds !== undefined && ![3600,21600,86400].includes(input.intervalSeconds))
           throw fail("Choose manual, hourly, every six hours or daily");
-        const fingerprint = createHash("sha256").update(JSON.stringify([name,project.id,input.intervalSeconds??null])).digest("hex");
+        const fingerprint = createHash("sha256").update(JSON.stringify(aiConnection ? [name,project.id,input.intervalSeconds??null,input.connectionId] : [name,project.id,input.intervalSeconds??null])).digest("hex");
         const prior = Object.values(state.automations).find(r=>owns(r,actor)&&r.setupKey===input.idempotencyKey);
         if(prior){if(prior.setupFingerprint!==fingerprint)throw fail("This save request has already been used; refresh before creating another",409);return prior;}
         const profile={id:randomUUID(),tenant:actor.tenant,subject:actor.subject,selection,revision:1};
-        const rule={id:randomUUID(),name:`${name} permission`,tenant:actor.tenant,subject:actor.subject,versions:[{version:1,projectIds:[project.id],tools:["get_bittrees_project"],enabled:true,createdAt:now}]};
-        const record={id:randomUUID(),name,tenant:actor.tenant,subject:actor.subject,profileId:profile.id,ruleId:rule.id,projectId:project.id,tool:"get_bittrees_project",trigger:input.intervalSeconds?{type:"schedule",intervalSeconds:input.intervalSeconds}:{type:"manual"},status:"paused",nextAt:null,createdAt:now,setupKey:input.idempotencyKey,setupFingerprint:fingerprint};
+        const rule={id:randomUUID(),name:`${name} permission`,tenant:actor.tenant,subject:actor.subject,versions:[{version:1,projectIds:[project.id],tools:[tool],enabled:true,createdAt:now}]};
+        const record={id:randomUUID(),name,tenant:actor.tenant,subject:actor.subject,profileId:profile.id,ruleId:rule.id,projectId:project.id,tool,...(aiConnection ? {connectionId:aiConnection.id} : {}),trigger:input.intervalSeconds?{type:"schedule",intervalSeconds:input.intervalSeconds}:{type:"manual"},status:"paused",nextAt:null,createdAt:now,setupKey:input.idempotencyKey,setupFingerprint:fingerprint};
         state.profiles[profile.id]=profile;state.rules[rule.id]=rule;state.automations[record.id]=record;
         audit(state,actor,"profile.create",profile.id,now);
         audit(state,actor,"rule.create",rule.id,now,{version:1});
@@ -164,7 +169,7 @@ export class Engine {
           input.tools.some((t) => !tools.includes(t)) ||
           typeof input.enabled !== "boolean"
         )
-          throw fail("Only implemented public-context tools may be allowed");
+          throw fail("Only implemented tools may be allowed");
         if (input.projectIds.some((id) => !actor.projectIds.includes(id)))
           throw fail("Rule exceeds actor project authority", 403);
         const record =
@@ -200,7 +205,7 @@ export class Engine {
         owned(state.profiles, input.profileId, actor);
         owned(state.rules, input.ruleId, actor);
         if (
-          !tools.includes(input.tool) ||
+          input.tool !== "get_bittrees_project" ||
           !actor.projectIds.includes(input.projectId)
         )
           throw fail("Unsupported tool or project", 403);
@@ -239,6 +244,15 @@ export class Engine {
           runs: Object.values(state.runs).filter((r) => owns(r, actor)),
           audit: state.audit.filter((r) => owns(r, actor)),
         };
+      if (operation === "ai.retry") {
+        fields(input, ["runId", "confirmed"]);
+        if (!this.aiWorker || input.confirmed !== true) throw fail("Confirm AI retry", 409);
+        const run = owned(state.runs, input.runId, actor);
+        this.aiWorker.outbox.retryInState(state, run.id);
+        run.status = "dispatch_pending";
+        audit(state, actor, operation, run.id, now);
+        return run;
+      }
       const record = owned(state.automations, input.id, actor);
       if (["pause", "resume", "cancel"].includes(operation)) {
         fields(input, ["id"]);
@@ -251,6 +265,17 @@ export class Engine {
         }[operation];
         if (operation === "resume" && record.trigger.type === "schedule")
           record.nextAt = now + record.trigger.intervalSeconds * 1000;
+        if (operation === "cancel") {
+          for (const entry of Object.values(state.aiDispatchOutbox ?? {})) {
+            if (entry.intent.automationId !== record.id) continue;
+            entry.cancelRequested = true;
+            if (["queued", "awaiting_retry"].includes(entry.state)) {
+              entry.state = "cancelled";
+              const run = state.runs[entry.intent.runId];
+              if (run) run.status = "cancelled";
+            }
+          }
+        }
         if (operation === "cancel")
           for (const run of Object.values(state.runs))
             if (
@@ -305,7 +330,7 @@ export class Engine {
     return run;
   }
   async tick(resolveActor) {
-    return this.store.transaction(async (state) => {
+    const result = await this.store.transaction(async (state) => {
       const now = this.clock();
       let scheduled = 0,
         processed = 0;
@@ -365,7 +390,14 @@ export class Engine {
             profile.selection,
             automation.projectId,
           );
-          // The only adapter is pure public catalog context; never an external side effect.
+          if (automation.tool === "run_ai_template") {
+            if (!this.aiWorker) throw fail("AI worker unavailable", 403);
+            this.aiWorker.prepare(state, run, automation, actor, rule, profile, now);
+            attempt.outcome = "dispatch_pending";
+            audit(state, actor, "execution", run.id, now, { status: run.status, ruleVersion: rule.version });
+            continue;
+          }
+          // Public adapter only. AI network dispatch occurs after this transaction.
           let timeout;
           try {
             run.result = await Promise.race([
@@ -412,5 +444,7 @@ export class Engine {
       }
       return { scheduled, processed };
     });
+    if (this.aiWorker) result.dispatched = await this.aiWorker.tick();
+    return result;
   }
 }

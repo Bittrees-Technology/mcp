@@ -1,3 +1,8 @@
+import { AiWorker } from "./ai-worker.mjs";
+import { CATALOG } from "../ecosystem/catalog.mjs";
+import { AiClient } from "./ai-client.mjs";
+import { AiSecrets } from "./ai-secrets.mjs";
+import { AiConnections } from "./ai-connections.mjs";
 import { createMcpHandler } from "./http.mjs";
 import { Engine } from "./engine.mjs";
 import { FileStore, PostgresStore } from "./store.mjs";
@@ -24,8 +29,25 @@ export async function runtime(env = process.env) {
       },
     };
   const credentials = JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]");
+  let aiConnections, aiWorker;
+  const aiConfigured = env.MCP_AI_CLIENT_CREDENTIAL !== undefined || env.MCP_AI_ENCRYPTION_KEY !== undefined;
+  if (aiConfigured) {
+    const secrets = new AiSecrets(env.MCP_AI_ENCRYPTION_KEY);
+    const client = new AiClient({
+      clientCredential: env.MCP_AI_CLIENT_CREDENTIAL,
+      resolveCredential: (intent) => {
+        const credential = credentials.find((entry) => entry.tenant === intent.tenant && entry.subject === intent.subject);
+        return aiConnections.credentialForDispatch(credential, intent);
+      },
+    });
+    aiConnections = new AiConnections(store, { client, secrets });
+    aiWorker = new AiWorker(store, { transport: client, catalog: CATALOG,
+      resolveActor: (tenant, subject) => credentials.find((entry) => entry.tenant === tenant && entry.subject === subject),
+    });
+  }
   return createMcpHandler({
-    engine: new Engine(store),
+    aiConnections,
+    engine: new Engine(store, { aiWorker }),
     credentials,
     workerToken: env.MCP_WORKER_TOKEN,
     release:

@@ -1,6 +1,6 @@
 let token = '', state = null, busy = false, generation = 0;
 let pageKind = document.querySelector('[data-workspace-page]').dataset.workspacePage;
-let setupKey = crypto.randomUUID();
+let setupKey = crypto.randomUUID(), aiConnections = [], consentId = '', consentTimer, consentTurn = 0;
 const $ = id => document.getElementById(id);
 const notice = (message, error = false) => { $('notice').textContent = message; $('notice').classList.toggle('error-notice', error); };
 const allowed = permission => state?.permissions.includes(permission);
@@ -19,8 +19,10 @@ function friendly(error) {
  return error.message;
 }
 async function request(path, body) {
+ const requestGeneration = generation;
  const response = await fetch(path, { method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}), redirect: 'error', signal: AbortSignal.timeout(20000) });
  const data = await response.json();
+ if (requestGeneration !== generation || !token) throw new Error("Workspace changed; refresh before continuing.");
  if (!response.ok) throw Object.assign(new Error(data.error ?? 'Request could not be completed'), { status: response.status });
  return data;
 }
@@ -34,6 +36,13 @@ function renderPermissions() {
 function preview() {
  const project = state?.projects.find(p => p.id === $('automation-project').value);
  const value = $('automation-timing').value;
+ const connection = aiConnections.find(row => row.id === $('automation-connection').value);
+ if (connection) {
+  $('automation-preview').textContent = `Request the approved local template for ${project?.name ?? 'this project'}. Nothing runs until you enable the automation.`;
+  $('automation-outcomes').replaceChildren(...['Uses only the device and template approved in AI.', 'Records whether AI accepted the request; this does not mean the model finished.', 'Your existing rule and project permissions must remain active.'].map(text => node('li', text)));
+  return;
+ }
+ $('automation-outcomes').replaceChildren(...['Reads public project information.', 'Saves the result in activity history.', 'Creates a matching project selection and rule.'].map(text => node('li', text)));
  $('automation-preview').textContent = project ? `Save public information about ${project.name} ${value === 'manual' ? 'when you choose Run now' : value === '3600' ? 'every hour' : value === '21600' ? 'every six hours' : 'every day'}.` : 'No projects are available with this key. Ask your operator to add project access.';
 }
 function renderProjects() {
@@ -74,7 +83,7 @@ function renderRules() {
  for (const record of state.rules) {
   const rule = record.versions.at(-1); const row = node('article', undefined, 'work-row'); const heading = node('div', undefined, 'row-heading');
   heading.append(node('h3', record.name ?? 'Project context permission'), node('span', rule.enabled ? 'Enabled' : 'Disabled', `state-label state-${rule.enabled ? 'active' : 'paused'}`)); row.append(heading);
-  row.append(node('p', `Can read public information for: ${rule.projectIds.map(projectName).join(', ')}.`));
+  row.append(node('p', `${rule.tools.includes("run_ai_template") ? "Can request the separately approved AI template for" : "Can read public information for"}: ${rule.projectIds.map(projectName).join(', ')}.`));
   const linked = state.automations.filter(a => a.ruleId === record.id && a.status !== 'cancelled');
   row.append(node('p', linked.length ? `Used by: ${linked.map(nameOf).join(', ')}.` : 'Not used by an active or paused automation.', 'muted'));
   row.append(action(rule.enabled ? 'Disable rule' : 'Enable rule', async () => { await request('/v1/rules/update', { id: record.id, expectedVersion: rule.version, projectIds: rule.projectIds, tools: rule.tools, enabled: !rule.enabled }); await refresh(); notice(rule.enabled ? 'Rule disabled. Future runs using this rule will be blocked.' : 'Rule enabled. Automations still need to be enabled separately.'); }, allowed('rule:write')));
@@ -86,26 +95,88 @@ function renderRules() {
 }
 function renderActivity() {
  $('activity').replaceChildren();
- const labels = { succeeded: 'Completed', denied: 'Blocked by permissions or rule', failed: 'Failed after retries', retrying: 'Retry scheduled', queued: 'Waiting for worker', cancelled: 'Cancelled' };
+ const labels = { accepted: 'Accepted by AI', dispatch_pending: 'Waiting to send to AI', uncertain: 'Checking whether AI accepted this request', dispatching: 'Contacting AI', awaiting_retry: 'Not received by AI — retry available', expired: 'Request expired', succeeded: 'Completed', denied: 'Blocked by permissions or rule', failed: 'Failed after retries', retrying: 'Retry scheduled', queued: 'Waiting for worker', cancelled: 'Cancelled' };
  for (const run of [...state.runs].reverse().slice(0, 20)) {
   const record = state.automations.find(a => a.id === run.automationId); const row = node('article', undefined, 'activity-row');
   row.append(node('strong', record ? nameOf(record) : 'Project update'), node('span', labels[run.status] ?? run.status), node('time', time(run.createdAt)));
   if (run.status === 'denied') row.append(node('p', 'Check the current rule and project access, then start a new run.', 'muted'));
-  if (run.result) { const details = node('details'); details.append(node('summary', 'View saved project information')); for (const field of ['name', 'summary']) if (run.result[field]) details.append(node('p', run.result[field])); row.append(details); }
+  if (run.status === 'accepted') row.append(node('p', 'AI accepted the request. Check the companion for model progress and results.', 'muted'));
+  if (run.status === 'awaiting_retry') row.append(action('Retry original request', async () => { await request('/v1/ai/runs/retry', { runId: run.id, confirmed: true }); await refresh(); notice('Original request queued for retry.'); }, allowed('automation:write')));
+  if (run.result && record?.tool !== 'run_ai_template') { const details = node('details'); details.append(node('summary', 'View saved project information')); for (const field of ['name', 'summary']) if (run.result[field]) details.append(node('p', run.result[field])); row.append(details); }
   $('activity').append(row);
  }
  if (!state.runs.length) $('activity').append(node('div', 'No runs yet. Enable an automation and choose Run now, or wait for its schedule.', 'work-empty'));
  $('history').textContent = JSON.stringify({ profiles: state.profiles, rules: state.rules, automations: state.automations, runs: state.runs, audit: state.audit }, null, 2);
 }
+function clearConsent() {
+ clearTimeout(consentTimer); consentId = '';
+ $('ai-consent').hidden = true;
+ for (const id of ['ai-request-id', 'ai-approval-code', 'ai-owner']) $(id).value = '';
+ $('ai-confirmed').checked = false;
+}
+function renderConnections() {
+ $('ai-connections-panel').hidden = !state.aiConnectionsEnabled;
+ $('ai-connect').disabled = busy || !allowed('automation:write');
+ $('ai-confirm-form').querySelector('button').disabled = busy || !allowed('automation:write');
+ const selected = $('automation-connection').value;
+ const fallback = node('option', 'Save public project information'); fallback.value = '';
+ $('automation-connection').replaceChildren(fallback);
+ $('ai-connections').replaceChildren();
+ for (const connection of aiConnections) {
+  const row = node('article', undefined, 'work-row');
+  const label = connection.status.replaceAll('_', ' ');
+  row.append(node('h3', `AI template · ${label}`), node('p', `Connection ${connection.id}`), node('p', `Expires ${time(connection.expiresAt)}`));
+  if (connection.status === 'connected' && connection.expiresAt > Date.now()) {
+   const option = node('option', `Approved AI template · ${connection.grant.templateId.slice(0, 8)}`); option.value = connection.id; $('automation-connection').append(option);
+   row.append(node('p', `Template revision ${connection.grant.templateRevision} · up to ${connection.grant.maxRuns} requests`));
+  }
+  if (['prepared','pending'].includes(connection.status) && connection.expiresAt > Date.now()) row.append(action('Continue approval', () => showConsent(connection.id), allowed('automation:write')));
+  if (connection.status === 'pending' && connection.expiresAt > Date.now()) row.append(action('Finish approved connection', async () => { clearConsent(); consentId = connection.id; $('ai-request-id').value = connection.id; $('ai-consent').hidden = false; consentTimer = setTimeout(clearConsent, Math.max(0, connection.expiresAt - Date.now())); }, allowed('automation:write')));
+  if (['connected','disconnecting'].includes(connection.status)) row.append(action('Disconnect AI template…', async () => {
+   $('confirm-description').textContent = 'Disconnect this AI template? Future dispatches stop; requests already accepted by AI may still finish.';
+   const confirmed = await new Promise(resolve => { $('confirm-dialog').addEventListener('close', () => resolve($('confirm-dialog').returnValue === 'cancel'), { once: true }); $('confirm-dialog').returnValue = ''; $('confirm-dialog').showModal(); });
+   if (confirmed) { await request('/v1/ai/connections/disconnect', { id: connection.id, confirmed: true }); await refresh(); notice('AI connection revoked.'); }
+  }, allowed('automation:write')));
+  if (['redeeming','review_required'].includes(connection.status)) row.append(node('p', 'Approval could not be confirmed. Review and revoke this request in AI before connecting again.', 'attention'));
+  $('ai-connections').append(row);
+ }
+ if (aiConnections.some(row => row.id === selected && row.status === 'connected' && row.expiresAt > Date.now())) $('automation-connection').value = selected;
+}
+async function showConsent(id) {
+ const current = generation, turn = consentTurn;
+ const result = await request('/v1/ai/connections/register', { id });
+ if (current !== generation || turn !== consentTurn || !token || document.hidden) return;
+ clearConsent(); consentId = id;
+ $('ai-request-id').value = id; $('ai-approval-code').value = result.approvalCode;
+ $('ai-consent').hidden = false;
+ consentTimer = setTimeout(clearConsent, Math.max(0, result.expiresAt - Date.now()));
+}
+$('ai-connect').onclick = () => perform(async () => {
+ const result = await request('/v1/ai/connections/prepare', {});
+ await refresh(); await showConsent(result.id);
+});
+$('ai-confirm-form').onsubmit = event => {
+ event.preventDefault();
+ const id = consentId, expectedOwnerId = $('ai-owner').value.trim(), confirmed = $('ai-confirmed').checked;
+ if (!id || !confirmed) return;
+ perform(async () => { clearConsent(); await request('/v1/ai/connections/redeem', { id, expectedOwnerId, confirmed }); await refresh(); notice('AI template connected. Choose it below and save a paused automation.'); });
+};
+function concealConsent() { consentTurn++; $('ai-approval-code').value = ''; $('ai-owner').value = ''; $('ai-confirmed').checked = false; }
+window.addEventListener('blur', concealConsent);
+document.addEventListener('visibilitychange', () => { if (document.hidden) concealConsent(); });
 async function refresh() {
  const current = generation; const data = await request('/v1/workspace'); if (current !== generation || !token) return;
+ let connections = [];
+ if (data.aiConnectionsEnabled) connections = (await request('/v1/ai/connections')).connections;
+ if (current !== generation || !token) return;
+ aiConnections = connections;
  state = data; $('workspace').hidden = false; $('login').hidden = true; $('connected').hidden = false;
- renderProjects(); renderPermissions(); renderAutomations(); renderRules(); renderActivity();
+ renderConnections(); renderProjects(); renderPermissions(); renderAutomations(); renderRules(); renderActivity();
 }
 async function perform(fn) {
  if (busy) return; busy = true;
  document.querySelectorAll('#workspace button,#login button').forEach(button => button.disabled = true);
- try { await fn(); } catch (error) { if (!state) token = ''; notice(friendly(error), true); } finally { busy = false; $('login').querySelector('button').disabled = false; if (state) { renderPermissions(); renderAutomations(); renderRules(); } $('refresh').disabled = false; }
+ try { await fn(); } catch (error) { if (!state) token = ''; notice(friendly(error), true); } finally { busy = false; $('login').querySelector('button').disabled = false; if (state) { renderPermissions(); renderConnections(); renderAutomations(); renderRules(); renderActivity(); } $('refresh').disabled = false; }
 }
 function setPage(kind) {
  pageKind = kind; const rules = kind === 'rules'; $('rules-view').hidden = !rules; $('automation-view').hidden = rules;
@@ -116,6 +187,7 @@ function setPage(kind) {
  document.querySelectorAll('header nav a').forEach(a => { if (a.getAttribute('href') === '/'+kind) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
 }
 function disconnect() {
+ clearConsent(); aiConnections = []; $('ai-connections').replaceChildren();
  generation++; token = ''; state = null; $('token').value = ''; $('workspace').hidden = true; $('connected').hidden = true; $('login').hidden = false;
  for (const id of ['automations', 'rules', 'activity', 'history', 'rule-projects', 'automation-project']) $(id).replaceChildren();
  $('automation-form').reset(); $('rule-form').reset(); setupKey = crypto.randomUUID(); notice('Disconnected. Your access key and workspace data have been cleared from this page.');
@@ -123,9 +195,10 @@ function disconnect() {
 $('login').onsubmit = e => { e.preventDefault(); perform(async () => { generation++; state = null; token = $('token').value.trim(); $('token').value = ''; await refresh(); notice('Workspace connected. Choose a project to get started.'); }); };
 $('disconnect').onclick = disconnect;
 $('refresh').onclick = () => perform(async () => { await refresh(); notice('Activity updated.'); });
+$('automation-connection').onchange = preview;
 $('automation-project').onchange = preview; $('automation-timing').onchange = preview;
 $('automation-form').addEventListener('input', () => { setupKey = crypto.randomUUID(); });
-$('automation-form').onsubmit = e => { e.preventDefault(); const data = new FormData(e.target); perform(async () => { const created = await request('/v1/automations/setup', { name: data.get('name'), projectId: data.get('projectId'), idempotencyKey: setupKey, ...(data.get('timing') !== 'manual' ? { intervalSeconds: Number(data.get('timing')) } : {}) }); setupKey = crypto.randomUUID(); await refresh(); notice(`“${created.name}” is saved and paused. Enable it when you’re ready.`); }); };
+$('automation-form').onsubmit = e => { e.preventDefault(); const data = new FormData(e.target); perform(async () => { const created = await request('/v1/automations/setup', { name: data.get('name'), projectId: data.get('projectId'), idempotencyKey: setupKey, ...(data.get('connectionId') ? { connectionId: data.get('connectionId') } : {}), ...(data.get('timing') !== 'manual' ? { intervalSeconds: Number(data.get('timing')) } : {}) }); setupKey = crypto.randomUUID(); await refresh(); notice(`“${created.name}” is saved and paused. Enable it when you’re ready.`); }); };
 $('rule-form').onsubmit = e => { e.preventDefault(); const data = new FormData(e.target); perform(async () => { const projectIds = data.getAll('project'); if (!projectIds.length) throw new Error('Choose at least one project for this rule.'); await request('/v1/rules', { name: data.get('name'), projectIds, tools: ['get_bittrees_project'], enabled: true }); await refresh(); notice('Rule created. It does not start any automation.'); }); };
 document.addEventListener('click', e => { const link = e.target.closest('a'); const href = link?.getAttribute('href'); if (['/rules', '/automations'].includes(href) && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) { e.preventDefault(); history.pushState({}, '', href); setPage(href.slice(1)); } });
 window.addEventListener('popstate', () => { if (['/rules', '/automations'].includes(location.pathname)) setPage(location.pathname.slice(1)); });

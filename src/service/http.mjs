@@ -100,6 +100,7 @@ export function createMcpHandler({
   engine,
   credentials = [],
   workerToken = "",
+  aiConnections,
   catalog = CATALOG,
   release = "development",
 } = {}) {
@@ -214,14 +215,41 @@ export function createMcpHandler({
             ),
           ),
         );
+      if (path.startsWith("/v1/ai/connections")) {
+        if (!aiConnections) throw fail("AI connections are not configured", 404);
+        if (url.search || req.headers.cookie) throw fail("Use the authenticated connection request", 400);
+        if (path === "/v1/ai/connections" && req.method === "GET")
+          return send(200, { connections: await aiConnections.list(actor) });
+        if (req.method !== "POST") throw fail("Method not allowed", 405);
+        const actions = {
+          "/v1/ai/connections/prepare": [],
+          "/v1/ai/connections/register": ["id"],
+          "/v1/ai/connections/redeem": ["id", "expectedOwnerId", "confirmed"],
+          "/v1/ai/connections/disconnect": ["id", "confirmed"],
+        };
+        const allowed = actions[path];
+        if (!allowed) throw fail("Route not found", 404);
+        const body = await readBody(req);
+        if (!body || typeof body !== "object" || Array.isArray(body) ||
+            Object.keys(body).length !== allowed.length || allowed.some((key) => !Object.hasOwn(body, key)) ||
+            (allowed.includes("id") && (typeof body.id !== "string" || !/^[a-f0-9-]{36}$/i.test(body.id))))
+          throw fail("Invalid connection request");
+        if (path.endsWith("/prepare")) return send(200, await aiConnections.prepare(actor));
+        if (path.endsWith("/register")) return send(200, await aiConnections.register(actor, body.id));
+        if (path.endsWith("/redeem")) return send(200, await aiConnections.redeem(actor, body));
+        if (body.confirmed !== true) throw fail("Confirm disconnection");
+        return send(200, await aiConnections.disconnect(actor, body.id));
+      }
       if (path === "/v1/workspace" && req.method === "GET") {
         authorize(actor, "catalog:read");
         const history = await engine.act(actor, "history");
         const selected = selectionFromParams(new URLSearchParams("mode=ecosystem"));
-        return send(200, { ...history, permissions: actor.permissions, projects: catalogView(catalog,selected).projects.filter(p=>actor.projectIds.includes(p.id)).map(p=>({id:p.id,name:p.name,summary:p.summary})) });
+        return send(200, { ...history, aiConnectionsEnabled: Boolean(aiConnections), permissions: actor.permissions, projects: catalogView(catalog,selected).projects.filter(p=>actor.projectIds.includes(p.id)).map(p=>({id:p.id,name:p.name,summary:p.summary})) });
       }
       if (path === "/v1/history" && req.method === "GET")
         return send(200, await engine.act(actor, "history"));
+      if (req.method === "POST" && path === "/v1/ai/runs/retry")
+        return send(200, await engine.act(actor, "ai.retry", await readBody(req)));
       if (req.method === "POST" && path.startsWith("/v1/")) {
         const operations = MANAGEMENT_ROUTES;
         if (!operations[path]) throw fail("Route not found", 404);

@@ -139,3 +139,45 @@ Browse the live [functions and endpoints reference](https://mcp.bittrees.org/ref
 Automations now has a single setup form: choose a named project, enter a name, choose manual/hourly/six-hourly/daily, and save paused. `POST /v1/automations/setup` creates the project profile, read-only rule and automation in one transaction; an idempotency key prevents duplicate saves. It requires automation:write, profile:write and rule:write. `GET /v1/workspace` returns only the caller’s permitted projects, permissions and owned history (catalog:read + automation:read). Existing configuration endpoints remain supported.
 
 Rules has its own named-project form, version history and enable/disable controls showing affected automations. Activity uses readable statuses and local times; raw JSON is under Technical details. Internal Automations/Rules navigation retains the access key in memory only. Disconnect/navigation out clears it. Cancellation requires confirmation; new saves remain paused.
+
+### AI connection and automation implementation (opt-in; interface acceptance pending)
+
+Storage format 2 preserves the existing public automation records and adds separate
+AI connection/outbox collections. Run the dedicated database migration before
+upgrading the service. The database rejects updates from older writers, including
+workers started before migration. For a development file store, stop its worker
+and run `MCP_LOCAL_STATE=/absolute/state.json node scripts/migrate-local.mjs`.
+The original path becomes a migration marker; records live in `state.json.v2`,
+with the old snapshot retained as `state.json.pre-v2`. Do not delete the marker
+or restore the older snapshot over current state. Interrupted migrations require
+operator inspection; they never silently reset the store.
+
+AI connection routes remain unavailable unless both `MCP_AI_CLIENT_CREDENTIAL`
+and `MCP_AI_ENCRYPTION_KEY` are configured. Each is an independent random 32-byte
+base64url value. Configure only the SHA-256 hash of the client credential at AI;
+keep the MCP encryption key separate from its database and backup keys. Never
+put either secret in browser settings, URLs, source control or logs. Losing the
+encryption key requires revocation at AI and new consent; it cannot be recovered
+from a state backup. Credential rotation invalidates the old authenticated actor
+binding and requires renewed consent.
+
+Authenticated connection operations are `POST /v1/ai/connections/prepare` (`{}`),
+`register` (`{id}`), `redeem` (`{id, expectedOwnerId, confirmed:true}`), and
+`disconnect` (`{id, confirmed:true}`). `GET /v1/ai/connections` returns metadata
+only. Registration shows an approval code for explicit entry into AI's consent
+interface; the code is never a URL parameter. Redemption requires the expected
+AI owner ID and independently approved template. A lost redemption reply is
+marked for review, because the target returns its credential only once. Stop or
+revoke that request at AI before beginning another connection. Disconnect blocks
+local dispatch first, retaining the encrypted credential until source revocation
+is acknowledged. A queued receipt means accepted by AI, not model completion or
+publication. Use the existing automation setup operation with `connectionId` to create a
+paused AI template automation. The current actor, selected project, rule/profile
+versions and approved connection are checked before dispatch. The existing worker
+records intent atomically, then performs AI network calls outside its transaction.
+Lost replies are reconciled by receipt inspection, including while paused; they
+are never blindly resent. Only an authoritative not-found receipt permits explicit
+`POST /v1/ai/runs/retry` with `{runId, confirmed:true}`, using the original intent.
+Cancellation stops unsent work; accepted or uncertain remote effects retain their
+honest status. User interfaces and actual two-service acceptance remain pending;
+configuring a connection does not enable a schedule.
