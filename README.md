@@ -143,8 +143,8 @@ Rules has its own named-project form, version history and enable/disable control
 ### AI connection and automation implementation (opt-in; interface acceptance pending)
 
 Storage format 2 preserves the existing public automation records and adds separate
-AI connection/outbox collections. Run the dedicated database migration before
-upgrading the service. The database rejects updates from older writers, including
+AI connection/outbox collections. Public-only deployments can continue using format1 while AI remains disabled.
+Run the dedicated database migration before enabling AI connection credentials. The database rejects updates from older writers, including
 workers started before migration. For a development file store, stop its worker
 and run `MCP_LOCAL_STATE=/absolute/state.json node scripts/migrate-local.mjs`.
 The original path becomes a migration marker; records live in `state.json.v2`,

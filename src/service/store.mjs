@@ -18,7 +18,8 @@ export const emptyState = () => ({
   runs: {},
   audit: [],
 });
-function assertFormat(state) {
+function assertFormat(state, allowLegacy = false) {
+  if (allowLegacy && state?.version === 1 && state.profiles && state.rules && state.automations && state.runs && Array.isArray(state.audit)) return;
   if (state?.version !== 2 || state.aiDispatchVersion !== 1 ||
       !state.aiConnections || !state.aiDispatchOutbox) throw new Error("Store migration required");
 }
@@ -98,8 +99,9 @@ export async function migrateFileStore(path) {
   } finally { await lock.close(); await unlink(`${path}.lock`); }
 }
 export class PostgresStore {
-  constructor(pool) {
+  constructor(pool, { allowLegacy = false } = {}) {
     this.pool = pool;
+    this.allowLegacy = allowLegacy;
   }
   async initialize() {
     // Test/operator helper only; runtime calls assertReady with its restricted role.
@@ -108,7 +110,7 @@ export class PostgresStore {
   }
   async assertReady() {
     const { rows } = await this.pool.query("SELECT body->>'version' AS version FROM mcp.bittrees_mcp_state WHERE id=1");
-    if (rows[0]?.version !== "2") throw new Error("Database migration required");
+    if (rows[0]?.version !== "2" && !(this.allowLegacy && rows[0]?.version === "1")) throw new Error("Database migration required");
   }
   async transaction(fn) {
     const client = await this.pool.connect();
@@ -121,10 +123,10 @@ export class PostgresStore {
       );
       if (!rows.length) throw new Error("Store not initialized");
       const state = rows[0].body;
-      assertFormat(state);
+      assertFormat(state, this.allowLegacy);
       const before = JSON.stringify(state);
       const result = await fn(state);
-      assertFormat(state);
+      assertFormat(state, this.allowLegacy);
       if (JSON.stringify(state) !== before) {
         await client.query("UPDATE mcp.bittrees_mcp_state SET body=$1 WHERE id=1", [state]);
       }

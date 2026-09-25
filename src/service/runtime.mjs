@@ -7,6 +7,8 @@ import { createMcpHandler } from "./http.mjs";
 import { Engine } from "./engine.mjs";
 import { FileStore, PostgresStore } from "./store.mjs";
 export async function runtime(env = process.env) {
+  const aiConfigured = env.MCP_AI_CLIENT_CREDENTIAL !== undefined || env.MCP_AI_ENCRYPTION_KEY !== undefined;
+
   let store;
   if (env.MCP_DATABASE_URL) {
     const { Pool } = await import("pg");
@@ -16,7 +18,7 @@ export async function runtime(env = process.env) {
       connectionTimeoutMillis: 5000,
       statement_timeout: 10000,
     });
-    store = new PostgresStore(pool);
+    store = new PostgresStore(pool, { allowLegacy: !aiConfigured });
     await store.assertReady();
   } else if (env.NODE_ENV !== "production" && env.MCP_LOCAL_STATE) {
     store = new FileStore(env.MCP_LOCAL_STATE);
@@ -30,7 +32,6 @@ export async function runtime(env = process.env) {
     };
   const credentials = JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]");
   let aiConnections, aiWorker;
-  const aiConfigured = env.MCP_AI_CLIENT_CREDENTIAL !== undefined || env.MCP_AI_ENCRYPTION_KEY !== undefined;
   if (aiConfigured) {
     const secrets = new AiSecrets(env.MCP_AI_ENCRYPTION_KEY);
     const client = new AiClient({

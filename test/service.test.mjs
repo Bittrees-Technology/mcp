@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "node:http";
@@ -339,7 +339,13 @@ test(
     });
     const store = new PostgresStore(pool);
     try {
+      await pool.query(await readFile(new URL('../migrations/001_state.sql', import.meta.url), 'utf8'));
+      const legacyStore = new PostgresStore(pool, { allowLegacy: true });
+      await legacyStore.assertReady();
+      const preserved = await configure(new Engine(legacyStore));
       await store.initialize();
+      await store.assertReady();
+      assert.ok((await new Engine(store).act(actor, 'history')).automations.some(row => row.id === preserved.automation.id));
       // This is the exact UPDATE issued by an already-running version-one writer.
       await assert.rejects(pool.query("UPDATE mcp.bittrees_mcp_state SET body=body WHERE id=1"), /writer upgrade required/);
       await store.transaction((s) => {
