@@ -55,6 +55,7 @@ test('connect an approved template, save paused, run and disconnect in the works
   }
   await page.getByRole('button',{name:'Enable automation',exact:true}).click();
   await page.getByRole('button',{name:'Run now',exact:true}).click();
+  await expect(page.locator('#notice')).toContainText('Run queued.');
   await engine.tick(()=>actor);await page.locator('#refresh').click();
   await expect(page.locator('#activity')).toContainText('Accepted by AI');
   await page.getByRole('button',{name:'Disconnect AI template…',exact:true}).click();
