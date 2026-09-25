@@ -344,6 +344,7 @@ test(
       await legacyStore.assertReady();
       const preserved = await configure(new Engine(legacyStore));
       await store.initialize();
+      await store.initialize(); // Re-running migration must not insert a format-one row into format two.
       await store.assertReady();
       assert.ok((await new Engine(store).act(actor, 'history')).automations.some(row => row.id === preserved.automation.id));
       // This is the exact UPDATE issued by an already-running version-one writer.
