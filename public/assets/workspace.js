@@ -69,6 +69,10 @@ function renderAutomations() {
    controls.append(action(record.status === 'active' ? 'Pause' : 'Enable automation', async () => { await request(`/v1/automations/${record.status === 'active' ? 'pause' : 'resume'}`, { id: record.id }); await refresh(); notice(record.status === 'active' ? 'Automation paused. Queued work will wait.' : 'Automation enabled.'); }, allowed('automation:write')));
    controls.append(action('Run now', async () => { await request('/v1/automations/trigger', { id: record.id, idempotencyKey: crypto.randomUUID(), ...(record.trigger.type === 'event' ? { event: record.trigger.event } : {}) }); await refresh(); notice('Run queued. Results appear here after the worker processes it, usually within five minutes.'); }, allowed('automation:write') && allowed('automation:execute') && record.status === 'active' && rule?.enabled));
    controls.append(action('Cancel…', async () => {
+    $('confirm-dialog').querySelector('h2').textContent = 'Cancel this automation?';
+    $('confirm-effects').textContent = 'Unsent requests will be cancelled. Already accepted or uncertain AI requests retain their status. This automation cannot restart.';
+    $('confirm-dialog').querySelector('[value=cancel]').textContent = 'Cancel automation';
+    $('confirm-dialog').querySelector('[value=back]').textContent = 'Keep automation';
     $('confirm-description').textContent = `Cancel “${nameOf(record)}”?`;
     const confirmed = await new Promise(resolve => { $('confirm-dialog').addEventListener('close', () => resolve($('confirm-dialog').returnValue === 'cancel'), { once: true }); $('confirm-dialog').returnValue = ''; $('confirm-dialog').showModal(); });
     if (confirmed) { await request('/v1/automations/cancel', { id: record.id }); await refresh(); notice('Automation cancelled. Its history remains available.'); }
@@ -133,6 +137,10 @@ function renderConnections() {
   if (['prepared','pending'].includes(connection.status) && connection.expiresAt > Date.now()) row.append(action('Continue approval', () => showConsent(connection.id), allowed('automation:write')));
   if (connection.status === 'pending' && connection.expiresAt > Date.now()) row.append(action('Finish approved connection', async () => { clearConsent(); consentId = connection.id; $('ai-request-id').value = connection.id; $('ai-consent').hidden = false; consentTimer = setTimeout(clearConsent, Math.max(0, connection.expiresAt - Date.now())); }, allowed('automation:write')));
   if (['connected','disconnecting'].includes(connection.status)) row.append(action('Disconnect AI template…', async () => {
+   $('confirm-dialog').querySelector('h2').textContent = 'Disconnect this AI template?';
+   $('confirm-effects').textContent = 'The connection is revoked at AI. Reconnecting requires new approval.';
+   $('confirm-dialog').querySelector('[value=cancel]').textContent = 'Disconnect template';
+   $('confirm-dialog').querySelector('[value=back]').textContent = 'Keep connection';
    $('confirm-description').textContent = 'Disconnect this AI template? Future dispatches stop; requests already accepted by AI may still finish.';
    const confirmed = await new Promise(resolve => { $('confirm-dialog').addEventListener('close', () => resolve($('confirm-dialog').returnValue === 'cancel'), { once: true }); $('confirm-dialog').returnValue = ''; $('confirm-dialog').showModal(); });
    if (confirmed) { await request('/v1/ai/connections/disconnect', { id: connection.id, confirmed: true }); await refresh(); notice('AI connection revoked.'); }
