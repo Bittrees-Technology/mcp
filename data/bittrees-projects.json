@@ -1172,8 +1172,8 @@
         "contactStatus": "pending"
       },
       "source": {
-        "revision": "d84d599e7ae355d85edd1be9d77ede0dd225efae",
-        "observedAt": "2026-10-11T05:59:32.832Z",
+        "revision": "f15dfe67f6721b14c318400f750289f877f044e6",
+        "observedAt": "2026-10-11T13:05:00.460Z",
         "manifestPath": "bittrees.project.json"
       },
       "lifecycle": "active",
@@ -1200,8 +1200,8 @@
   ],
   "sync": {
     "state": "reconciled",
-    "lastAttemptAt": "2026-10-11T05:59:32.832Z",
-    "lastSuccessAt": "2026-10-11T05:59:32.832Z",
+    "lastAttemptAt": "2026-10-11T13:05:00.460Z",
+    "lastSuccessAt": "2026-10-11T13:05:00.460Z",
     "errors": []
   },
   "excludedComponents": [
