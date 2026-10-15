@@ -101,6 +101,7 @@ export function createMcpHandler({
   credentials = [],
   workerToken = "",
   aiConnections,
+  sourceConnections,
   catalog = CATALOG,
   release = "development",
 } = {}) {
@@ -369,6 +370,12 @@ export function createMcpHandler({
             return send(202, {});
           throw fail("Unsupported notification");
         }
+        const sourceProjects = resolveSelection(catalog, profile).projects.map(p => p.id);
+        if (message.method === "tools/call" && message.params?.name?.startsWith("source_")) {
+          if (!sourceConnections) throw fail("Source connections disabled", 403);
+          const data = await sourceConnections.call(actor, sourceProjects, message.params.name, message.params.arguments ?? {});
+          return send(200, {jsonrpc:"2.0",id:message.id,result:{content:[{type:"text",text:JSON.stringify(data)}],structuredContent:data}});
+        }
         const management = MANAGEMENT_TOOLS.filter((tool) =>
           actor?.permissions.includes(tool.permission),
         );
@@ -444,6 +451,7 @@ export function createMcpHandler({
         if (message.method === "tools/list")
           result.result.tools = [
             ...result.result.tools,
+            ...(sourceConnections?.list(actor, sourceProjects) ?? []),
             ...management.map(({ permission, operation, ...tool }) => tool),
           ];
         return send(200, result);

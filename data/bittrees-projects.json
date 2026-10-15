@@ -845,8 +845,8 @@
       "aliases": [
         "marcada"
       ],
-      "affiliation": "pending",
-      "approval": "pending",
+      "affiliation": "bittrees",
+      "approval": "approved",
       "components": [],
       "affiliationEvidence": [
         "https://github.com/Bittrees-Technology/mercado/blob/main/README.md"
@@ -857,9 +857,9 @@
         "contactStatus": "pending"
       },
       "source": {
-        "revision": "efe756cf533c90f85752b38c29bec7c92405708a",
-        "observedAt": "2026-09-16T16:45:00Z",
-        "manifestPath": "bittrees.project.json"
+        "revision": "3445d8c79f8369f45d957b48c1aa8620d63b4eb1",
+        "observedAt": "2026-10-15T16:10:00Z",
+        "manifestPath": "README.md"
       },
       "lifecycle": "preview",
       "health": {
@@ -868,7 +868,7 @@
       },
       "adapter": {
         "type": "catalog-resource",
-        "status": "pending",
+        "status": "ready",
         "privateReads": "not-implemented",
         "actions": "not-implemented"
       },
