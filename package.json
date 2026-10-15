@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node src/service/server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check api/index.mjs && node --check src/service/http.mjs && node --check src/service/engine.mjs && node --check src/service/store.mjs",
+    "check": "node --check api/index.mjs && node --check src/service/http.mjs && node --check src/service/engine.mjs && node --check src/service/store.mjs && node --input-type=module -e \"await import('./api/index.mjs')\"",
     "build": "node scripts/build.mjs",
     "migrate": "node scripts/migrate.mjs"
   },
