@@ -1,3 +1,4 @@
+import { activeExpiry } from "./workflow-authority.mjs";
 import { randomUUID, createHash } from "node:crypto";
 import {
   CATALOG,
@@ -37,7 +38,7 @@ function owns(record, actor) {
 export function authorize(actor, permission) {
   if (
     !actor ||
-    actor.expiresAt <= Date.now() ||
+    !activeExpiry(actor) ||
     actor.audience !== "https://mcp.bittrees.org" ||
     !actor.permissions.includes(permission)
   )

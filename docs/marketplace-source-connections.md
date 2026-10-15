@@ -9,3 +9,5 @@ Tools: `source_crm_brief`, `source_crm_preview`, `source_crm_status`, `source_me
 Mercado's catalog entry is approved for this user-requested integration, based on the checked-out Bittrees-Technology/mercado repository and its README. Source proposal access remains separately opt-in. This does not mark either app's general private API as implemented.
 
 Deploy both source-app changes first. AI's coordinator has a separate migration, owner-bound MCP credential and bounded worker. No source credentials are installed by this commit.
+
+Managed standing connections explicitly set `managed: true, expiresAt: null` and require a registered audience-bound credential at AI's workflow-authority service. Permission checks are uncached and fail closed. MCP also checks the CRM assignment's current owner/researcher access before source dispatch. The workflow control credential revokes all managed source and sync tokens without redeployment. Source tokens remain server-side; no publication or outreach scopes are introduced.
