@@ -26,9 +26,11 @@ export class SourceConnections {
     if (c.managed) {
       await checkWorkflowAuthority(c.token, source, "propose");
       // Workspace owner and researcher membership are authoritative in CRM.
+      if (source !== "crm") {
       const crm = this.connection(actor, "crm", projects);
       const authority = await this.request(endpoints.crm.origin + endpoints.crm.actions.brief, {method:"POST",headers:{authorization:`Bearer ${crm.token}`,"content-type":"application/json"},body:"{}",redirect:"error",signal:AbortSignal.timeout(10000)});
       if (!authority.ok) return deny();
+      }
     }
     const response=await this.request(e.origin+e.actions[action],{method:'POST',headers:{authorization:`Bearer ${c.token}`,'content-type':'application/json'},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(20000)});
     if (!response.ok) throw Object.assign(new Error('Source rejected request; check connection, scope and proposal'),{statusCode:response.status});
