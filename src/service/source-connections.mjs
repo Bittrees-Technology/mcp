@@ -1,7 +1,7 @@
 import { activeExpiry, checkWorkflowAuthority } from "./workflow-authority.mjs";
 const endpoints = {
-  crm: {origin:'https://crm.bittrees.org', actions:{brief:'/api/integrations/leads/brief',preview:'/api/integrations/leads/prepare',status:'/api/integrations/leads/status'}},
-  mercado:{origin:'https://mercado.bittrees.org',actions:{preview:'/api/integrations/coordinator/preview',status:'/api/integrations/coordinator/status'}}
+  crm: {origin:'https://crm.bittrees.org', actions:{brief:'/api/integrations/leads/brief',preview:'/api/integrations/leads/prepare',status:'/api/integrations/leads/status',execute:'/api/integrations/leads/execute'}},
+  mercado:{origin:'https://mercado.bittrees.org',actions:{preview:'/api/integrations/coordinator/preview',status:'/api/integrations/coordinator/status',execute:'/api/integrations/coordinator/execute'}}
 };
 const deny=()=>{throw Object.assign(new Error('Source connection unavailable'),{statusCode:403});};
 export class SourceConnections {
@@ -15,7 +15,7 @@ export class SourceConnections {
   list(actor, projects) {
     return Object.entries(endpoints).flatMap(([source,endpoint])=>{
       try {this.connection(actor,source,projects);}catch{return [];}
-      return Object.keys(endpoint.actions).map(action=>({name:`source_${source}_${action}`,description:`${action} a scoped ${source} proposal. Source-app review remains required.`,inputSchema:{type:'object',properties:action==='brief'?{}:{operationId:{type:'string',format:'uuid'},...(action==='preview'?(source==='crm'?{candidates:{type:'array',maxItems:20}}:{product:{type:'object'}}):{})},required:action==='brief'?[]:['operationId',...(action==='preview'?[source==='crm'?'candidates':'product']:[])],additionalProperties:false}}));
+      return Object.keys(endpoint.actions).filter(action => action !== "execute" || (actor.managed === true && actor.permissions.includes("sources:execute"))).map(action=>({name:`source_${source}_${action}`,description:action === "execute" ? `Execute ${source} qualification policy under an explicit revocable grant; exceptions remain held.` : `${action} a scoped ${source} proposal.`,inputSchema:{type:'object',properties:action==='brief'?{}:{operationId:{type:'string',format:'uuid'},...(action==='preview'?(source==='crm'?{candidates:{type:'array',maxItems:20}}:{product:{type:'object'}}):{})},required:action==='brief'?[]:['operationId',...(action==='preview'?[source==='crm'?'candidates':'product']:[])],additionalProperties:false}}));
     });
   }
   async call(actor,projects,name,args) {
@@ -23,6 +23,10 @@ export class SourceConnections {
     if (!tool || !args || Array.isArray(args) || Object.keys(args).some(k=>!Object.hasOwn(tool.inputSchema.properties,k))) return deny();
     const [,source,action]=name.split('_');
     const c=this.connection(actor,source,projects), e=endpoints[source];
+    if (action === "execute") {
+      if (!c.managed || !actor.managed) return deny();
+      await checkWorkflowAuthority(c.token, source, source === "crm" ? "import:qualified" : "publish:qualified");
+    }
     if (c.managed) {
       await checkWorkflowAuthority(c.token, source, "propose");
       // Workspace owner and researcher membership are authoritative in CRM.

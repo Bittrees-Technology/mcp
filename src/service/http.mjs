@@ -62,7 +62,7 @@ export function validateCredentials(credentials) {
       !actor.subject ||
       identities.has(identity) ||
       actor.audience !== ORIGIN ||
-      !(Number.isFinite(actor.expiresAt) || (actor.managed === true && actor.expiresAt === null && actor.permissions?.every(p => ["catalog:read", "sources:propose"].includes(p)))) ||
+      !(Number.isFinite(actor.expiresAt) || (actor.managed === true && actor.expiresAt === null && actor.permissions?.every(p => ["catalog:read", "sources:propose", "sources:execute"].includes(p)))) ||
       !Array.isArray(actor.projectIds) ||
       !Array.isArray(actor.permissions)
     )
@@ -374,6 +374,7 @@ export function createMcpHandler({
         }
         const sourceProjects = resolveSelection(catalog, profile).projects.map(p => p.id);
         if (message.method === "tools/call" && message.params?.name?.startsWith("source_")) {
+          if (actor?.managed && message.params.name.endsWith("_execute")) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:execute");
           if (!sourceConnections) throw fail("Source connections disabled", 403);
           const data = await sourceConnections.call(actor, sourceProjects, message.params.name, message.params.arguments ?? {});
           return send(200, {jsonrpc:"2.0",id:message.id,result:{content:[{type:"text",text:JSON.stringify(data)}],structuredContent:data}});
