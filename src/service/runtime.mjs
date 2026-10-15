@@ -31,7 +31,7 @@ export async function runtime(env = process.env) {
         });
       },
     };
-  const credentials = [...JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]"), ...JSON.parse(env.MCP_SOURCE_ACTORS_JSON ?? "[]")];
+  const credentials = [...JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]"), ...JSON.parse(env.MCP_SOURCE_ACTORS_JSON ?? "[]"), ...JSON.parse(env.MCP_QUALIFIED_ACTORS_JSON ?? "[]")];
   let aiConnections, aiWorker;
   if (aiConfigured) {
     const secrets = new AiSecrets(env.MCP_AI_ENCRYPTION_KEY);
@@ -49,7 +49,7 @@ export async function runtime(env = process.env) {
   }
   return createMcpHandler({
     aiConnections,
-    sourceConnections: new SourceConnections(JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]")),
+    sourceConnections: new SourceConnections([...JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]"), ...JSON.parse(env.MCP_QUALIFIED_CONNECTIONS_JSON || "[]")]),
     engine: new Engine(store, { aiWorker }),
     credentials,
     workerToken: env.MCP_WORKER_TOKEN,
