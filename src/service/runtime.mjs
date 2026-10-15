@@ -1,3 +1,4 @@
+import { SourceConnections } from "./source-connections.mjs";
 import { AiWorker } from "./ai-worker.mjs";
 import { CATALOG } from "../ecosystem/catalog.mjs";
 import { AiClient } from "./ai-client.mjs";
@@ -48,6 +49,7 @@ export async function runtime(env = process.env) {
   }
   return createMcpHandler({
     aiConnections,
+    sourceConnections: new SourceConnections(JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]")),
     engine: new Engine(store, { aiWorker }),
     credentials,
     workerToken: env.MCP_WORKER_TOKEN,
