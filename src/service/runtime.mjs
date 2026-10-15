@@ -31,7 +31,7 @@ export async function runtime(env = process.env) {
         });
       },
     };
-  const credentials = JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]");
+  const credentials = [...JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]"), ...JSON.parse(env.MCP_SOURCE_ACTORS_JSON ?? "[]")];
   let aiConnections, aiWorker;
   if (aiConfigured) {
     const secrets = new AiSecrets(env.MCP_AI_ENCRYPTION_KEY);
