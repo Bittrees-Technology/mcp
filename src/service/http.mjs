@@ -1,3 +1,4 @@
+import { checkWorkflowAuthority, activeExpiry } from "./workflow-authority.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import {
@@ -61,7 +62,7 @@ export function validateCredentials(credentials) {
       !actor.subject ||
       identities.has(identity) ||
       actor.audience !== ORIGIN ||
-      !Number.isFinite(actor.expiresAt) ||
+      !(Number.isFinite(actor.expiresAt) || (actor.managed === true && actor.expiresAt === null && actor.permissions?.every(p => ["catalog:read", "sources:propose"].includes(p)))) ||
       !Array.isArray(actor.projectIds) ||
       !Array.isArray(actor.permissions)
     )
@@ -78,7 +79,7 @@ export function authenticate(headers, credentials) {
   const actor = credentials.find((a) =>
     timingSafeEqual(digest, Buffer.from(a.tokenHash, "hex")),
   );
-  if (!actor || actor.expiresAt <= Date.now())
+  if (!actor || !activeExpiry(actor))
     throw fail("Invalid or expired service credential", 401);
   return actor;
 }
@@ -159,6 +160,7 @@ export function createMcpHandler({
       if (["GET", "HEAD"].includes(req.method) && ["/reference", "/reference.json"].includes(path))
         return path === "/reference" ? send(200, referencePage(MANAGEMENT_TOOLS), "text/html") : send(200, serviceReference(MANAGEMENT_TOOLS));
       const actor = authenticate(req.headers, credentials);
+      if (actor?.managed) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:propose");
       if (path === "/health" && ["GET", "HEAD"].includes(req.method)) {
         await engine.store.transaction(() => null);
         return send(200, {
