@@ -4,12 +4,36 @@ import { AiDispatchOutbox, aiCommandId } from "./ai-outbox.mjs";
 import { requireSelectedProject } from "../ecosystem/catalog.mjs";
 const denied = () => Object.assign(new Error("AI automation authority is not current"), { statusCode: 403 });
 export class AiWorker {
-  constructor(store, { transport, resolveActor, catalog, clock = Date.now }) {
+  constructor(store, { transport, resolveActor, catalog, rolesConsumer, clock = Date.now }) {
+    this.rolesConsumer=rolesConsumer;
     this.store = store; this.resolveActor = resolveActor; this.catalog = catalog; this.clock = clock;
     this.outbox = new AiDispatchOutbox(store, {
-      transport, clock,
+      transport:Object.fromEntries(["submit","inspect"].map(mode=>[mode,(intent,signal)=>this.dispatch(transport,mode,intent,signal)])), clock,
       authorize: (state, intent, operation) => this.authorized(state, intent, operation),
     });
+  }
+  async rolesCheck(actor,run,automation,grant,stage,parameters,effect) {
+    const binding=run.rolesAuthorityBinding??null;
+    if(binding!==(actor?.rolesAuthorityBinding??null))throw denied();
+    if(!binding)return effect(parameters);
+    if(!this.rolesConsumer)throw denied();
+    const operationId=aiCommandId({runId:run.id,grantId:automation.connectionId,...aiActor(actor)});
+    return this.rolesConsumer.execute(actor,binding,{project:automation.projectId,operationId,
+      resource:`template:${grant.deviceId}:${grant.templateId}:${grant.templateRevision}`,action:'template:dispatch',stage},parameters,effect);
+  }
+  async authorizeEnqueue(state,run,automation,actor) {
+    const connection=this.connection(state,actor,automation.connectionId);
+    return this.rolesCheck(actor,run,automation,connection.grant,'enqueue',
+      {runId:run.id,automationId:automation.id,grantId:connection.id,permissionId:connection.grant.permissionId,templateId:connection.grant.templateId,templateRevision:connection.grant.templateRevision},()=>true);
+  }
+  async dispatch(transport,mode,intent,signal) {
+    const context=await this.store.transaction(state=>{
+      if(!this.authorized(state,intent,mode==='inspect'?'inspect':'dispatch'))throw denied();
+      const actor=this.resolveActor(intent.tenant,intent.subject),run=state.runs[intent.runId],automation=state.automations[intent.automationId];
+      return structuredClone({actor,run,automation,grant:this.connection(state,actor,intent.grantId).grant});
+    });
+    return this.rolesCheck(context.actor,context.run,context.automation,context.grant,'execute',intent,
+      exactIntent=>transport[mode](exactIntent,signal));
   }
   connection(state, actor, id) {
     const row = state.aiConnections?.[id];
@@ -22,7 +46,7 @@ export class AiWorker {
       const actor = this.resolveActor(intent.tenant, intent.subject);
       authorize(actor, operation === "manage" ? "automation:write" : "automation:execute");
       const automation = state.automations[intent.automationId], run = state.runs[intent.runId];
-      if (!automation || !run || run.automationId !== automation.id ||
+      if (!automation || !run || (run.rolesAuthorityBinding??null)!==(actor.rolesAuthorityBinding??null) || run.automationId !== automation.id ||
           automation.tenant !== actor.tenant || automation.subject !== actor.subject ||
           intent.actorId !== aiActor(actor).actorId) return false;
       if (operation === "manage") return true;

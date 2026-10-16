@@ -1,3 +1,4 @@
+import {randomUUID} from "node:crypto";
 import { activeExpiry, checkWorkflowAuthority } from "./workflow-authority.mjs";
 const endpoints = {
   crm: {origin:'https://crm.bittrees.org', actions:{brief:'/api/integrations/leads/brief',preview:'/api/integrations/leads/prepare',status:'/api/integrations/leads/status',execute:'/api/integrations/leads/execute'}},
@@ -5,7 +6,7 @@ const endpoints = {
 };
 const deny=()=>{throw Object.assign(new Error('Source connection unavailable'),{statusCode:403});};
 export class SourceConnections {
-  constructor(connections=[], request=fetch) { this.connections=connections; this.request=request; }
+  constructor(connections=[], request=fetch, rolesConsumer) { this.connections=connections; this.request=request; this.rolesConsumer=rolesConsumer; }
   connection(actor, source, projects) {
     if (!actor || !actor.permissions.includes('sources:propose') || !projects.includes(source) || !actor.projectIds.includes(source)) return deny();
     const c=this.connections.find(c=>c.tenant===actor.tenant && c.subject===actor.subject && c.actorTokenHash===actor.tokenHash && c.source===source);
@@ -36,7 +37,12 @@ export class SourceConnections {
       if (!authority.ok) return deny();
       }
     }
-    const response=await this.request(e.origin+e.actions[action],{method:'POST',headers:{authorization:`Bearer ${c.token}`,'content-type':'application/json'},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(20000)});
+    const invoke=(payload=args)=>this.request(e.origin+e.actions[action],{method:'POST',headers:{authorization:`Bearer ${c.token}`,'content-type':'application/json'},body:JSON.stringify(payload),redirect:'error',signal:AbortSignal.timeout(20000)});
+    const binding=actor.rolesAuthorityBinding;
+    if(c.rolesAuthorityBinding && c.rolesAuthorityBinding!==binding)return deny();
+    if(binding && !this.rolesConsumer)return deny();
+    const response=binding ? await this.rolesConsumer.execute(actor,binding,{project:source,operationId:action==='brief'?randomUUID():args.operationId,
+      resource:action==='brief'?'workspace:brief':`operation:${args.operationId}`,action:`source:${action}`},args,invoke) : await invoke();
     if (!response.ok) throw Object.assign(new Error('Source rejected request; check connection, scope and proposal'),{statusCode:response.status});
     const raw=await response.text();
     if(raw.length>120000) throw new Error('Source response too large');

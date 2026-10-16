@@ -17,3 +17,14 @@ test('Source connections bind credential, actor, project and expiry; reject arbi
  assert(!JSON.stringify(gateway.list(actor,['crm'])).includes(connection.token));
  connection.expiresAt=0;assert.equal(gateway.list(actor,['crm']).length,0);
 });
+
+test('explicit Roles source binding cannot fall back to legacy execution',async()=>{
+ const actor={tenant:'t',subject:'s',tokenHash:'a'.repeat(64),permissions:['sources:propose'],projectIds:['crm'],rolesAuthorityBinding:'enrolled'};
+ const connection={actorTokenHash:actor.tokenHash,tenant:'t',subject:'s',source:'crm',token:'b'.repeat(64),expiresAt:Date.now()+100000};
+ let effects=0;const request=async()=>{effects++;return new Response('{}');};
+ const gateway=new SourceConnections([connection],request,{execute:async()=>{throw Error('revoked');}});
+ await assert.rejects(gateway.call(actor,['crm'],'source_crm_status',{operationId:'123'}));assert.equal(effects,0);
+ gateway.rolesConsumer=undefined;await assert.rejects(gateway.call(actor,['crm'],'source_crm_status',{operationId:'123'}));assert.equal(effects,0);
+ connection.rolesAuthorityBinding='enrolled';delete actor.rolesAuthorityBinding;
+ await assert.rejects(gateway.call(actor,['crm'],'source_crm_status',{operationId:'123'}));assert.equal(effects,0);
+});
