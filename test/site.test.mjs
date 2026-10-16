@@ -16,7 +16,8 @@ test('standalone pages, workspace assets and service boundaries',async()=>{
   const ref=await (await fetch(base+'/reference.json')).json();
   const rpc=await (await fetch(base+'/mcp',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/list'})})).json();
   assert.deepEqual(ref.tools.filter(t=>t.access==='Public').map(t=>t.name),rpc.result.tools.map(t=>t.name));
-  assert.equal(ref.tools.length,8);
+  assert.equal(ref.tools.length,10);
+  assert.ok(ref.tools.some(t=>t.name==='plan_bittrees_tool_use'));
   assert.equal(ref.endpoints.filter(e=>e.method==='POST'&&e.path.startsWith('/v1/')).length,10);
   for(const endpoint of ref.endpoints.filter(e=>e.method==='GET'&&!e.path.includes('{')&&e.access==='Public'))assert.equal((await fetch(base+endpoint.path)).status,200,endpoint.path);
   const page=await (await fetch(base+'/reference')).text();

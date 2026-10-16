@@ -1196,6 +1196,261 @@
         }
       ],
       "authScopes": []
+    },
+    {
+      "id": "calendar",
+      "name": "Bittrees Calendar",
+      "summary": "Personal scheduling and permission-checked source deadlines.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/calendar",
+      "publicUrl": "https://calendar.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/calendar/blob/a9af58f6bc929612521e5af5a3a54a87bb9b1e88/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/calendar/blob/a9af58f6bc929612521e5af5a3a54a87bb9b1e88/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "a9af58f6bc929612521e5af5a3a54a87bb9b1e88",
+        "observedAt": "2026-10-16T21:57:59.496908+00:00",
+        "manifestPath": "README.md"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "news",
+      "name": "Bittrees News",
+      "summary": "Personal news curation and reviewed publication.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/news",
+      "publicUrl": "https://news.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/news/blob/00d3861fb1a5761ee1710fe62c13e4abb0d66222/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/news/blob/00d3861fb1a5761ee1710fe62c13e4abb0d66222/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "00d3861fb1a5761ee1710fe62c13e4abb0d66222",
+        "observedAt": "2026-10-16T21:57:59.496908+00:00",
+        "manifestPath": "README.md"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "tld",
+      "name": "Bittrees TLD",
+      "summary": "Domain administration and unsigned controller-policy preparation.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/tld",
+      "publicUrl": "https://tld.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/tld/blob/4715905e235021f53815bbdbbaff44f29f87d320/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/tld/blob/4715905e235021f53815bbdbbaff44f29f87d320/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "4715905e235021f53815bbdbbaff44f29f87d320",
+        "observedAt": "2026-10-16T21:57:59.496908+00:00",
+        "manifestPath": "README.md"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "ai",
+      "name": "Bittrees AI",
+      "summary": "Local AI companion and scoped workflow coordination.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/ai",
+      "publicUrl": "https://ai.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/ai/blob/bb68c0b0b9229ec48e8a69aa7dcfb8e3cb355ed1/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/ai/blob/bb68c0b0b9229ec48e8a69aa7dcfb8e3cb355ed1/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "bb68c0b0b9229ec48e8a69aa7dcfb8e3cb355ed1",
+        "observedAt": "2026-10-16T21:57:59.496908+00:00",
+        "manifestPath": "README.md"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
+    },
+    {
+      "id": "workflow",
+      "name": "Bittrees Workflows",
+      "summary": "Source-owned workflow progress and coordination.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/workflow",
+      "publicUrl": "https://workflow.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/workflow/blob/871cc145e2d72c770e14ae05ed24a5be5f822f2c/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/workflow/blob/871cc145e2d72c770e14ae05ed24a5be5f822f2c/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "871cc145e2d72c770e14ae05ed24a5be5f822f2c",
+        "observedAt": "2026-10-16T21:57:59.496908+00:00",
+        "manifestPath": "README.md"
+      },
+      "lifecycle": "preview",
+      "health": {
+        "status": "unverified",
+        "checkedAt": null
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
     }
   ],
   "sync": {
