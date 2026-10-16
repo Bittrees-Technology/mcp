@@ -1,17 +1,18 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-16T22:00:00Z",
+  "reviewedAt": "2026-10-16T21:57:59.496908+00:00",
   "connections": [
     {
       "projectId": "crm",
       "transport": "mcp",
       "endpoint": "https://crm.bittrees.org/api/integrations/datasets/mcp",
       "verification": "source-inspected",
-      "source": "https://github.com/Bittrees-Technology/crm/blob/d1e3e9cd75a1b67d8d8fe0b106dd2779f616c4e9/lib/project-automation.ts",
+      "source": "https://github.com/Bittrees-Technology/crm/blob/9e24caf5e8948af58ce6588646f52fac5761abfd/lib/project-automation.ts",
       "operations": {
         "read": [
           "projects.list",
           "project.read",
+          "tasks.inventory",
           "tasks.list",
           "dataset.read",
           "qualification.context"
@@ -36,7 +37,7 @@
           "qualification.sync"
         ]
       },
-      "boundary": "Dataset and current project grants required. Task tools cover owner-assigned AI draft/review tasks only; ordinary confirmations need separate preparation. Completion saves a note and finishes only the claimed task."
+      "boundary": "Dataset and current project grants required. Inventory reads owner-assigned ordinary and AI tasks directly linked to a connected project, with pagination and eligibility reasons. Claim/finish cover AI draft/review tasks only. Unassigned supplier confirmations need separate preparation. Completion saves a note and finishes only the claimed task."
     },
     {
       "projectId": "calendar",

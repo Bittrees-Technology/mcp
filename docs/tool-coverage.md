@@ -8,7 +8,7 @@ Use the existing app connection and its live `initialize` / `tools/list` before 
 
 | App | Tool route | Limits / next gap |
 | --- | --- | --- |
-| CRM | Native dataset MCP: task lifecycle, dataset and qualification; managed supplier proposal MCP | Ordinary-task inventory and supplier preparation are being added separately; current project grant required |
+| CRM | Native dataset MCP: task lifecycle, dataset and qualification; managed supplier proposal MCP | Paginated ordinary-task inventory is available within connected projects; unassigned supplier preparation remains a gap; current project grant required |
 | Calendar | Native MCP: read, save, delete, source deadlines, availability | Source access checked independently; no invitation email |
 | News | Native MCP: reading, curation and reviewed publication | Publication approvals preserved; Acer model configuration untouched |
 | TLD | Native MCP: policy reading, validation and unsigned preparation | No signing, Safe submission or execution |
