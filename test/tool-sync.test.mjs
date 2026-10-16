@@ -24,3 +24,8 @@ test('a valid empty manifest removes obsolete tools while keeping project covera
  assert.equal(next.report.apps[0].toolCount,0);
  assert.equal(next.report.state,'synced');
 });
+
+test('duplicate or ambiguous routes cannot change an exact tool lookup',()=>{
+ const m=structuredClone(manifest);m.connections.push(structuredClone(m.connections[0]));assert.throws(()=>validateToolManifest(m,source));
+ const n=structuredClone(manifest);n.connections[1].operations.read=['tasks.list'];assert.throws(()=>validateToolManifest(n,source));
+});
