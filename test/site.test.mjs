@@ -8,7 +8,7 @@ import{createMcpHandler}from'../src/service/http.mjs';
 test('standalone pages, workspace assets and service boundaries',async()=>{
  const server=createServer(createMcpHandler({engine:new Engine({transaction:async fn=>fn(emptyState())})}));server.listen(0,'127.0.0.1');await once(server,'listening');const base=`http://127.0.0.1:${server.address().port}`;
  try{
-  for(const path of ['/','/connect','/projects','/automations','/rules','/status','/reference','/assets/site.css','/assets/workspace.js']){
+  for(const path of ['/','/connect','/projects','/automations','/rules','/status','/reference','/assets/site.css','/assets/workspace.js','/assets/workspace-polling.js']){
    const r=await fetch(base+path);assert.equal(r.status,200,path);const text=await r.text();assert.ok(text.length>100);assert.match(r.headers.get('content-security-policy'),/connect-src 'self'/);
    if(path==='/')assert.match(text,/The connection layer/);
    if(path==='/automations')assert.match(text,/id="workspace" hidden/);

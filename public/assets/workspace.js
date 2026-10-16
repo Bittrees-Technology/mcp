@@ -1,3 +1,4 @@
+const { startWorkspacePolling, workspacePollInterval } = globalThis.BittreesWorkspacePolling;
 let token = '', state = null, busy = false, generation = 0;
 let pageKind = document.querySelector('[data-workspace-page]').dataset.workspacePage;
 let setupKey = crypto.randomUUID(), aiConnections = [], consentId = '', consentTimer, consentTurn = 0;
@@ -180,6 +181,7 @@ async function refresh() {
  aiConnections = connections;
  state = data; $('workspace').hidden = false; $('login').hidden = true; $('connected').hidden = false;
  renderConnections(); renderProjects(); renderPermissions(); renderAutomations(); renderRules(); renderActivity();
+ polling.reset();
 }
 async function perform(fn) {
  if (busy) return; busy = true;
@@ -211,5 +213,9 @@ $('rule-form').onsubmit = e => { e.preventDefault(); const data = new FormData(e
 document.addEventListener('click', e => { const link = e.target.closest('a'); const href = link?.getAttribute('href'); if (['/rules', '/automations'].includes(href) && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0) { e.preventDefault(); history.pushState({}, '', href); setPage(href.slice(1)); } });
 window.addEventListener('popstate', () => { if (['/rules', '/automations'].includes(location.pathname)) setPage(location.pathname.slice(1)); });
 window.addEventListener('pagehide', disconnect);
-setInterval(() => { if (token && state && !busy && !document.hidden && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName)) perform(refresh); }, 15000);
+const polling = startWorkspacePolling({
+ refresh: () => perform(refresh),
+ interval: () => workspacePollInterval(state, aiConnections),
+ canPoll: () => token && state && !busy && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName),
+});
 setPage(pageKind);

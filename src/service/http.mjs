@@ -151,7 +151,7 @@ export function createMcpHandler({
           throw fail("Worker authentication required", 401);
         return send(200, await engine.tick(resolveActor));
       }
-      if (["GET","HEAD"].includes(req.method) && ["/assets/site.css","/assets/workspace.js"].includes(path)) {
+      if (["GET","HEAD"].includes(req.method) && ["/assets/site.css","/assets/workspace.js","/assets/workspace-polling.js"].includes(path)) {
         const content = await readFile(new URL(`../../public${path}`, import.meta.url), "utf8");
         return send(200, content, path.endsWith('.css') ? 'text/css' : 'text/javascript');
       }
