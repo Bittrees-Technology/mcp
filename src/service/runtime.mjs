@@ -1,3 +1,4 @@
+import {rolesObserver} from "./status.mjs";
 import { SourceConnections } from "./source-connections.mjs";
 import { AiWorker } from "./ai-worker.mjs";
 import { CATALOG } from "../ecosystem/catalog.mjs";
@@ -53,6 +54,8 @@ export async function runtime(env = process.env) {
     engine: new Engine(store, { aiWorker }),
     credentials,
     workerToken: env.MCP_WORKER_TOKEN,
+    cronToken: env.CRON_SECRET,
+    observeRoles: rolesObserver(),
     release:
       env.VERCEL_GIT_COMMIT_SHA ?? env.MCP_RELEASE_COMMIT ?? "development",
   });

@@ -1,3 +1,5 @@
+import { Operations } from "./operations.mjs";
+import {serviceStatus,statusPage} from "./status.mjs";
 import { functionCatalog } from "../ecosystem/tool-coverage.mjs";
 import { checkWorkflowAuthority, activeExpiry } from "./workflow-authority.mjs";
 import { createHash, timingSafeEqual } from "node:crypto";
@@ -13,7 +15,6 @@ import {
 import { scopedMcpResult } from "../ecosystem/mcp.mjs";
 import {
   renderConnectionPage,
-  renderCatalogStatus,
 } from "../ecosystem/ui.mjs";
 import { home, projects, workspace } from "../ecosystem/site.mjs";
 import { fail, authorize } from "./engine.mjs";
@@ -102,12 +103,16 @@ export function createMcpHandler({
   engine,
   credentials = [],
   workerToken = "",
+  cronToken = "",
+  observeRoles = async () => ({state:"not-checked",consumerEnforcement:"not-integrated"}),
   aiConnections,
   sourceConnections,
   catalog = CATALOG,
   release = "development",
 } = {}) {
   validateCredentials(credentials);
+  const operations = new Operations(engine);
+  const status = () => serviceStatus({catalog,operations,release,aiConfigured:Boolean(aiConnections),sourceConfigured:Boolean(sourceConnections?.connections.length),cronConfigured:Boolean(cronToken),observeRoles});
   const resolveActor = (tenant, subject) =>
     credentials.find(
       (a) =>
@@ -142,15 +147,16 @@ export function createMcpHandler({
       const path = url.pathname;
       if (req.headers.origin && req.headers.origin !== ORIGIN)
         throw fail("Origin not allowed", 403);
-      if (path === "/internal/tick") {
-        if (req.method !== "POST") throw fail("Method not allowed", 405);
+      if (path === "/internal/tick" || path === "/internal/cron") {
+        const cron = path === "/internal/cron", secret = cron ? cronToken : workerToken;
+        if (req.method !== (cron ? "GET" : "POST")) throw fail("Method not allowed", 405);
         if (
-          !workerToken ||
+          !secret ||
           hash(req.headers.authorization ?? "") !==
-            hash(`Bearer ${workerToken}`)
+            hash(`Bearer ${secret}`)
         )
           throw fail("Worker authentication required", 401);
-        return send(200, await engine.tick(resolveActor));
+        return send(200, await operations.tick(resolveActor, cron ? "vercel-cron" : "manual-worker"));
       }
       if (["GET","HEAD"].includes(req.method) && ["/assets/site.css","/assets/workspace.js","/assets/workspace-polling.js"].includes(path)) {
         const content = await readFile(new URL(`../../public${path}`, import.meta.url), "utf8");
@@ -162,6 +168,10 @@ export function createMcpHandler({
         return path === "/reference" ? send(200, referencePage(MANAGEMENT_TOOLS), "text/html") : send(200, serviceReference(MANAGEMENT_TOOLS));
       const actor = authenticate(req.headers, credentials);
       if (actor?.managed) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:propose");
+      if (["/status", "/status.json"].includes(path) && ["GET", "HEAD"].includes(req.method)) {
+        const report = await status();
+        return send(report.storage === "ready" ? 200 : 503, path === "/status" ? statusPage(report) : report, path === "/status" ? "text/html" : "application/json");
+      }
       if (path === "/health" && ["GET", "HEAD"].includes(req.method)) {
         await engine.store.transaction(() => null);
         return send(200, {
@@ -169,20 +179,21 @@ export function createMcpHandler({
           release,
           storage: "ready",
           catalogRevision: catalogRevision(catalog),
-          adapter: "public-catalog-context",
-          sensitiveActions: "not-implemented",
+          adapter: "public-context-and-scoped-source-connections",
+          sensitiveActions: sourceConnections?.connections.length ? "configured-source-authorization-required" : "not-configured",
+          aiAutomation: aiConnections ? "configured-not-end-to-end-verified" : "not-configured",
+          scheduler: await operations.snapshot(),
+          rolesExecution: "not-integrated",
         });
       }
       if (path === "/mcp-docs" && ["GET", "HEAD"].includes(req.method)) return send(200, `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect your client</title><style>body{font:18px/1.6 system-ui;max-width:900px;margin:auto;padding:28px;background:#f4f7f0;color:#19392b}a{color:#245e42}code{overflow-wrap:anywhere}</style></head><body><main><h1>Connect your client</h1><p>Start at <strong>mcp.bittrees.org</strong>, the central discovery entry point for Bittrees apps, tools and components. Existing Agent contribution clients retain their original endpoint during migration.</p><ol><li><a href="/connect">Choose your project selection</a> and download the connection configuration.</li><li>Add the URL in your agent client's remote MCP server settings. Use Streamable HTTP with JSON responses.</li><li>Run <code>search_bittrees_tools</code> to find functions across apps and <code>get_bittrees_tool</code> for an exact function. Use <code>list_bittrees_projects</code> to inspect app components, then <code>list_bittrees_tool_coverage</code> and <code>plan_bittrees_tool_use</code> to find app tools before using a browser. Use <code>get_bittrees_project</code> for public project context.</li></ol><p><a href="/reference">Browse all functions and endpoints</a></p><h2>Saved profiles and automation</h2><p>A service operator provisions a separate scoped credential. Send it in an Authorization bearer header, never a URL. Saved profile URLs reject selection overrides. New automations start paused; an authorized agent can inspect history and trigger, pause, resume or cancel them. Public catalog membership grants no execution permission.</p><p><a href="https://github.com/Bittrees-Technology/mcp/blob/main/README.md">Configuration and automation API guide</a> · <a href="/status">Service status</a> · <a href="https://agent.bittrees.org">Agent onboarding</a></p></main></body></html>`, "text/html");
       if (
         ["GET", "HEAD"].includes(req.method) &&
-        ["/", "/connect", "/status"].includes(path)
+        ["/connect"].includes(path)
       )
         return send(
           200,
-          path === "/status"
-            ? renderCatalogStatus(catalog)
-            : renderConnectionPage(url.searchParams, catalog),
+          renderConnectionPage(url.searchParams, catalog),
           "text/html",
         );
       if (
@@ -248,7 +259,7 @@ export function createMcpHandler({
         authorize(actor, "catalog:read");
         const history = await engine.act(actor, "history");
         const selected = selectionFromParams(new URLSearchParams("mode=ecosystem"));
-        return send(200, { ...history, aiConnectionsEnabled: Boolean(aiConnections), permissions: actor.permissions, projects: catalogView(catalog,selected).projects.filter(p=>actor.projectIds.includes(p.id)).map(p=>({id:p.id,name:p.name,summary:p.summary})) });
+        return send(200, { ...history, credentialExpiresAt:actor.expiresAt, capacity:await operations.privateMetrics(actor), aiConnectionsEnabled: Boolean(aiConnections), permissions: actor.permissions, projects: catalogView(catalog,selected).projects.filter(p=>actor.projectIds.includes(p.id)).map(p=>({id:p.id,name:p.name,summary:p.summary})) });
       }
       if (path === "/v1/history" && req.method === "GET")
         return send(200, await engine.act(actor, "history"));
