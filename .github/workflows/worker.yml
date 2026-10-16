@@ -1,7 +1,7 @@
-name: Standalone MCP automation worker
+name: MCP scheduler watchdog and manual worker
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '17,47 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -9,8 +9,7 @@ concurrency:
   group: mcp-automation-worker
   cancel-in-progress: false
 jobs:
-  tick:
-    if: vars.MCP_WORKER_ENABLED == 'true'
+  monitor:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     environment: mcp-production
@@ -18,16 +17,22 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - name: Process already-enabled automation work
+      - name: Manual recovery tick
+        if: github.event_name == 'workflow_dispatch'
         env:
           MCP_WORKER_TOKEN: ${{ secrets.MCP_WORKER_TOKEN }}
         run: |
           node --input-type=module <<'JS'
-          if (!process.env.MCP_WORKER_TOKEN) throw new Error('Missing dedicated worker credential');
-          const response = await fetch('https://mcp.bittrees.org/internal/tick', {
-            method: 'POST', redirect: 'error', signal: AbortSignal.timeout(120000),
-            headers: {Authorization: `Bearer ${process.env.MCP_WORKER_TOKEN}`}
-          });
-          if (!response.ok) throw new Error(`MCP worker failed (${response.status})`);
-          console.log('MCP worker completed');
+          if (!process.env.MCP_WORKER_TOKEN) throw Error('Missing worker credential');
+          const r=await fetch('https://mcp.bittrees.org/internal/tick',{method:'POST',redirect:'error',signal:AbortSignal.timeout(120000),headers:{Authorization:`Bearer ${process.env.MCP_WORKER_TOKEN}`}});
+          if(!r.ok)throw Error(`Worker failed (${r.status})`);
+          JS
+      - name: Alert through workflow failure when scheduler is stale
+        run: |
+          node --input-type=module <<'JS'
+          const r=await fetch('https://mcp.bittrees.org/health',{redirect:'error',signal:AbortSignal.timeout(15000)});
+          if(!r.ok)throw Error(`Gateway unavailable (${r.status})`);
+          const health=await r.json();
+          if(health.scheduler?.state!=='healthy')throw Error(`Scheduler requires attention: ${health.scheduler?.state??'missing heartbeat'}`);
+          console.log('Scheduler heartbeat is current');
           JS
