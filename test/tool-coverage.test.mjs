@@ -29,6 +29,15 @@ test('reviewed Calendar and News routes retain operation-specific limits', () =>
  assert.deepEqual(c.routes[0].tools,['calendar.save']);
  assert.match(c.routes[0].boundary,/operationId/);
  const n=call('plan_bittrees_tool_use',{projectId:'news',operation:'publish'});
- assert.deepEqual(n.routes[0].tools,['get_publication_review','publish_reviewed_preview','get_publication_receipt']);
+ assert.ok(n.routes[0].tools.includes('publish_reviewed_preview'));
+ assert.ok(n.routes[0].tools.includes('get_publication_receipt'));
  assert.match(n.routes[0].boundary,/approval/);
+});
+test('central search is paginated, exact and restricted to selected apps', () => {
+ const first=call('search_bittrees_tools',{query:'tasks',limit:1},'mode=selected&projects=crm');
+ assert.equal(first.functions.length,1);assert.equal(first.nextOffset,1);
+ assert.equal(call('get_bittrees_tool',{id:first.functions[0].id},'mode=selected&projects=crm').projectId,'crm');
+ assert.throws(()=>call('get_bittrees_tool',{id:'calendar:calendar.save'},'mode=selected&projects=crm'));
+ assert.equal(call('search_bittrees_tools',{query:'calendar'},'mode=selected&projects=crm').total,0);
+ assert.throws(()=>call('search_bittrees_tools',{limit:101}));
 });

@@ -1,0 +1,36 @@
+{
+  "schema": "bittrees.app-tools.v1",
+  "version": 1,
+  "projectId": "mcp",
+  "canonicalDiscovery": "https://mcp.bittrees.org/mcp",
+  "connections": [
+    {
+      "projectId": "mcp",
+      "transport": "mcp",
+      "endpoint": "https://mcp.bittrees.org/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/mcp/blob/main/src/service/http.mjs",
+      "operations": {
+        "read": [
+          "search_bittrees_tools",
+          "get_bittrees_tool",
+          "list_bittrees_tool_coverage",
+          "plan_bittrees_tool_use",
+          "list_bittrees_projects",
+          "get_bittrees_project",
+          "automation_history"
+        ],
+        "prepare": [
+          "prepare_bittrees_project_handoff"
+        ],
+        "update": [
+          "automation_trigger",
+          "automation_pause",
+          "automation_resume",
+          "automation_cancel"
+        ]
+      },
+      "boundary": "Public discovery respects project selection. Automation management requires an existing scoped service credential and current ownership/rules. Discovery never grants private access."
+    }
+  ]
+}

@@ -1093,41 +1093,41 @@
     {
       "id": "mail",
       "name": "Mail",
-      "summary": "Private mail integration; canonical repository and adapter unverified.",
+      "summary": "Wallet-authenticated mail with source-owned mailbox eligibility and message approvals.",
       "lanes": [
         "discovery"
       ],
       "availability": "repository",
-      "repositoryUrl": null,
-      "publicUrl": null,
+      "repositoryUrl": "https://github.com/Bittrees-Technology/mail",
+      "publicUrl": "https://mail.bittrees.org",
       "sourceEvidence": [
-        "plans/node-bittrees-product-plan.md"
+        "https://github.com/Bittrees-Technology/mail/blob/49a137c397a8ce9d4a38c728ecda0db2ba55394a/README.md"
       ],
       "aliases": [],
-      "affiliation": "pending",
-      "approval": "pending",
+      "affiliation": "bittrees",
+      "approval": "approved",
       "components": [],
       "affiliationEvidence": [
-        "Owner confirmation pending"
+        "https://github.com/Bittrees-Technology/mail/blob/49a137c397a8ce9d4a38c728ecda0db2ba55394a/README.md"
       ],
       "owner": {
-        "repositoryController": null,
+        "repositoryController": "Bittrees-Technology",
         "accountableContact": null,
         "contactStatus": "pending"
       },
       "source": {
-        "revision": null,
-        "observedAt": "2026-09-16T16:45:00Z",
-        "manifestPath": "bittrees.project.json"
+        "revision": "49a137c397a8ce9d4a38c728ecda0db2ba55394a",
+        "observedAt": "2026-10-16T22:10:50.126003+00:00",
+        "manifestPath": "README.md"
       },
-      "lifecycle": "planned",
+      "lifecycle": "preview",
       "health": {
         "status": "unverified",
         "checkedAt": null
       },
       "adapter": {
         "type": "catalog-resource",
-        "status": "pending",
+        "status": "ready",
         "privateReads": "not-implemented",
         "actions": "not-implemented"
       },
@@ -1136,7 +1136,7 @@
           "id": "project.context",
           "kind": "resource",
           "scope": "public:catalog",
-          "status": "pending"
+          "status": "ready"
         }
       ],
       "authScopes": []

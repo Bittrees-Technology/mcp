@@ -83,15 +83,15 @@ test("removal/reclassification is deterministic and removed pins remain explaina
 test("pending origins stay listed but cannot enter a selection or execute a tool", () => {
   assert.ok(CATALOG.projects.some((p) => p.approval === "pending"));
   assert.throws(
-    () => requireSelectedProject(CATALOG, profile("mode=ecosystem"), "mail"),
+    () => requireSelectedProject(CATALOG, profile("mode=ecosystem"), "ecrypt"),
     /not available/,
   );
   assert.throws(
     () =>
       rpc(
         "tools/call",
-        { name: "get_bittrees_project", arguments: { projectId: "mail" } },
-        "mode=selected&projects=mail",
+        { name: "get_bittrees_project", arguments: { projectId: "ecrypt" } },
+        "mode=selected&projects=ecrypt",
       ),
     /not available/,
   );
@@ -131,6 +131,7 @@ test("crafted cross-project resources, handoffs, private calls and URL arguments
   assert.deepEqual(
     listed.map((r) => r.uri),
     [
+      "https://mcp.bittrees.org/tool-catalog.json",
       "https://mcp.bittrees.org/catalog.json",
       "https://mcp.bittrees.org/v1/projects/agent",
     ],
