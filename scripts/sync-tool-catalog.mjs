@@ -1,6 +1,6 @@
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {reconcileToolManifests,atomicWriteJson} from '../src/ecosystem/tool-sync.mjs';
+import {reconcileToolManifests,atomicWriteJson,readPublicToolManifest} from '../src/ecosystem/tool-sync.mjs';
 const root=new URL('../',import.meta.url);
 const read=async path=>JSON.parse(await readFile(new URL(path,root),'utf8'));
 const previous=await read('data/tool-coverage.json'),policy=await read('data/tool-sources.json'),updates={};
@@ -10,6 +10,7 @@ async function github(path){const r=await fetch('https://api.github.com/'+path,{
 for(const source of policy.sources){
  if(!/^Bittrees-Technology\/[A-Za-z0-9_.-]+$/.test(source.repository)||!/^[-\w./]+$/.test(source.branch)||source.manifestPath!=='bittrees.tools.json')throw Error('Unapproved sync source');
  try{
+  if(source.publicManifestUrl){updates[source.id]=await readPublicToolManifest(source.publicManifestUrl);continue;}
   const commit=await github(`repos/${source.repository}/commits/${encodeURIComponent(source.branch)}`);
   if(!/^[a-f0-9]{40}$/.test(commit.sha))throw Error('Missing revision');
   const file=await github(`repos/${source.repository}/contents/bittrees.tools.json?ref=${commit.sha}`);

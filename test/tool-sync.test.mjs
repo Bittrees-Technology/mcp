@@ -29,3 +29,11 @@ test('duplicate or ambiguous routes cannot change an exact tool lookup',()=>{
  const m=structuredClone(manifest);m.connections.push(structuredClone(m.connections[0]));assert.throws(()=>validateToolManifest(m,source));
  const n=structuredClone(manifest);n.connections[1].operations.read=['tasks.list'];assert.throws(()=>validateToolManifest(n,source));
 });
+test('public metadata sync sends no GitHub or app credential and records content digest',async()=>{
+ const {readPublicToolManifest}=await import('../src/ecosystem/tool-sync.mjs');let seen;
+ const result=await readPublicToolManifest('https://roles.bittrees.org/.well-known/bittrees-tools.json',async(url,options)=>{seen=options;return Response.json(manifest);});
+ assert.equal(seen.headers.Authorization,undefined);assert.equal(seen.headers.authorization,undefined);assert.equal(seen.redirect,'error');assert.equal(result.revisionType,'manifest-sha256');assert.equal(result.revision.length,64);
+ assert.equal(reconcileToolManifests(previous,[source],{crm:result}).report.state,'synced');
+ await assert.rejects(()=>readPublicToolManifest('http://127.0.0.1/private'));
+ await assert.rejects(()=>readPublicToolManifest('https://roles.bittrees.org/.well-known/bittrees-tools.json',async()=>({ok:true,redirected:true})));
+});
