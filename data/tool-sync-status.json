@@ -1,4 +1,170 @@
 {
-  "state": "awaiting-first-sync",
-  "apps": []
+  "canonicalDiscovery": "https://mcp.bittrees.org/mcp",
+  "checkedAt": "2026-10-16T22:14:13.218Z",
+  "state": "partial",
+  "apps": [
+    {
+      "projectId": "agent",
+      "state": "synced",
+      "sourceRevision": "8de1c9e7f158cab399a4be6237a80ef6d0c24e30",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "bittrees-capital",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "bittrees-gov",
+      "state": "synced",
+      "sourceRevision": "22398ec29fa324a17eb05ff64125ed06b294ed11",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "bittrees-org",
+      "state": "synced",
+      "sourceRevision": "9d77128191ffb728a394a118a0f9886382982343",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "bittrees-research",
+      "state": "synced",
+      "sourceRevision": "34cf583902fb9d045a9545a72250b6e1734e8b8a",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "bounties",
+      "state": "synced",
+      "sourceRevision": "75d767bb5b9ed1c3d5abbdd266051146513b3d3a",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "chat",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "crypto-directory",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "nftfactory",
+      "state": "synced",
+      "sourceRevision": "6bdbeae45d82f26dec57cc9ac66da75efe5f5b48",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "tcp",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "roles",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "insights",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "crm",
+      "state": "synced",
+      "sourceRevision": "965893af90d6b2075d595fbd6d64cc553788b4b2",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 19
+    },
+    {
+      "projectId": "autonote",
+      "state": "synced",
+      "sourceRevision": "1581250d29019a8bf337c860cadbad6d59be664d",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 3
+    },
+    {
+      "projectId": "mercado",
+      "state": "synced",
+      "sourceRevision": "ce92a9c99775fe3f5428a03581a89c15022fa6d3",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 3
+    },
+    {
+      "projectId": "ecrypt",
+      "state": "synced",
+      "sourceRevision": "c574560024f5f5881951ca897634bf94a63b6368",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "cryptoalegre",
+      "state": "synced",
+      "sourceRevision": "ef9449092fe78e983e74fcf15cfecc4e9e167ff1",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 0
+    },
+    {
+      "projectId": "the-verse",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "mcp",
+      "state": "synced",
+      "sourceRevision": "f389ff94a5b97d4491b0feda448fe0e046fd4da9",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 12
+    },
+    {
+      "projectId": "calendar",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "news",
+      "state": "synced",
+      "sourceRevision": "da289bff5aa04c31c13135c1fe14c34b7a720bb0",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "toolCount": 23
+    },
+    {
+      "projectId": "tld",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "ai",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "workflow",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    },
+    {
+      "projectId": "mail",
+      "state": "unavailable-or-invalid",
+      "checkedAt": "2026-10-16T22:14:13.218Z",
+      "retainedPrevious": true
+    }
+  ]
 }
