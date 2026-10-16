@@ -17,7 +17,7 @@ export class Operations {
       await this.store.transaction(state=>{
         const w=state.operations?.worker;if(w?.attemptId!==id)return;
         const finishedAt=this.clock();
-        Object.assign(w,{state:'succeeded',leaseUntil:0,finishedAt,lastSuccessAt:finishedAt,lastError:null,
+        Object.assign(w,{...(source==='vercel-cron'?{lastCronSuccessAt:finishedAt}:{}),state:'succeeded',leaseUntil:0,finishedAt,lastSuccessAt:finishedAt,lastError:null,
           samples:[...(w.samples??[]),{startedAt,finishedAt,source}].slice(-12)});
       });
       return result;
@@ -32,7 +32,8 @@ export class Operations {
       const age=w?.lastSuccessAt?Math.max(0,now-w.lastSuccessAt):null;
       const samples=w?.samples??[];
       return {state:!w?'not-observed':w.state==='failed'?'failed':w.state==='running'&&w.leaseUntil<=now?'stalled':age===null?'awaiting-first-success':age>STALE_MS?'stale':'healthy',
-        expectedIntervalSeconds:CADENCE_MS/1000,staleAfterSeconds:STALE_MS/1000,
+        scheduledState:!w?.lastCronSuccessAt?'not-observed':now-w.lastCronSuccessAt>STALE_MS?'stale':'healthy',
+        lastScheduledSuccessAt:w?.lastCronSuccessAt??null,expectedIntervalSeconds:CADENCE_MS/1000,staleAfterSeconds:STALE_MS/1000,
         lastStartedAt:w?.startedAt??null,lastFinishedAt:w?.finishedAt??null,lastSuccessAt:w?.lastSuccessAt??null,
         ageSeconds:age===null?null:Math.floor(age/1000),source:w?.source??null,
         observedIntervalsSeconds:samples.slice(1).map((s,i)=>Math.round((s.startedAt-samples[i].startedAt)/1000)),

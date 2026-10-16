@@ -33,6 +33,6 @@ jobs:
           const r=await fetch('https://mcp.bittrees.org/health',{redirect:'error',signal:AbortSignal.timeout(15000)});
           if(!r.ok)throw Error(`Gateway unavailable (${r.status})`);
           const health=await r.json();
-          if(health.scheduler?.state!=='healthy')throw Error(`Scheduler requires attention: ${health.scheduler?.state??'missing heartbeat'}`);
+          if(health.scheduler?.state!=='healthy'||health.scheduler?.scheduledState!=='healthy')throw Error(`Scheduler requires attention: ${health.scheduler?.state??'missing heartbeat'}`);
           console.log('Scheduler heartbeat is current');
           JS

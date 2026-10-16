@@ -38,3 +38,9 @@ test('workspace metrics never include another owner',async()=>{
  f.state.audit=[{tenant:'b',subject:'b'}];
  assert.deepEqual(await f.operations.privateMetrics({tenant:'a',subject:'a'}),{runs:1,auditEntries:0,oldestPendingAt:10});
 });
+
+test('manual recovery does not conceal a stale scheduler',async()=>{
+ const f=fixture();await f.operations.tick(()=>null,'vercel-cron');
+ f.setNow(1000000+STALE_MS+1);await f.operations.tick(()=>null,'manual-worker');
+ const status=await f.operations.snapshot();assert.equal(status.state,'healthy');assert.equal(status.scheduledState,'stale');
+});
