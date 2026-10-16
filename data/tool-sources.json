@@ -13,7 +13,8 @@
       "repository": "Bittrees-Technology/Bittrees-Capital",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [],
+      "publicManifestUrl": "https://capital.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "bittrees-gov",
@@ -69,7 +70,8 @@
       "repository": "Bittrees-Technology/tcp",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [],
+      "publicManifestUrl": "https://tcp.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "roles",
@@ -93,14 +95,16 @@
             "credential": "Use an existing app-scoped credential through secret storage; never send credentials as tool arguments."
           }
         }
-      ]
+      ],
+      "publicManifestUrl": "https://roles.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "insights",
       "repository": "Bittrees-Technology/insights",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [],
+      "publicManifestUrl": "https://insights.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "crm",
@@ -197,7 +201,8 @@
           "transport": "mcp",
           "endpoint": "https://calendar.bittrees.org/api/mcp"
         }
-      ]
+      ],
+      "publicManifestUrl": "https://calendar.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "news",
@@ -221,7 +226,8 @@
           "transport": "mcp",
           "endpoint": "https://tld.bittrees.org/api/mcp"
         }
-      ]
+      ],
+      "publicManifestUrl": "https://tld.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "ai",
@@ -235,14 +241,16 @@
       "repository": "Bittrees-Technology/workflow",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [],
+      "publicManifestUrl": "https://workflow.bittrees.org/.well-known/bittrees-tools.json"
     },
     {
       "id": "mail",
       "repository": "Bittrees-Technology/mail",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [],
+      "publicManifestUrl": "https://mail.bittrees.org/.well-known/bittrees-tools.json"
     }
   ]
 }
