@@ -15,7 +15,8 @@
           "tasks.inventory",
           "tasks.list",
           "dataset.read",
-          "qualification.context"
+          "qualification.context",
+          "dataset.schema"
         ],
         "create": [
           "tasks.create",
@@ -77,7 +78,9 @@
           "list_articles",
           "get_preview",
           "get_publication_review",
-          "get_publication_receipt"
+          "get_publication_receipt",
+          "get_delivery",
+          "ranking_history"
         ],
         "create": [
           "generate_newspaper"
@@ -85,7 +88,13 @@
         "update": [
           "edit_preview",
           "edit_preview_item",
-          "set_preferences"
+          "set_preferences",
+          "set_newspaper",
+          "set_subscription",
+          "set_feed",
+          "set_ranking",
+          "curate_summary",
+          "refresh_rankings"
         ],
         "research": [
           "add_source",
@@ -95,10 +104,12 @@
         "publish": [
           "get_publication_review",
           "publish_reviewed_preview",
-          "get_publication_receipt"
+          "get_publication_receipt",
+          "publish_preview",
+          "publish_newspaper"
         ]
       },
-      "boundary": "Current read/curate/publish scopes are checked by News. Publication retains exact reviewed-content approval. This route does not change or select the Acer news model."
+      "boundary": "Current read/curate/publish scopes are checked by News. Publication retains exact reviewed-content approval. This route does not change or select the Acer news model. Delivery changes require explicit user intent and their separate scope. Prefer publish_reviewed_preview with an exact review and stable operation ID over legacy publication tools."
     },
     {
       "projectId": "tld",
@@ -183,9 +194,12 @@
           "source_crm_brief",
           "source_crm_preview",
           "source_crm_status"
+        ],
+        "complete": [
+          "source_crm_execute"
         ]
       },
-      "boundary": "Requires an existing owner-bound managed source connection, selected project and current source authority. Preview/status do not approve or publish. Never pass source tokens through tool arguments."
+      "boundary": "Requires an existing owner-bound managed source connection, selected project and current source authority. Preview/status do not approve or publish. Never pass source tokens through tool arguments. Execution additionally requires the existing managed sources:execute grant and current source policy; exceptions remain held."
     },
     {
       "projectId": "mercado",
@@ -197,9 +211,40 @@
         "prepare": [
           "source_mercado_preview",
           "source_mercado_status"
+        ],
+        "complete": [
+          "source_mercado_execute"
         ]
       },
-      "boundary": "Requires an existing owner-bound managed source connection, selected project and current source authority. Preview/status do not approve or publish. Never pass source tokens through tool arguments."
+      "boundary": "Requires an existing owner-bound managed source connection, selected project and current source authority. Preview/status do not approve or publish. Never pass source tokens through tool arguments. Execution additionally requires the existing managed sources:execute grant and current source policy; exceptions remain held."
+    },
+    {
+      "projectId": "mcp",
+      "transport": "mcp",
+      "endpoint": "https://mcp.bittrees.org/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/mcp/blob/main/src/service/http.mjs",
+      "operations": {
+        "read": [
+          "search_bittrees_tools",
+          "get_bittrees_tool",
+          "list_bittrees_tool_coverage",
+          "plan_bittrees_tool_use",
+          "list_bittrees_projects",
+          "get_bittrees_project",
+          "automation_history"
+        ],
+        "prepare": [
+          "prepare_bittrees_project_handoff"
+        ],
+        "update": [
+          "automation_trigger",
+          "automation_pause",
+          "automation_resume",
+          "automation_cancel"
+        ]
+      },
+      "boundary": "Public discovery respects project selection. Automation management requires an existing scoped service credential and current ownership/rules. Discovery never grants private access."
     }
   ]
 }

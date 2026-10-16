@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "agent",
+      "repository": "Bittrees-Technology/agent",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "bittrees-capital",
+      "repository": "Bittrees-Technology/Bittrees-Capital",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "bittrees-gov",
+      "repository": "Bittrees-Technology/Bittrees-Inc",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "bittrees-org",
+      "repository": "Bittrees-Technology/Bittrees-Org",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "bittrees-research",
+      "repository": "Bittrees-Technology/Bittrees-Research",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "bounties",
+      "repository": "Bittrees-Technology/bounties",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "chat",
+      "repository": "Bittrees-Technology/chirpy",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "crypto-directory",
+      "repository": "Bittrees-Technology/crypto-directory",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "nftfactory",
+      "repository": "Bittrees-Technology/nftfactory",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "tcp",
+      "repository": "Bittrees-Technology/tcp",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "roles",
+      "repository": "Bittrees-Technology/roles",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "local-mcp-adapter",
+          "endpoint": "https://roles.bittrees.org/api/integrations/ai",
+          "setup": {
+            "command": "node",
+            "args": [
+              "integrations/app-api-mcp.mjs"
+            ],
+            "environmentNames": [
+              "BITTREES_APP",
+              "BITTREES_APP_TOKEN"
+            ],
+            "app": "roles",
+            "credential": "Use an existing app-scoped credential through secret storage; never send credentials as tool arguments."
+          }
+        }
+      ]
+    },
+    {
+      "id": "insights",
+      "repository": "Bittrees-Technology/insights",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "crm",
+      "repository": "Bittrees-Technology/crm",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://crm.bittrees.org/api/integrations/datasets/mcp"
+        },
+        {
+          "transport": "managed-mcp",
+          "endpoint": "https://mcp.bittrees.org/mcp"
+        }
+      ]
+    },
+    {
+      "id": "autonote",
+      "repository": "Bittrees-Technology/autonote",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "local-mcp-adapter",
+          "endpoint": "https://autonote.bittrees.org/api/integrations/ai",
+          "setup": {
+            "command": "node",
+            "args": [
+              "integrations/app-api-mcp.mjs"
+            ],
+            "environmentNames": [
+              "BITTREES_APP",
+              "BITTREES_APP_TOKEN"
+            ],
+            "app": "autonote",
+            "credential": "Use an existing app-scoped credential through secret storage; never send credentials as tool arguments."
+          }
+        }
+      ]
+    },
+    {
+      "id": "mercado",
+      "repository": "Bittrees-Technology/mercado",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "managed-mcp",
+          "endpoint": "https://mcp.bittrees.org/mcp"
+        }
+      ]
+    },
+    {
+      "id": "ecrypt",
+      "repository": "Bittrees-Technology/ecrypt",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "cryptoalegre",
+      "repository": "Bittrees-Technology/cryptoalegre",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "the-verse",
+      "repository": "Bittrees-Technology/the-verse",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "mcp",
+      "repository": "Bittrees-Technology/mcp",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://mcp.bittrees.org/mcp"
+        }
+      ]
+    },
+    {
+      "id": "calendar",
+      "repository": "Bittrees-Technology/calendar",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://calendar.bittrees.org/api/mcp"
+        }
+      ]
+    },
+    {
+      "id": "news",
+      "repository": "Bittrees-Technology/news",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://news.bittrees.org/api/mcp"
+        }
+      ]
+    },
+    {
+      "id": "tld",
+      "repository": "Bittrees-Technology/tld",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://tld.bittrees.org/api/mcp"
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "repository": "Bittrees-Technology/ai",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "workflow",
+      "repository": "Bittrees-Technology/workflow",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    },
+    {
+      "id": "mail",
+      "repository": "Bittrees-Technology/mail",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": []
+    }
+  ]
+}

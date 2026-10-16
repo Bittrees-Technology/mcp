@@ -41,3 +41,13 @@ The source app rechecks authorization on every read. The adapter permits only fi
 4. Review the remaining apps individually. Preserve Bounties escrow/payment approval and governance/controller authority. Do not expose broad SQL, arbitrary HTTP, credentials or permission-grant tools.
 
 Human sign-in or granting new access may still require an app approval flow. Routine execution should not require an open browser after the scoped connection exists.
+
+## Central discovery and automatic sync
+
+`mcp.bittrees.org` is the canonical starting point for agents, even when an operation runs through an app's own authorized MCP connection. Use `search_bittrees_tools` across selected apps, `get_bittrees_tool` for an exact `app:function` ID, and `plan_bittrees_tool_use` for operation routing. `/tool-catalog.json` and the `selected-tool-directory` MCP resource contain the same selected-project function directory, project components, gaps and sync state. Current input schemas come from the app's authorized `tools/list`, not an assumed stale central copy.
+
+Each allowlisted repository publishes `bittrees.tools.json` with schema `bittrees.app-tools.v1`, version1, its fixed `projectId`, `canonicalDiscovery: https://mcp.bittrees.org/mcp`, and its public `connections` metadata. Update it alongside tool additions/removals. Empty connections explicitly declare a coverage gap; they do not infer private access or pretend an adapter exists.
+
+The central `Sync app tool manifests` workflow reconciles hourly, by manual dispatch, or on `bittrees-tools-updated` repository dispatch. Dispatch payloads never provide fetch URLs. Sources, branches, paths, connection endpoints, transports and local adapter setup are centrally allowlisted in `data/tool-sources.json`. Manifests are fetched at immutable commit revisions. Tool names and operation mappings may update within reviewed routes, but new endpoints/setup require a reviewed central change. This is metadata synchronization only; it cannot grant execution authority.
+
+An invalid or unavailable app retains its last known tools and publishes a warning without blocking other valid app updates. A valid empty manifest removes obsolete routes. Reports are retained as CI artifacts and source health appears in the directory. Existing catalog exclusions and pending publication states still apply.

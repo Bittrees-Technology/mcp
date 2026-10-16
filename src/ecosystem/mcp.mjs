@@ -1,4 +1,4 @@
-import { toolCoverage, planToolUse, OPERATIONS } from "./tool-coverage.mjs";
+import { toolCoverage, planToolUse, OPERATIONS, functionCatalog, searchFunctions, getFunction } from "./tool-coverage.mjs";
 import {
   CATALOG,
   catalogView,
@@ -9,6 +9,18 @@ import {
 } from "./catalog.mjs";
 const LEGACY_ORIGIN = "https://mcp.bittrees.org";
 export const ECOSYSTEM_TOOLS = [
+  {
+    name: "search_bittrees_tools",
+    description: "Search the central Bittrees tool directory across selected apps by function, task or operation. Returns exact tool IDs, app endpoints, source authority and coverage gaps; does not execute app tools.",
+    inputSchema: { type: "object", properties: { query: {type:"string",maxLength:200}, operation: {type:"string",enum:OPERATIONS}, limit:{type:"integer",minimum:1,maximum:100}, offset:{type:"integer",minimum:0,maximum:10000} }, additionalProperties:false },
+    annotations: { readOnlyHint:true, openWorldHint:false },
+  },
+  {
+    name: "get_bittrees_tool",
+    description: "Read one exact app:function from the central directory, including connection setup, boundaries and where to discover its authoritative current input schema.",
+    inputSchema: { type:"object", properties:{id:{type:"string",maxLength:200}},required:["id"],additionalProperties:false },
+    annotations: { readOnlyHint:true, openWorldHint:false },
+  },
   {
     name: "list_bittrees_tool_coverage",
     description: "Inspect reviewed app MCP routes and gaps for selected projects. Prefer app tools over browser work. Source inspection is not live availability or permission.",
@@ -115,13 +127,14 @@ export function scopedMcpResult(
           resources: { listChanged: false, subscribe: false },
         },
         serverInfo: { name: "bittrees-ecosystem-gateway", version: "2.0.0" },
-        instructions: `This connection uses ${profile.mode} selection. Re-list resources to refresh the approved catalog. Use list_bittrees_tool_coverage and plan_bittrees_tool_use to prefer app MCP tools. No downstream permissions are granted.`,
+        instructions: `This connection uses ${profile.mode} selection. Re-list resources to refresh the approved catalog. Start at this central MCP: search_bittrees_tools, get_bittrees_tool, then plan_bittrees_tool_use. The selected-tool-directory resource describes registered functions and parts. No downstream permissions are granted.`,
       });
     case "tools/list":
       return result({ tools: ECOSYSTEM_TOOLS });
     case "resources/list":
       return result({
         resources: [
+          {uri: `${ORIGIN}/tool-catalog.json`, name:"selected-tool-directory", mimeType:"application/json"},
           {
             uri: `${ORIGIN}/catalog.json`,
             name: "selected-catalog",
@@ -148,6 +161,7 @@ export function scopedMcpResult(
         throw scopeError("Only canonical selected resource URIs are allowed");
       let data;
       if (url.pathname === "/catalog.json") data = view;
+      else if (url.pathname === "/tool-catalog.json") data = functionCatalog(view.projects);
       else {
         const match = url.pathname.match(/^\/v1\/projects\/([a-z0-9-]+)$/);
         if (!match)
@@ -173,6 +187,8 @@ export function scopedMcpResult(
         )
       )
         throw scopeError("Unsupported tool argument");
+      if (name === "search_bittrees_tools") return result(wrap(searchFunctions(view.projects,args)));
+      if (name === "get_bittrees_tool") return result(wrap(getFunction(view.projects,args.id)));
       if (name === "list_bittrees_tool_coverage") {
         const projects = args.projectId === undefined ? view.projects : [requireSelectedProject(catalog, profile, args.projectId)];
         return result(wrap(toolCoverage(projects)));

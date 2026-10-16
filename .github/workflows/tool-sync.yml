@@ -1,0 +1,46 @@
+name: Sync app tool manifests
+on:
+  schedule:
+    - cron: '41 * * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [bittrees-tools-updated]
+permissions:
+  contents: read
+concurrency:
+  group: central-tool-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Fetch only allowlisted manifests at immutable source commits
+        run: node scripts/sync-tool-catalog.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tool-sync-${{ github.run_id }}
+          path: output/tool-sync/
+          retention-days: 30
+      - name: Publish validated metadata and visible sync health
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/tool-coverage.json data/tool-sync-status.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'Sync app tool directory metadata'
+            git push origin HEAD:main
+          fi
