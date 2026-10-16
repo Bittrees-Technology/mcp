@@ -1,0 +1,204 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-10-16T22:00:00Z",
+  "connections": [
+    {
+      "projectId": "crm",
+      "transport": "mcp",
+      "endpoint": "https://crm.bittrees.org/api/integrations/datasets/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/crm/blob/d1e3e9cd75a1b67d8d8fe0b106dd2779f616c4e9/lib/project-automation.ts",
+      "operations": {
+        "read": [
+          "projects.list",
+          "project.read",
+          "tasks.list",
+          "dataset.read",
+          "qualification.context"
+        ],
+        "create": [
+          "tasks.create",
+          "dataset.append"
+        ],
+        "update": [
+          "tasks.update",
+          "dataset.save"
+        ],
+        "complete": [
+          "tasks.claim",
+          "tasks.finish"
+        ],
+        "research": [
+          "qualification.context",
+          "qualification.enrich"
+        ],
+        "sync": [
+          "qualification.sync"
+        ]
+      },
+      "boundary": "Dataset and current project grants required. Task tools cover owner-assigned AI draft/review tasks only; ordinary confirmations need separate preparation. Completion saves a note and finishes only the claimed task."
+    },
+    {
+      "projectId": "calendar",
+      "transport": "mcp",
+      "endpoint": "https://calendar.bittrees.org/api/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/calendar/blob/a9af58f6bc929612521e5af5a3a54a87bb9b1e88/lib/mcp.mjs",
+      "operations": {
+        "read": [
+          "calendar.list",
+          "calendar.get",
+          "calendar.sources",
+          "calendar.availability"
+        ],
+        "create": [
+          "calendar.save"
+        ],
+        "update": [
+          "calendar.save"
+        ],
+        "delete": [
+          "calendar.delete"
+        ]
+      },
+      "boundary": "Agent credential scopes and current source permissions required. Updates/deletes require revision. Creation uses a stable operationId. No invitation email is sent."
+    },
+    {
+      "projectId": "news",
+      "transport": "mcp",
+      "endpoint": "https://news.bittrees.org/api/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/news/blob/00d3861fb1a5761ee1710fe62c13e4abb0d66222/lib/mcp.ts",
+      "operations": {
+        "read": [
+          "get_connection",
+          "get_newspaper",
+          "list_articles",
+          "get_preview",
+          "get_publication_review",
+          "get_publication_receipt"
+        ],
+        "create": [
+          "generate_newspaper"
+        ],
+        "update": [
+          "edit_preview",
+          "edit_preview_item",
+          "set_preferences"
+        ],
+        "research": [
+          "add_source",
+          "refresh_source",
+          "ranking_history"
+        ],
+        "publish": [
+          "get_publication_review",
+          "publish_reviewed_preview",
+          "get_publication_receipt"
+        ]
+      },
+      "boundary": "Current read/curate/publish scopes are checked by News. Publication retains exact reviewed-content approval. This route does not change or select the Acer news model."
+    },
+    {
+      "projectId": "tld",
+      "transport": "mcp",
+      "endpoint": "https://tld.bittrees.org/api/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/tld/blob/4715905e235021f53815bbdbbaff44f29f87d320/lib/mcp-server.mjs",
+      "operations": {
+        "read": [
+          "controller_state",
+          "controller_proposals"
+        ],
+        "prepare": [
+          "controller_validate_policy",
+          "controller_validate_proposal",
+          "controller_prepare_policy"
+        ]
+      },
+      "boundary": "Requires fresh owner-issued credential and current TLD access. Prepare additionally requires write/manage access. Unsigned preparation only; never signs, submits or executes Safe transactions. Inspect proposals before retrying an uncertain preparation."
+    },
+    {
+      "projectId": "roles",
+      "transport": "local-mcp-adapter",
+      "endpoint": "https://roles.bittrees.org/api/integrations/ai",
+      "verification": "adapter-tested-source-inspected",
+      "source": "https://github.com/Bittrees-Technology/roles/blob/e2ab01da8161f6c191e7636ca10167ef789ad544/lib/ai-http.mjs",
+      "operations": {
+        "read": [
+          "roles.read_access",
+          "roles.read_policy"
+        ]
+      },
+      "boundary": "Existing Roles AI grant only. Policy reading additionally requires read_own_policy. No new grants or administration.",
+      "setup": {
+        "command": "node",
+        "args": [
+          "integrations/app-api-mcp.mjs"
+        ],
+        "environmentNames": [
+          "BITTREES_APP",
+          "BITTREES_APP_TOKEN"
+        ],
+        "app": "roles",
+        "credential": "Use an existing app-scoped credential through secret storage; never send credentials as tool arguments."
+      }
+    },
+    {
+      "projectId": "autonote",
+      "transport": "local-mcp-adapter",
+      "endpoint": "https://autonote.bittrees.org/api/integrations/ai",
+      "verification": "adapter-tested-source-inspected",
+      "source": "https://github.com/Bittrees-Technology/autonote/blob/562193c4be67e691d472a610b6df3851e96caeba/app/api/integrations/ai/[action]/route.ts",
+      "operations": {
+        "read": [
+          "autonote.read_transcript",
+          "autonote.review_status",
+          "autonote.review_receipt"
+        ]
+      },
+      "boundary": "Existing meeting-bound AutoNote AI grant only. Review status is not approval; receipts do not publish. No transcript access beyond the grant.",
+      "setup": {
+        "command": "node",
+        "args": [
+          "integrations/app-api-mcp.mjs"
+        ],
+        "environmentNames": [
+          "BITTREES_APP",
+          "BITTREES_APP_TOKEN"
+        ],
+        "app": "autonote",
+        "credential": "Use an existing app-scoped credential through secret storage; never send credentials as tool arguments."
+      }
+    },
+    {
+      "projectId": "crm",
+      "transport": "managed-mcp",
+      "endpoint": "https://mcp.bittrees.org/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/mcp/blob/a19ce2a/src/service/source-connections.mjs",
+      "operations": {
+        "research": [
+          "source_crm_brief",
+          "source_crm_preview",
+          "source_crm_status"
+        ]
+      },
+      "boundary": "Requires an existing owner-bound managed source connection, selected project and current source authority. Preview/status do not approve or publish. Never pass source tokens through tool arguments."
+    },
+    {
+      "projectId": "mercado",
+      "transport": "managed-mcp",
+      "endpoint": "https://mcp.bittrees.org/mcp",
+      "verification": "source-inspected",
+      "source": "https://github.com/Bittrees-Technology/mcp/blob/a19ce2a/src/service/source-connections.mjs",
+      "operations": {
+        "prepare": [
+          "source_mercado_preview",
+          "source_mercado_status"
+        ]
+      },
+      "boundary": "Requires an existing owner-bound managed source connection, selected project and current source authority. Preview/status do not approve or publish. Never pass source tokens through tool arguments."
+    }
+  ]
+}

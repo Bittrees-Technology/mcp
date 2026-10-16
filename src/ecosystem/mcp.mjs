@@ -1,3 +1,4 @@
+import { toolCoverage, planToolUse, OPERATIONS } from "./tool-coverage.mjs";
 import {
   CATALOG,
   catalogView,
@@ -8,6 +9,18 @@ import {
 } from "./catalog.mjs";
 const LEGACY_ORIGIN = "https://mcp.bittrees.org";
 export const ECOSYSTEM_TOOLS = [
+  {
+    name: "list_bittrees_tool_coverage",
+    description: "Inspect reviewed app MCP routes and gaps for selected projects. Prefer app tools over browser work. Source inspection is not live availability or permission.",
+    inputSchema: { type: "object", properties: { projectId: { type: "string" } }, additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
+  {
+    name: "plan_bittrees_tool_use",
+    description: "Find the reviewed MCP route for a selected app operation before using the browser. Returns tool names, connection and permission boundaries; executes nothing and grants no access.",
+    inputSchema: { type: "object", properties: { projectId: { type: "string" }, operation: { type: "string", enum: OPERATIONS } }, required: ["projectId", "operation"], additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
+  },
   {
     name: "list_bittrees_projects",
     description:
@@ -90,7 +103,7 @@ export function scopedMcpResult(
         selection: view.selection,
         catalogRevision: view.revision,
         instructions:
-          "Only selected public catalog resources are connected. Private reads and actions require future project adapters.",
+          "Use list_bittrees_tool_coverage and plan_bittrees_tool_use before browser work. This gateway exposes selected public metadata and reviewed routing guidance; private app tools require separate scoped app connections.",
         ttlMs: 0,
         cacheScope: "public",
       });
@@ -102,7 +115,7 @@ export function scopedMcpResult(
           resources: { listChanged: false, subscribe: false },
         },
         serverInfo: { name: "bittrees-ecosystem-gateway", version: "2.0.0" },
-        instructions: `This connection uses ${profile.mode} selection. Re-list resources to refresh the approved catalog. No downstream permissions are granted.`,
+        instructions: `This connection uses ${profile.mode} selection. Re-list resources to refresh the approved catalog. Use list_bittrees_tool_coverage and plan_bittrees_tool_use to prefer app MCP tools. No downstream permissions are granted.`,
       });
     case "tools/list":
       return result({ tools: ECOSYSTEM_TOOLS });
@@ -160,6 +173,14 @@ export function scopedMcpResult(
         )
       )
         throw scopeError("Unsupported tool argument");
+      if (name === "list_bittrees_tool_coverage") {
+        const projects = args.projectId === undefined ? view.projects : [requireSelectedProject(catalog, profile, args.projectId)];
+        return result(wrap(toolCoverage(projects)));
+      }
+      if (name === "plan_bittrees_tool_use") {
+        const project = requireSelectedProject(catalog, profile, args.projectId);
+        return result(wrap(planToolUse(project, args.operation)));
+      }
       if (name === "list_bittrees_projects") {
         if (args.query !== undefined && typeof args.query !== "string")
           throw scopeError("Invalid query");

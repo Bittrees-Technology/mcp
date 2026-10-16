@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { scopedMcpResult } from '../src/ecosystem/mcp.mjs';
+const call = (name, args={}, selection='mode=bittrees') => scopedMcpResult({jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}}, {url:'/mcp?'+selection}).result.structuredContent;
+test('coverage prefers MCP but never claims permission or live execution', () => {
+ const c=call('list_bittrees_tool_coverage',{projectId:'crm'});
+ assert.equal(c.policy.browserFallbackAutomatic,false);
+ assert.equal(c.projects[0].liveAvailability,'not-checked');
+ const p=call('plan_bittrees_tool_use',{projectId:'crm',operation:'complete'});
+ assert.deepEqual(p.routes[0].tools,['tasks.claim','tasks.finish']);
+ assert.equal(p.executionAllowed,false);
+ assert.match(p.routes[0].boundary,/only/);
+});
+test('coverage respects selected, excluded and pending projects', () => {
+ const c=call('list_bittrees_tool_coverage',{},'mode=selected&projects=crm');
+ assert.deepEqual(c.projects.map(p=>p.projectId),['crm']);
+ for(const projectId of ['calendar','mail','wallet']) assert.throws(()=>call('list_bittrees_tool_coverage',{projectId},'mode=selected&projects=crm'));
+ assert.throws(()=>call('plan_bittrees_tool_use',{projectId:'crm',operation:'read'},'mode=bittrees&exclude=crm'));
+});
+test('unknown coverage and operations cannot become an execution route', () => {
+ assert.equal(call('plan_bittrees_tool_use',{projectId:'autonote',operation:'publish'}).status,'coverage-gap');
+ assert.equal(call('plan_bittrees_tool_use',{projectId:'tld',operation:'publish'}).routes.length,0);
+ assert.throws(()=>call('plan_bittrees_tool_use',{projectId:'crm',operation:'grant'}));
+ assert.throws(()=>call('plan_bittrees_tool_use',{projectId:'crm',operation:'read',token:'secret'}));
+ assert.throws(()=>call('list_bittrees_tool_coverage',{url:'http://localhost'}));
+});
+test('reviewed Calendar and News routes retain operation-specific limits', () => {
+ const c=call('plan_bittrees_tool_use',{projectId:'calendar',operation:'create'});
+ assert.deepEqual(c.routes[0].tools,['calendar.save']);
+ assert.match(c.routes[0].boundary,/operationId/);
+ const n=call('plan_bittrees_tool_use',{projectId:'news',operation:'publish'});
+ assert.deepEqual(n.routes[0].tools,['get_publication_review','publish_reviewed_preview','get_publication_receipt']);
+ assert.match(n.routes[0].boundary,/approval/);
+});
