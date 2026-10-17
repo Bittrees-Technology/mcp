@@ -1,4 +1,4 @@
-import {operationPermission} from "./operation-registry.mjs";
+import {OPERATION_DEFINITIONS} from "./operation-registry.mjs";
 import { activeExpiry } from "./workflow-authority.mjs";
 import { randomUUID, createHash } from "node:crypto";
 import {
@@ -90,11 +90,11 @@ export class Engine {
   async act(actor, operation, input = {}) {
     return this.store.transaction(async (state) => {
       const now = this.clock();
-      authorize(actor, operationPermission(operation));
+      const definition=OPERATION_DEFINITIONS[operation];
+      if(!definition)throw fail("Unknown operation");
+      for(const permission of definition.permissions)authorize(actor,permission);
+      fields(input,Object.keys(definition.inputSchema.properties));
       if (operation === "automation.setup") {
-        authorize(actor, "profile:write");
-        authorize(actor, "rule:write");
-        fields(input, ["name", "projectId", "intervalSeconds", "idempotencyKey", "connectionId"]);
         const aiConnection = input.connectionId === undefined ? null : this.aiWorker?.connection(state, actor, input.connectionId);
         if (input.connectionId !== undefined && !aiConnection) throw fail("AI connections are not configured", 409);
         const tool = aiConnection ? "run_ai_template" : "get_bittrees_project";
@@ -118,7 +118,6 @@ export class Engine {
         return record;
       }
       if (operation === "profile.create") {
-        fields(input, ["selection"]);
         const selection = validateSelection(input.selection);
         const record = {
           id: randomUUID(),
@@ -132,7 +131,6 @@ export class Engine {
         return record;
       }
       if (operation === "profile.update") {
-        fields(input, ["id", "selection", "expectedRevision"]);
         const record = owned(state.profiles, input.id, actor);
         if (input.expectedRevision !== record.revision)
           throw fail("Profile revision conflict", 409);
@@ -142,14 +140,6 @@ export class Engine {
         return record;
       }
       if (operation === "rule.create" || operation === "rule.update") {
-        fields(input, [
-          "id",
-          "expectedVersion",
-          "name",
-          "projectIds",
-          "tools",
-          "enabled",
-        ]);
         if (
           !Array.isArray(input.projectIds) ||
           !input.projectIds.length ||
@@ -197,7 +187,6 @@ export class Engine {
         return record;
       }
       if (operation === "automation.create") {
-        fields(input, ["name", "profileId", "ruleId", "projectId", "tool", "trigger"]);
         owned(state.profiles, input.profileId, actor);
         owned(state.rules, input.ruleId, actor);
         if (
@@ -231,7 +220,6 @@ export class Engine {
         return record;
       }
       if (operation === "history") {
-        fields(input,["limit","cursor","auditCursor"]);
         const allRuns=Object.values(state.runs).filter(r=>owns(r,actor));
         const allAudit=state.audit.filter(r=>owns(r,actor));
         const paginate=(rows,cursor,timeField)=>{
@@ -249,7 +237,6 @@ export class Engine {
           ...(input.limit?{page:{limit:input.limit,nextCursor:runs.next,auditNextCursor:auditPage.next,totalRuns:allRuns.length,totalAudit:allAudit.length}}:{})};
       }
       if (operation === "ai.retry") {
-        fields(input, ["runId", "confirmed"]);
         if (!this.aiWorker || input.confirmed !== true) throw fail("Confirm AI retry", 409);
         const run = owned(state.runs, input.runId, actor);
         await this.aiWorker.authorizeEnqueue(state,run,state.automations[run.automationId],actor);
@@ -260,7 +247,6 @@ export class Engine {
       }
       const record = owned(state.automations, input.id, actor);
       if (["pause", "resume", "cancel"].includes(operation)) {
-        fields(input, ["id"]);
         if (record.status === "cancelled")
           throw fail("Cancelled automation cannot resume", 409);
         record.status = {
@@ -292,7 +278,6 @@ export class Engine {
         return record;
       }
       if (operation === "enqueue") {
-        fields(input, ["id", "idempotencyKey", "event"]);
         key(input.idempotencyKey);
         if (record.status !== "active")
           throw fail("Automation is paused or cancelled", 409);
