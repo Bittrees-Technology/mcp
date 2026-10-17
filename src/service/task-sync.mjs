@@ -40,7 +40,7 @@ export class TaskSync {
   envelope.data.projects=envelope.data.projects.filter(p=>projects.includes(p.projectId)&&actor.projectIds.includes(p.projectId));
   const remote=await this.rpc(actor,c,'projects.list',{},'workspace:projects','task:read');
   if(!Array.isArray(remote.projects)||remote.projects.length>300)throw fail('Invalid CRM projects response',502);
-  const mappings=remote.projects.filter(p=>p.tasks===true&&p.backlogSourceProjectId&&p.expiresAt&&Date.parse(p.expiresAt)>this.clock()).map(p=>({sourceProjectId:p.backlogSourceProjectId,sourceSiteUrl:p.backlogSourceSiteUrl??null,crmProjectId:p.id,workspaceId:p.workspaceId,approved:true,expiresAt:Math.min(Date.parse(p.expiresAt),c.expiresAt)}));
+  const mappings=remote.projects.filter(p=>p.backlogSourceProjectId&&p.expiresAt&&Date.parse(p.expiresAt)>this.clock()).map(p=>({sourceProjectId:p.backlogSourceProjectId,sourceSiteUrl:p.backlogSourceSiteUrl??null,crmProjectId:p.id,workspaceId:p.workspaceId,approved:true,expiresAt:Math.min(Date.parse(p.expiresAt),c.expiresAt)}));
   const plan=planTaskSync(envelope,{mappings,now:this.clock()});
   return {...plan,writeEnabled:false,canRequestImport:actor.permissions.includes('task-sync:write'),blocker:'Each import requires current Roles permission, exact CRM source mapping and conflict checks.',tasks:plan.tasks.map(t=>({...t,state:t.state==='source-contract-required'?'ready-for-permission-check':t.state}))};
  }

@@ -22,7 +22,7 @@ The configured actor and source grants must independently authorize these operat
 
 `MCP_TASK_SYNC_CONNECTIONS_JSON` is a server-only array, empty by default. Each approved connection has `tenant`, `subject`, `actorTokenHash`, a dedicated CRM dataset `token`, and numeric `expiresAt`. It must match an existing explicitly enrolled credential's `rolesAuthorityBinding`. Keep tokens outside source control and client configuration; do not reuse lead-import credentials without verifying the new scope.
 
-CRM `projects.list` must return `id`, `workspaceId`, `tasks:true`, exact `backlogSourceProjectId`/`backlogSourceSiteUrl`, and a valid `expiresAt`. Mapping is chosen by the source owner, never inferred from a fuzzy project-name match. A source project with no canonical site may map only through an explicit matching null-site identity.
+CRM `projects.list` must return `id`, `workspaceId`, exact `backlogSourceProjectId`/`backlogSourceSiteUrl`, and a valid `expiresAt`. Mapping is chosen by the source owner, never inferred from a fuzzy project-name match. A source project with no canonical site may map only through an explicit matching null-site identity.
 
 ## Retry and conflict behavior
 
@@ -35,3 +35,5 @@ The internal import ledger is bounded to 1,000 entries with operator review at c
 ## Validation and release prerequisites
 
 Gateway tests cover missing binding, changed source, scope restriction, fresh per-attempt denial, uncertain-response identity, source conflict and omission of owner-controlled fields. Source PR39 independently tests actual PostgreSQL idempotency/authorization/conflict behavior. Verify both final deployed revisions before configuring a connection. Replay one approved import, revoke permission and confirm the next attempt is denied before enabling unattended task orchestration.
+
+Ordinary backlog import is independent of CRM’s AI-task grant (`tasks`). An exact enabled backlog mapping may be used with `tasks:false`; the gateway must not require or enable unrelated AI-task access. Current Roles decisions, mapping expiry and CRM source authorization still apply.
