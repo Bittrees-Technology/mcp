@@ -1,3 +1,4 @@
+import {TaskSync} from "./task-sync.mjs";
 import {RolesConsumer} from "./roles-consumer.mjs";
 import {rolesObserver} from "./status.mjs";
 import { SourceConnections } from "./source-connections.mjs";
@@ -53,6 +54,7 @@ export async function runtime(env = process.env) {
   }
   return createMcpHandler({
     aiConnections,
+    taskSync:new TaskSync(store,{rolesConsumer,connections:JSON.parse(env.MCP_TASK_SYNC_CONNECTIONS_JSON || "[]")}),
     rolesReadiness:rolesConsumer.readiness(),
     sourceConnections: new SourceConnections([...JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]"), ...JSON.parse(env.MCP_QUALIFIED_CONNECTIONS_JSON || "[]")], fetch, rolesConsumer),
     engine: new Engine(store, { aiWorker }),

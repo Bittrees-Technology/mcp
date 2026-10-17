@@ -1,5 +1,5 @@
 const { startWorkspacePolling, workspacePollInterval } = globalThis.BittreesWorkspacePolling;
-let token = '', state = null, busy = false, generation = 0;
+let token = '', state = null, busy = false, generation = 0, browsingHistory = false;
 let pageKind = document.querySelector('[data-workspace-page]').dataset.workspacePage;
 let setupKey = crypto.randomUUID(), aiConnections = [], consentId = '', consentTimer, consentTurn = 0;
 const $ = id => document.getElementById(id);
@@ -181,6 +181,7 @@ function concealConsent() { consentTurn++; $('ai-approval-code').value = ''; $('
 window.addEventListener('blur', concealConsent);
 document.addEventListener('visibilitychange', () => { if (document.hidden) concealConsent(); });
 async function refresh() {
+ browsingHistory = false;
  const current = generation; const data = await request('/v1/workspace'); if (current !== generation || !token) return;
  let connections = [];
  if (data.aiConnectionsEnabled) connections = (await request('/v1/ai/connections')).connections;
@@ -223,8 +224,8 @@ window.addEventListener('pagehide', disconnect);
 const polling = startWorkspacePolling({
  refresh: () => perform(refresh),
  interval: () => workspacePollInterval(state, aiConnections),
- canPoll: () => token && state && !busy && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName),
+ canPoll: () => token && state && !busy && !browsingHistory && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName),
 });
 setPage(pageKind);
 
-$('older-activity').onclick = () => perform(async()=>{const older=await request('/v1/history?limit=50&cursor='+encodeURIComponent(state.page.nextCursor));state.runs=[...older.runs,...state.runs];state.page=older.page;renderActivity();});
+$('older-activity').onclick = () => perform(async()=>{const older=await request('/v1/history?limit=50&cursor='+encodeURIComponent(state.page.nextCursor));state.runs=[...older.runs,...state.runs];state.page=older.page;browsingHistory=true;renderActivity();notice('Viewing older activity. Choose Refresh activity to return to live updates.');});

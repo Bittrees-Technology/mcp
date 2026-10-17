@@ -1,3 +1,4 @@
+import {TASK_SYNC_TOOLS} from "./task-sync.mjs";
 import { ECOSYSTEM_TOOLS } from '../ecosystem/mcp.mjs';
 import { page } from '../ecosystem/site.mjs';
 import {MANAGEMENT_ROUTES, details} from './operation-registry.mjs';
@@ -29,7 +30,7 @@ export function serviceReference(managementTools) {
  ].map(([method,path,access,description,bodyFields])=>({method,path,access,description,...(bodyFields?{bodyFields}: {})}));
  return {
   schema:'bittrees.mcp.reference.v1',baseUrl:'https://mcp.bittrees.org',
-  tools:[...ECOSYSTEM_TOOLS.map(t=>({...t,access:'Public'})),...managementTools.map(({operation,permission,...t})=>({...t,access:permission}))],
+  tools:[...ECOSYSTEM_TOOLS.map(t=>({...t,access:'Public'})),...managementTools.map(({operation,permission,...t})=>({...t,access:permission})),...TASK_SYNC_TOOLS.map(({permission,...t})=>({...t,access:permission+"; configured task connection, exact source mapping and current Roles required"}))],
   endpoints,
   protocol:{transport:'Streamable HTTP with JSON responses',method:'POST',methods:['initialize','notifications/initialized','ping','tools/list','tools/call','resources/list','resources/read'],extensions:['server/discover (implementation-specific)'],negotiatedVersion:'2025-06-18',acceptedVersionHeaders:['2025-06-18','2025-03-26'],sse:false,batchRequests:false},
   selection:{modes:['selected','bittrees','ecosystem'],parameters:['mode','projects','exclude','profileVersion','profileRevision'],defaultMode:'ecosystem'},

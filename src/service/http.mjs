@@ -79,12 +79,13 @@ export function createMcpHandler({
   observeRoles = async () => ({state:"not-checked",consumerEnforcement:"not-integrated"}),
   aiConnections,
   sourceConnections,
+  taskSync,
   catalog = CATALOG,
   release = "development",
 } = {}) {
   validateCredentials(credentials);
   const operations = new Operations(engine);
-  const status = () => serviceStatus({catalog,operations,release,aiConfigured:Boolean(aiConnections),sourceConfigured:Boolean(sourceConnections?.connections.length),cronConfigured:Boolean(cronToken),rolesReadiness,observeRoles});
+  const status = () => serviceStatus({catalog,operations,release,aiConfigured:Boolean(aiConnections),sourceConfigured:Boolean(sourceConnections?.connections.length),taskSyncConfigured:Boolean(taskSync?.connections.length),cronConfigured:Boolean(cronToken),rolesReadiness,observeRoles});
   const resolveActor = (tenant, subject) =>
     credentials.find(
       (a) =>
@@ -358,6 +359,11 @@ export function createMcpHandler({
           throw fail("Unsupported notification");
         }
         const sourceProjects = resolveSelection(catalog, profile).projects.map(p => p.id);
+        if(message.method === "tools/call" && message.params?.name?.startsWith("task_sync_")) {
+          if(!taskSync)throw fail("Task sync is not configured",403);
+          const data=await taskSync.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
+          return send(200,{jsonrpc:"2.0",id:message.id,result:{structuredContent:data,content:[{type:"text",text:JSON.stringify(data)}]}});
+        }
         if (message.method === "tools/call" && message.params?.name?.startsWith("source_")) {
           if (actor?.managed && message.params.name.endsWith("_execute")) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:execute");
           if (!sourceConnections) throw fail("Source connections disabled", 403);
@@ -441,6 +447,7 @@ export function createMcpHandler({
           result.result.tools = [
             ...result.result.tools,
             ...(sourceConnections?.list(actor, sourceProjects) ?? []),
+            ...(taskSync?.list(actor, sourceProjects) ?? []),
             ...management.map(({ permission, operation, ...tool }) => tool),
           ];
         return send(200, result);

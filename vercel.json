@@ -5,7 +5,7 @@
   "functions": {
     "api/index.mjs": {
       "maxDuration": 120,
-      "includeFiles": "{data,schemas,public/assets}/**"
+      "includeFiles": "{data,schemas,migrations,public/assets}/**"
     }
   },
   "rewrites": [
