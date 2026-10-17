@@ -19,9 +19,28 @@ export const details = {
  cancel: ['automation:write', 'Cancel an automation and its queued/retrying runs. Cancellation is terminal.', 'id'],
  enqueue: ['automation:write', 'Queue a run of an active automation; duplicate keys return the same run.', 'id, idempotencyKey, event (for event triggers)'],
 };
+const string={type:"string"}, integer={type:"integer"}, object={type:"object"}, strings={type:"array",items:string};
+const schema=(properties,required=[])=>({type:"object",properties,required,additionalProperties:false});
+export const OPERATION_DEFINITIONS = {
+ "automation.setup":{inputSchema:schema({name:{type:"string",maxLength:100},projectId:string,idempotencyKey:string,connectionId:string,intervalSeconds:{type:"integer",enum:[3600,21600,86400]}},["projectId","idempotencyKey"]),permissions:["automation:write","profile:write","rule:write"],sideEffect:"configuration"},
+ "profile.create":{inputSchema:schema({selection:object},["selection"]),permissions:["profile:write"],sideEffect:"configuration"},
+ "profile.update":{inputSchema:schema({id:string,selection:object,expectedRevision:integer},["id","selection","expectedRevision"]),permissions:["profile:write"],sideEffect:"configuration"},
+ "rule.create":{inputSchema:schema({id:string,expectedVersion:integer,name:string,projectIds:strings,tools:strings,enabled:{type:"boolean"}},["projectIds","tools","enabled"]),permissions:["rule:write"],sideEffect:"configuration"},
+ "rule.update":{inputSchema:schema({id:string,expectedVersion:integer,name:string,projectIds:strings,tools:strings,enabled:{type:"boolean"}},["id","expectedVersion","projectIds","tools","enabled"]),permissions:["rule:write"],sideEffect:"configuration"},
+ "automation.create":{inputSchema:schema({name:string,profileId:string,ruleId:string,projectId:string,tool:{enum:["get_bittrees_project"]},trigger:object},["profileId","ruleId","projectId","tool","trigger"]),permissions:["automation:write"],sideEffect:"configuration"},
+ history:{inputSchema:schema({limit:{type:"integer",minimum:1,maximum:100},cursor:string,auditCursor:string}),permissions:["automation:read"],sideEffect:"read"},
+ "ai.retry":{inputSchema:schema({runId:string,confirmed:{const:true}},["runId","confirmed"]),permissions:["automation:write"],sideEffect:"execution-request"},
+ enqueue:{inputSchema:schema({id:string,idempotencyKey:string,event:string},["id","idempotencyKey"]),permissions:["automation:write"],sideEffect:"execution-request"},
+ ...Object.fromEntries(["pause","resume","cancel"].map(operation=>[operation,{inputSchema:schema({id:string},["id"]),permissions:["automation:write"],sideEffect:"lifecycle"}])),
+};
+for(const [handler,definition] of Object.entries(OPERATION_DEFINITIONS)){
+ definition.handler=handler;
+ definition.route=Object.entries(MANAGEMENT_ROUTES).find(([,op])=>op===handler)?.[0]??(handler==='history'?'/v1/history':handler==='ai.retry'?'/v1/ai/runs/retry':null);
+ definition.availability=handler==='ai.retry'?'configured-ai-connection-and-current-authority':'scoped-workspace-permission';
+}
 export const MANAGEMENT_TOOLS = [
   {name:"automation_setup",description:"Save a paused automation with its selection and rule in one request. Enabling and execution require separate current permission.",
-    inputSchema:{type:"object",properties:{name:{type:"string",maxLength:100},projectId:{type:"string"},idempotencyKey:{type:"string"},connectionId:{type:"string"},intervalSeconds:{type:"integer",enum:[3600,21600,86400]}},required:["projectId","idempotencyKey"],additionalProperties:false},
+    inputSchema:OPERATION_DEFINITIONS["automation.setup"].inputSchema,
     permission:"automation:write",permissions:["automation:write","profile:write","rule:write"],operation:"automation.setup",sideEffect:"configuration"},
   {
     name: "automation_history",
@@ -38,20 +57,10 @@ export const MANAGEMENT_TOOLS = [
   ...["trigger", "pause", "resume", "cancel"].map((action) => ({
     name: `automation_${action}`,
     description: `${action} an existing automation within this project selection. Execution requires current permission and any source-specific consent.`,
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        ...(action === "trigger"
-          ? { idempotencyKey: { type: "string" }, event: { type: "string" } }
-          : {}),
-      },
-      required: action === "trigger" ? ["id", "idempotencyKey"] : ["id"],
-      additionalProperties: false,
-    },
+    inputSchema: OPERATION_DEFINITIONS[action === "trigger" ? "enqueue" : action].inputSchema,
     permission: "automation:write",
     operation: action === "trigger" ? "enqueue" : action,
   })),
 ];
 
-export const operationPermission = operation => operation === "history" ? "automation:read" : operation.startsWith("profile") ? "profile:write" : operation.startsWith("rule") ? "rule:write" : "automation:write";
+export const operationPermission = operation => OPERATION_DEFINITIONS[operation]?.permissions[0] ?? "automation:write";

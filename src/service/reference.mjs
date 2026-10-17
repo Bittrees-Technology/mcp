@@ -1,7 +1,7 @@
 import {TASK_SYNC_TOOLS} from "./task-sync.mjs";
 import { ECOSYSTEM_TOOLS } from '../ecosystem/mcp.mjs';
 import { page } from '../ecosystem/site.mjs';
-import {MANAGEMENT_ROUTES, details} from './operation-registry.mjs';
+import {MANAGEMENT_ROUTES, details,OPERATION_DEFINITIONS} from './operation-registry.mjs';
 export {MANAGEMENT_ROUTES} from './operation-registry.mjs';
 export function serviceReference(managementTools) {
  const endpoints = [
@@ -31,7 +31,7 @@ export function serviceReference(managementTools) {
  return {
   schema:'bittrees.mcp.reference.v1',baseUrl:'https://mcp.bittrees.org',
   tools:[...ECOSYSTEM_TOOLS.map(t=>({...t,access:'Public'})),...managementTools.map(({operation,permission,...t})=>({...t,access:permission})),...TASK_SYNC_TOOLS.map(({permission,...t})=>({...t,access:permission+"; configured task connection, exact source mapping and current Roles required"}))],
-  endpoints,
+  endpoints:endpoints.map(e=>{const op=Object.values(OPERATION_DEFINITIONS).find(d=>d.route===e.path);return op?{...e,inputSchema:op.inputSchema,sideEffect:op.sideEffect,availability:op.availability}:e}),
   protocol:{transport:'Streamable HTTP with JSON responses',method:'POST',methods:['initialize','notifications/initialized','ping','tools/list','tools/call','resources/list','resources/read'],extensions:['server/discover (implementation-specific)'],negotiatedVersion:'2025-06-18',acceptedVersionHeaders:['2025-06-18','2025-03-26'],sse:false,batchRequests:false},
   selection:{modes:['selected','bittrees','ecosystem'],parameters:['mode','projects','exclude','profileVersion','profileRevision'],defaultMode:'ecosystem'},
   limits:['Public context is available. Managed source tools and AI automation are conditional on server configuration and source permissions; inspect /status.json for current readiness.','Automation supports public context and separately configured, consented AI templates. New automations start paused.','Management tools require catalog:read plus their listed permission. Execution additionally requires automation:execute, current project authority, profile selection and an enabled rule.','Scope is enforced on the server. A credential may restrict public discovery but cannot expand project eligibility.','GET /mcp is not supported. There is no SSE stream, resource subscription or arbitrary URL proxy.'],

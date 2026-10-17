@@ -188,3 +188,9 @@ configuring a connection does not enable a schedule.
 ## Current readiness and function discovery
 
 Use `/status` for observed operational readiness and `/tools` to search approved app functions. See [Roles rollout](docs/roles-consumer-rollout.md) for mandatory source/AI role enforcement and remaining enrollment/approval requirements; deployment does not enroll an actor or grant permission.
+
+## October gateway consolidation
+
+Use [Explore](https://mcp.bittrees.org/explore) for projects and functions, Connect for client setup, Automations for workspace actions, and Status for evidence and blockers. `automation_setup` creates a paused automation atomically. `/v1/history?limit=50` offers owner-scoped activity pages. Shared operation definitions drive management route schemas, field guards and MCP tool definitions.
+
+See [execution and status rollout](docs/gateway-execution-rollout.md) and [guarded task imports](docs/task-sync-adapter.md). Task imports and AI production execution require separately approved actors, mappings and source consent; deploying code does not activate them.
