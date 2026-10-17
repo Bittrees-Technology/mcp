@@ -1,0 +1,26 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';
+import {Engine} from '../src/service/engine.mjs';import {AiWorker} from '../src/service/ai-worker.mjs';import {aiActor} from '../src/service/ai-secrets.mjs';import {emptyState} from '../src/service/store.mjs';import {CATALOG} from '../src/ecosystem/catalog.mjs';
+test('AI enqueue, dispatch and retry obtain distinct checks; queue binding survives credential removal',async()=>{
+ let actor={tenant:'test',subject:'test',tokenHash:'a'.repeat(64),audience:'https://mcp.bittrees.org',expiresAt:Date.now()+600000,projectIds:['agent'],permissions:['catalog:read','profile:write','rule:write','automation:write','automation:read','automation:execute'],rolesAuthorityBinding:'worker'};
+ let state={...emptyState(),aiDispatchVersion:1,aiDispatchOutbox:{},aiConnections:{}};
+ const connectionId=randomUUID(),permissionId=randomUUID();
+ state.aiConnections[connectionId]={id:connectionId,status:'connected',expiresAt:Date.now()+600000,actor:aiActor(actor),grant:{permissionId,deviceId:randomUUID(),templateId:randomUUID(),templateRevision:1,expiresAt:Date.now()+600000}};
+ const store={transaction:async fn=>{const copy=structuredClone(state);const result=await fn(copy);state=copy;return result;}};
+ let allow=true,effects=0,stages=[];
+ const rolesConsumer={execute:async(a,b,s,p,effect)=>{stages.push(s.stage);if(!allow)throw Error('revoked');return effect(structuredClone(p));}};
+ const receipt=(i,state)=>({id:i.command.id,grantId:i.grantId,permissionId:i.permissionId,state});
+ const transport={submit:async i=>{effects++;throw Error('lost reply');},inspect:async i=>receipt(i,'not_found')};
+ const worker=new AiWorker(store,{catalog:CATALOG,resolveActor:()=>actor,transport,rolesConsumer});const engine=new Engine(store,{aiWorker:worker});
+ const automation=await engine.act(actor,'automation.setup',{name:'Bound AI test',projectId:'agent',connectionId,idempotencyKey:'setup'});
+ await engine.act(actor,'resume',{id:automation.id});
+ allow=false;await assert.rejects(engine.act(actor,'enqueue',{id:automation.id,idempotencyKey:'denied'}));assert.equal(Object.keys(state.runs).length,0);assert.equal(effects,0);
+ allow=true;stages=[];const run=await engine.act(actor,'enqueue',{id:automation.id,idempotencyKey:'run'});assert.deepEqual(stages,['enqueue']);
+ await engine.tick(()=>actor);assert.deepEqual(stages,['enqueue','execute']);assert.equal(effects,1);
+ await engine.tick(()=>actor);assert.equal(stages.at(-1),'execute');assert.equal(state.runs[run.id].status,'awaiting_retry');
+ allow=false;await assert.rejects(engine.act(actor,'ai.retry',{runId:run.id,confirmed:true}));assert.equal(effects,1);
+ allow=true;await engine.act(actor,'ai.retry',{runId:run.id,confirmed:true});assert.equal(stages.at(-1),'enqueue');
+ allow=false;await engine.tick(()=>actor);assert.equal(effects,1);assert.equal(stages.at(-1),'execute');
+ delete actor.rolesAuthorityBinding;const count=stages.length;await engine.tick(()=>actor);assert.equal(stages.length,count);assert.equal(effects,1);
+ await assert.rejects(engine.act(actor,'enqueue',{id:automation.id,idempotencyKey:'downgrade'}),/binding changed/);
+ assert.equal(state.runs[run.id].rolesAuthorityBinding,'worker');
+});

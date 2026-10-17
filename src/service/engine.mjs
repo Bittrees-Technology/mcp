@@ -115,7 +115,7 @@ export class Engine {
         if(prior){if(prior.setupFingerprint!==fingerprint)throw fail("This save request has already been used; refresh before creating another",409);return prior;}
         const profile={id:randomUUID(),tenant:actor.tenant,subject:actor.subject,selection,revision:1};
         const rule={id:randomUUID(),name:`${name} permission`,tenant:actor.tenant,subject:actor.subject,versions:[{version:1,projectIds:[project.id],tools:[tool],enabled:true,createdAt:now}]};
-        const record={id:randomUUID(),name,tenant:actor.tenant,subject:actor.subject,profileId:profile.id,ruleId:rule.id,projectId:project.id,tool,...(aiConnection ? {connectionId:aiConnection.id} : {}),trigger:input.intervalSeconds?{type:"schedule",intervalSeconds:input.intervalSeconds}:{type:"manual"},status:"paused",nextAt:null,createdAt:now,setupKey:input.idempotencyKey,setupFingerprint:fingerprint};
+        const record={id:randomUUID(),name,tenant:actor.tenant,subject:actor.subject,profileId:profile.id,ruleId:rule.id,projectId:project.id,tool,...(aiConnection ? {connectionId:aiConnection.id} : {}),trigger:input.intervalSeconds?{type:"schedule",intervalSeconds:input.intervalSeconds}:{type:"manual"},status:"paused",rolesAuthorityBinding:actor.rolesAuthorityBinding??null,nextAt:null,createdAt:now,setupKey:input.idempotencyKey,setupFingerprint:fingerprint};
         state.profiles[profile.id]=profile;state.rules[rule.id]=rule;state.automations[record.id]=record;
         audit(state,actor,"profile.create",profile.id,now);
         audit(state,actor,"rule.create",rule.id,now,{version:1});
@@ -249,6 +249,7 @@ export class Engine {
         fields(input, ["runId", "confirmed"]);
         if (!this.aiWorker || input.confirmed !== true) throw fail("Confirm AI retry", 409);
         const run = owned(state.runs, input.runId, actor);
+        await this.aiWorker.authorizeEnqueue(state,run,state.automations[run.automationId],actor);
         this.aiWorker.outbox.retryInState(state, run.id);
         run.status = "dispatch_pending";
         audit(state, actor, operation, run.id, now);
@@ -302,7 +303,8 @@ export class Engine {
       throw fail("Unknown operation");
     });
   }
-  enqueue(state, record, idempotencyKey, now, actor) {
+  async enqueue(state, record, idempotencyKey, now, actor) {
+    if(record.tool==="run_ai_template" && (record.rolesAuthorityBinding??null)!==(actor?.rolesAuthorityBinding??null))throw fail("Automation Roles binding changed",403);
     const id = createHash("sha256")
       .update(
         JSON.stringify([
@@ -321,11 +323,16 @@ export class Engine {
       tenant: record.tenant,
       subject: record.subject,
       automationId: record.id,
+      rolesAuthorityBinding:actor.rolesAuthorityBinding??null,
       status: "queued",
       attempts: [],
       nextAt: now,
       createdAt: now,
     };
+    if(record.tool==="run_ai_template") {
+      if(!this.aiWorker)throw fail("AI worker unavailable",403);
+      await this.aiWorker.authorizeEnqueue(state,run,record,actor);
+    }
     state.runs[id] = run;
     audit(state, actor, "enqueue", id, now);
     return run;
@@ -344,13 +351,14 @@ export class Engine {
           scheduled < 20
         ) {
           // Missed intervals coalesce into one run, avoiding catch-up storms.
-          this.enqueue(
+          try {await this.enqueue(
             state,
             automation,
             `schedule-${automation.nextAt}`,
             now,
             actor ?? { tenant: automation.tenant, subject: automation.subject },
           );
+          } catch {audit(state,actor??{tenant:automation.tenant,subject:automation.subject},"schedule-denied",automation.id,now);}
           scheduled++;
           automation.nextAt = now + automation.trigger.intervalSeconds * 1000;
         }

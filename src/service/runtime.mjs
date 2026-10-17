@@ -1,3 +1,4 @@
+import {RolesConsumer} from "./roles-consumer.mjs";
 import {rolesObserver} from "./status.mjs";
 import { SourceConnections } from "./source-connections.mjs";
 import { AiWorker } from "./ai-worker.mjs";
@@ -33,6 +34,8 @@ export async function runtime(env = process.env) {
       },
     };
   const credentials = [...JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]"), ...JSON.parse(env.MCP_SOURCE_ACTORS_JSON ?? "[]"), ...JSON.parse(env.MCP_QUALIFIED_ACTORS_JSON ?? "[]")];
+  const rolesConsumer=new RolesConsumer({gatewayKey:env.MCP_AUTHORITY_REQUEST_PRIVATE_KEY,decisionKey:env.MCP_ROLES_DECISION_PUBLIC_KEY,
+    bindings:JSON.parse(env.MCP_ROLES_BINDINGS_JSON || '[]')});
   let aiConnections, aiWorker;
   if (aiConfigured) {
     const secrets = new AiSecrets(env.MCP_AI_ENCRYPTION_KEY);
@@ -44,13 +47,14 @@ export async function runtime(env = process.env) {
       },
     });
     aiConnections = new AiConnections(store, { client, secrets });
-    aiWorker = new AiWorker(store, { transport: client, catalog: CATALOG,
+    aiWorker = new AiWorker(store, { transport: client, catalog: CATALOG, rolesConsumer,
       resolveActor: (tenant, subject) => credentials.find((entry) => entry.tenant === tenant && entry.subject === subject),
     });
   }
   return createMcpHandler({
     aiConnections,
-    sourceConnections: new SourceConnections([...JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]"), ...JSON.parse(env.MCP_QUALIFIED_CONNECTIONS_JSON || "[]")]),
+    rolesReadiness:rolesConsumer.readiness(),
+    sourceConnections: new SourceConnections([...JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]"), ...JSON.parse(env.MCP_QUALIFIED_CONNECTIONS_JSON || "[]")], fetch, rolesConsumer),
     engine: new Engine(store, { aiWorker }),
     credentials,
     workerToken: env.MCP_WORKER_TOKEN,

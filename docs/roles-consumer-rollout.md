@@ -1,0 +1,15 @@
+# Roles source consumer rollout
+
+The source adapter includes an opt-in, dual-signed Roles execution check. It does not enroll identities or activate policy. Existing source-authorized connections keep their existing authorization path. They are not represented as Roles-controlled.
+
+An operator-reviewed credential opts in with `rolesAuthorityBinding`. The corresponding connection can pin the same binding to prevent omission. Once opted in, missing configuration, denial, expired proof, invalid signature or unavailable Roles stops the request with no legacy fallback. Existing workflow grants and source authorization remain required. A new request and decision are obtained immediately before each source operation; no allow is returned or cached for reuse.
+
+Protected environment inputs: MCP_AUTHORITY_REQUEST_PRIVATE_KEY (dedicated gateway key), MCP_ROLES_DECISION_PUBLIC_KEY (pinned Roles verification key), MCP_ROLES_BINDINGS_JSON (explicit enrolled agent/service identities only). Each binding contains id, tenant, subject, actorTokenHash, workspace, principal, credentialId, privateKey, delegationId (optional), and exact permissions with project/resource/action. Keys must be Ed25519; credentialId is the normalized SPKI PEM SHA256. Never retain a person's private key here.
+
+For the CRM and Mercado proposal adapters, resource is `operation:<actual operation UUID>` and action is `source:<preview|status|execute>`. Tenant/workspace come from reviewed server configuration; parameters digest is calculated from the actual adapter arguments. Permissions must match the exact operation. This is a proposed adapter mapping, not a grant. No production binding is provisioned: Roles reports zero enrolled actors and zero MCP grants. The read-only CRM brief uses resource `workspace:brief` and action `source:brief`, with tenant/workspace from the same binding; its operation UUID is request correlation only. Mutation proposal IDs remain the source’s stable operation IDs.
+
+AI automations persist their Roles binding on both automation and run. Enqueue and explicit retry check a fresh enqueue-stage decision; each dispatch and receipt reconciliation checks a fresh execute-stage decision after local actor, connection, selection and rule checks. The stable resource is `template:<deviceId>:<templateId>:<templateRevision>`; operation ID is the deterministic AI command ID. Removing or changing the actor binding denies queued work.
+
+Not complete: interactive person signing/enrollment UI; production actor enrollment and exact permission approval. Public project context remains public. The framework-only TLD policy proposal creates no actor permission and does not resolve these requirements.
+
+Verification helpers are copied from reviewed Roles commit 73a97846ab2c82846d3824476381e24660c5a69e. Tests use isolated keys and signed decisions, verify both request signatures, exact argument binding, new request IDs on retries, denial, expiry, wrong stage/audience/resource, missing source requirement, invalid signer, cross-owner access and excluded projects. Source adapter tests prove no fallback on revocation or missing configuration.
