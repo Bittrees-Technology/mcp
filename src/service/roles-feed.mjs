@@ -1,13 +1,15 @@
+import {configuredCredentials} from './credential-config.mjs';
+import {activeExpiry} from './workflow-authority.mjs';
 import {feedAuthorized,createRoleFeed} from './role-feed-core.mjs';
 import {validateCredentials} from './http.mjs';
 export function credentialRoleFeed(env=process.env,now=Date.now()){
- const credentials=JSON.parse(env.MCP_CREDENTIALS_JSON||'[]');
+ const credentials=configuredCredentials(env);
  if(!Array.isArray(credentials)||credentials.length>1000)throw Error('Invalid credential configuration');
  validateCredentials(credentials);
  const rows=[];
  for(const actor of credentials){
   if(actor.projectIds.some(p=>typeof p!=='string'||p.length>100)||actor.permissions.some(p=>typeof p!=='string'||p.length>100))throw Error('Invalid credential scopes');
-  for(const project of actor.projectIds)rows.push({identity:JSON.stringify([actor.tenant,actor.subject]),kind:'service',...(actor.expiresAt>now?{label:'Service identity'}:{}),scope:'project:'+project,permissions:actor.permissions.map(id=>({id,effect:actor.expiresAt>now?'allow':'deny',status:actor.expiresAt>now?'active':'suspended',expiresAt:new Date(actor.expiresAt).toISOString()}))});
+  for(const project of actor.projectIds)rows.push({identity:JSON.stringify([actor.tenant,actor.subject]),kind:'service',...(activeExpiry(actor,now)?{label:'Service identity'}:{}),scope:'project:'+project,permissions:actor.permissions.map(id=>({id,effect:activeExpiry(actor,now)?'allow':'deny',status:activeExpiry(actor,now)?'active':'suspended',expiresAt:actor.expiresAt === null ? null : new Date(actor.expiresAt).toISOString()}))});
  }
  return createRoleFeed('mcp.bittrees.org',rows,{env,now,coverageNote:'Configured tenant/subject service identities, project scopes, permissions and expiry. Tokens and token hashes are never exported. Execution also requires current profile/rule/adapter authorization; this feed does not execute jobs or evaluate those gates.'});
 }

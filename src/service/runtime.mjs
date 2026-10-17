@@ -1,3 +1,4 @@
+import {configuredCredentials} from './credential-config.mjs';
 import {TaskSync} from "./task-sync.mjs";
 import {RolesConsumer} from "./roles-consumer.mjs";
 import {rolesObserver} from "./status.mjs";
@@ -34,7 +35,7 @@ export async function runtime(env = process.env) {
         });
       },
     };
-  const credentials = [...JSON.parse(env.MCP_CREDENTIALS_JSON ?? "[]"), ...JSON.parse(env.MCP_SOURCE_ACTORS_JSON ?? "[]"), ...JSON.parse(env.MCP_QUALIFIED_ACTORS_JSON ?? "[]")];
+  const credentials = configuredCredentials(env);
   const rolesConsumer=new RolesConsumer({gatewayKey:env.MCP_AUTHORITY_REQUEST_PRIVATE_KEY,decisionKey:env.MCP_ROLES_DECISION_PUBLIC_KEY,
     bindings:JSON.parse(env.MCP_ROLES_BINDINGS_JSON || '[]')});
   let aiConnections, aiWorker;
