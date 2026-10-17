@@ -9,6 +9,13 @@
       "branch": "main",
       "manifestPath": "bittrees.project.json",
       "enabled": true
+    },
+    {
+      "id": "agent",
+      "repository": "Bittrees-Technology/agent",
+      "branch": "main",
+      "manifestPath": "bittrees.project.json",
+      "enabled": true
     }
   ]
 }

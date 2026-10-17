@@ -31,13 +31,14 @@ export class Operations {
       const now=this.clock(),w=state.operations?.worker;
       const age=w?.lastSuccessAt?Math.max(0,now-w.lastSuccessAt):null;
       const samples=w?.samples??[];
+      const deferredOccurrences=Object.values(state.runs).filter(r=>r.status==="deferred").length;
       return {state:!w?'not-observed':w.state==='failed'?'failed':w.state==='running'&&w.leaseUntil<=now?'stalled':age===null?'awaiting-first-success':age>STALE_MS?'stale':'healthy',
         scheduledState:!w?.lastCronSuccessAt?'not-observed':now-w.lastCronSuccessAt>STALE_MS?'stale':'healthy',
         lastScheduledSuccessAt:w?.lastCronSuccessAt??null,expectedIntervalSeconds:CADENCE_MS/1000,staleAfterSeconds:STALE_MS/1000,
         lastStartedAt:w?.startedAt??null,lastFinishedAt:w?.finishedAt??null,lastSuccessAt:w?.lastSuccessAt??null,
         ageSeconds:age===null?null:Math.floor(age/1000),source:w?.source??null,
         observedIntervalsSeconds:samples.slice(1).map((s,i)=>Math.round((s.startedAt-samples[i].startedAt)/1000)),
-        jobOutcomes:w?.lastResult??null, jobState:!w?.lastResult?'not-observed':(w.lastResult.blocked||w.lastResult.deferred||w.lastResult.jobFailures)?'needs-attention':'no-enqueue-blockers',
+        jobOutcomes:w?.lastResult??null, deferredOccurrences, jobState:deferredOccurrences?'needs-attention':!w?.lastResult?'not-observed':(w.lastResult.blocked||w.lastResult.deferred||w.lastResult.jobFailures)?'needs-attention':'no-enqueue-blockers',
         lastError:w?.lastError??null};
     });
   }

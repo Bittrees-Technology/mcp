@@ -33,6 +33,7 @@ function renderPermissions() {
  $('save-rule').disabled = busy || !allowed('rule:write') || !state.projects.length;
  $('setup-access').textContent = setup ? 'Save now, then enable when ready.' : 'Creating an automation needs profile, rule and automation access for at least one project. Your operator can update your key.';
  $('capacity-summary').textContent = `Access expires ${time(state.credentialExpiresAt)}. ${state.capacity?.pendingCount??0} pending runs; ${state.capacity?.blockedCount??0} blocked or failed. ${state.capacity?.oldestDueAt ? 'Oldest pending occurrence: '+time(state.capacity.oldestDueAt)+'.' : ''} ${state.capacity?.runs??0} saved runs. History is retained; contact your operator about capacity warnings.`;
+ $('capacity-summary').classList.toggle('attention', Boolean(state.credentialExpiresAt && state.credentialExpiresAt-Date.now()<86400000) || (state.capacity?.runs??0)>=8000 || (state.capacity?.auditEntries??0)>=8000 || (state.capacity?.blockedCount??0)>0);
  $('access-summary').textContent = `${state.projects.length} project${state.projects.length === 1 ? '' : 's'} available to this workspace`;
 }
 function preview() {
