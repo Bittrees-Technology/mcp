@@ -1,3 +1,4 @@
+import {MANAGEMENT_TOOLS} from "./operation-registry.mjs";
 import {toolDirectory} from "./tool-directory.mjs";
 import { Operations } from "./operations.mjs";
 import {serviceStatus,statusPage} from "./status.mjs";
@@ -21,37 +22,6 @@ import { home, projects, workspace } from "../ecosystem/site.mjs";
 import { fail, authorize } from "./engine.mjs";
 import { MANAGEMENT_ROUTES, serviceReference, referencePage } from "./reference.mjs";
 const ORIGIN = "https://mcp.bittrees.org";
-const MANAGEMENT_TOOLS = [
-  {
-    name: "automation_history",
-    description:
-      "Read your selected automation definitions, runs and audit history.",
-    inputSchema: {
-      type: "object",
-      properties: {},
-      additionalProperties: false,
-    },
-    permission: "automation:read",
-    operation: "history",
-  },
-  ...["trigger", "pause", "resume", "cancel"].map((action) => ({
-    name: `automation_${action}`,
-    description: `${action} an existing automation within this project selection. Configuration is prepared separately; sensitive adapters are unavailable.`,
-    inputSchema: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        ...(action === "trigger"
-          ? { idempotencyKey: { type: "string" }, event: { type: "string" } }
-          : {}),
-      },
-      required: action === "trigger" ? ["id", "idempotencyKey"] : ["id"],
-      additionalProperties: false,
-    },
-    permission: "automation:write",
-    operation: action === "trigger" ? "enqueue" : action,
-  })),
-];
 const hash = (s) => createHash("sha256").update(s).digest("hex");
 export function validateCredentials(credentials) {
   const identities = new Set();
@@ -384,7 +354,7 @@ export function createMcpHandler({
           throw fail("Invalid JSON-RPC request");
         if (message.id === undefined) {
           if (message.method === "notifications/initialized")
-            return send(202, {});
+            return send(202, undefined);
           throw fail("Unsupported notification");
         }
         const sourceProjects = resolveSelection(catalog, profile).projects.map(p => p.id);
@@ -395,7 +365,7 @@ export function createMcpHandler({
           return send(200, {jsonrpc:"2.0",id:message.id,result:{content:[{type:"text",text:JSON.stringify(data)}],structuredContent:data}});
         }
         const management = MANAGEMENT_TOOLS.filter((tool) =>
-          actor?.permissions.includes(tool.permission),
+          (tool.permissions??[tool.permission]).every(p=>actor?.permissions.includes(p)),
         );
         if (
           message.method === "tools/call" &&
@@ -413,7 +383,8 @@ export function createMcpHandler({
             )
           )
             throw fail("Invalid tool arguments");
-          if (tool.operation !== "history") {
+          if (tool.operation === "automation.setup" && !resolveSelection(catalog,profile).projects.some(p=>p.id===args.projectId)) throw fail("Project is outside this selection",403);
+          if (tool.operation !== "history" && tool.operation !== "automation.setup") {
             const target = await engine.store.transaction(
               (s) => s.automations[args.id],
             );

@@ -100,10 +100,12 @@ function renderRules() {
 }
 function renderActivity() {
  $('activity').replaceChildren();
- const labels = { accepted: 'Accepted by AI', dispatch_pending: 'Waiting to send to AI', uncertain: 'Checking whether AI accepted this request', dispatching: 'Contacting AI', awaiting_retry: 'Not received by AI — retry available', expired: 'Request expired', succeeded: 'Completed', denied: 'Blocked by permissions or rule', failed: 'Failed after retries', retrying: 'Retry scheduled', queued: 'Waiting for worker', cancelled: 'Cancelled' };
+ const labels = { deferred: 'Waiting to retry connection or authorization', accepted: 'Accepted by AI', dispatch_pending: 'Waiting to send to AI', uncertain: 'Checking whether AI accepted this request', dispatching: 'Contacting AI', awaiting_retry: 'Not received by AI — retry available', expired: 'Request expired', succeeded: 'Completed', denied: 'Blocked by permissions or rule', failed: 'Failed after retries', retrying: 'Retry scheduled', queued: 'Waiting for worker', cancelled: 'Cancelled' };
  for (const run of [...state.runs].reverse().slice(0, 20)) {
   const record = state.automations.find(a => a.id === run.automationId); const row = node('article', undefined, 'activity-row');
   row.append(node('strong', record ? nameOf(record) : 'Project update'), node('span', labels[run.status] ?? run.status), node('time', time(run.createdAt)));
+  if (run.status === 'deferred') row.append(node('p', `Nothing was sent. Next authorization check: ${time(run.nextAt)}. Automatic retries are limited to three attempts.`, 'muted'));
+  if (run.scheduledFor) row.append(node('p', `Scheduled for ${time(run.scheduledFor)}`, 'muted'));
   if (run.status === 'denied') row.append(node('p', 'Check the current rule and project access, then start a new run.', 'muted'));
   if (run.status === 'accepted') row.append(node('p', 'AI accepted the request. Check the companion for model progress and results.', 'muted'));
   if (run.status === 'awaiting_retry') row.append(action('Retry original request', async () => { await request('/v1/ai/runs/retry', { runId: run.id, confirmed: true }); await refresh(); notice('Original request queued for retry.'); }, allowed('automation:write')));
