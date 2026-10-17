@@ -43,3 +43,9 @@ The nine withdrawn products remain excluded from discovery, feeds, automatic enr
 ## Release and rollback
 
 CI must pass service/PostgreSQL and browser tests. Deploy the exact merged commit, verify `/explore`, Connect discovery, status, exclusions and notification semantics, and observe two genuine scheduled ticks. A manual tick cannot establish provider cadence. Roll back the UI commit if necessary, but never restore the legacy no-binding Roles bypass. No state migration is required by this rollout; additive run metadata and statuses are retained.
+
+## Agent backlog import preparation
+
+Run `node scripts/prepare-task-sync.mjs` to inspect the fixed, approved Agent `/tasks.json` feed without writing to CRM. An optional `MCP_TASK_MAPPING_FILE` supplies a reviewed list with `sourceProjectId`, exact `sourceSiteUrl` (null only for a catalog entry without a site), `crmProjectId`, `workspaceId`, `approved: true` and `expiresAt`. A valid mapping is preparation, not execution authority. Ambiguous, expired, excluded or mismatched sources are rejected or held. Changes to existing destination mappings and owner-edited source content require review. Missing tasks are retained.
+
+Current live feed validation found 66 tasks across 11 projects; all require approved destination mappings. CRM's inspected `tasks.create`/`tasks.update` schemas require `AI draft` or `AI review`, so they cannot represent the entire ordinary production backlog faithfully. Agent chat is coordinating a source capability for ordinary task import. The planner is implemented and tested; it intentionally has no CRM write transport and must not be described as an activated sync.

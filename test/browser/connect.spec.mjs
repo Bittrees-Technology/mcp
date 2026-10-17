@@ -10,7 +10,7 @@ test('shared connection journey, scoped discovery and mobile layout',async({page
  await expect(page.locator('#connection-url')).toHaveValue(/projects=crm/);
  await page.getByRole('button',{name:'Test connection',exact:true}).click();await expect(page.locator('#connection-result')).toContainText('Connected.');
  await page.locator('#project-filter').fill('CRM');await expect(page.locator('.project-choice:visible')).toHaveCount(1);
- for(const width of [1180,390]){await page.setViewportSize({width,height:900});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:`test-results/connect-${width}.png`,fullPage:true});}
+ for(const width of [1180,390]){await page.setViewportSize({width,height:900});await expect.poll(()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.locator('#test-connection').scrollIntoViewIfNeeded();await expect(page.locator('#test-connection')).toBeInViewport();await page.screenshot({path:`test-results/connect-${width}.png`,fullPage:true});}
  await page.goto('https://mcp.bittrees.org/explore');await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Explore'})).toHaveAttribute('aria-current','page');
  }finally{await new Promise(r=>server.close(r));}
 });

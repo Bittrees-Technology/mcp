@@ -125,7 +125,9 @@ function clearConsent() {
  $('ai-confirmed').checked = false;
 }
 function renderConnections() {
- $('ai-connections-panel').hidden = !state.aiConnectionsEnabled;
+ $('ai-connections-panel').hidden = false;
+ $('connection-readiness').textContent = state.aiConnectionsEnabled ? 'Approve one local template in AI, then choose it when creating an automation.' : 'Public project updates need no source connection. AI template connections are not configured; your operator must complete setup before you can request approval.';
+ $('ai-connect').hidden = !state.aiConnectionsEnabled;
  $('ai-connect').disabled = busy || !allowed('automation:write');
  $('ai-confirm-form').querySelector('button').disabled = busy || !allowed('automation:write');
  const selected = $('automation-connection').value;
