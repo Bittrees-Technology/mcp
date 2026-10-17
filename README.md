@@ -34,7 +34,8 @@ New definitions are **paused**; an authorized explicit resume is required.
 - Permissions: `catalog:read`, `profile:read`, `profile:write`, `rule:write`,
   `automation:read`, `automation:write`, `automation:execute`. Grant only needed
   permissions and explicit project IDs. No wildcard projects are supported.
-- `MCP_WORKER_TOKEN`: separate high-entropy worker credential for `/internal/tick`.
+- `MCP_WORKER_TOKEN`: separate high-entropy manual recovery credential for `/internal/tick`.
+- `CRON_SECRET`: dedicated Vercel scheduler credential for `/internal/cron`.
   It cannot configure rules or call profile APIs. Do not reuse client tokens.
 - `MCP_RELEASE_COMMIT`: immutable deployed source revision (deployment workflow).
 - Development only: `MCP_LOCAL_STATE=/absolute/path/state.json`, with
@@ -91,9 +92,11 @@ transient adapter failures retry. Denial is terminal, with a bounded generic rea
 instead of provider errors or secrets. Rule/profile revision is recorded per attempt.
 
 Scheduled missed intervals coalesce into one run. Resume starts a new schedule
-interval. The prepared GitHub worker runs every five minutes when
-`MCP_WORKER_ENABLED=true`; schedules are best effort at that cadence, not a
-real-time guarantee. Worker outage leaves durable work for later ticks. The worker
+interval. Vercel invokes `/internal/cron` every five minutes using `CRON_SECRET`.
+A three-minute durable lease prevents overlapping ticks. GitHub monitors heartbeat
+and supports manual recovery; it is no longer the primary scheduler.
+`/status.json` reports scheduled and manual heartbeat separately, marking
+scheduled evidence stale after 15 minutes. Timing is best effort. Worker outage leaves durable work for later ticks. The worker
 never enables an automation. Ten thousand runs/audit entries are a deliberate
 capacity cap; fail closed until reviewed backup/archival, rather than discard
 history. Single-row serialization is an initial modest-volume implementation.
@@ -181,3 +184,7 @@ are never blindly resent. Only an authoritative not-found receipt permits explic
 Cancellation stops unsent work; accepted or uncertain remote effects retain their
 honest status. User interfaces and actual two-service acceptance remain pending;
 configuring a connection does not enable a schedule.
+
+## Current readiness and function discovery
+
+Use `/status` for observed operational readiness and `/tools` to search approved app functions. See [Roles rollout](docs/roles-consumer-rollout.md) for opt-in source/AI enforcement and remaining enrollment/approval requirements; deployment does not enroll an actor or grant permission.
