@@ -187,4 +187,4 @@ configuring a connection does not enable a schedule.
 
 ## Current readiness and function discovery
 
-Use `/status` for observed operational readiness and `/tools` to search approved app functions. See [Roles rollout](docs/roles-consumer-rollout.md) for opt-in source/AI enforcement and remaining enrollment/approval requirements; deployment does not enroll an actor or grant permission.
+Use `/status` for observed operational readiness and `/tools` to search approved app functions. See [Roles rollout](docs/roles-consumer-rollout.md) for mandatory source/AI role enforcement and remaining enrollment/approval requirements; deployment does not enroll an actor or grant permission.

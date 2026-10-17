@@ -1,8 +1,8 @@
 # Roles source consumer rollout
 
-The source adapter includes an opt-in, dual-signed Roles execution check. It does not enroll identities or activate policy. Existing source-authorized connections keep their existing authorization path. They are not represented as Roles-controlled.
+Protected source and AI operations require a fresh, dual-signed Roles execution check. A source credential or MCP sign-in alone never permits execution. Unbound legacy credentials and queued runs are denied. This does not enroll identities, add grants or activate policy.
 
-An operator-reviewed credential opts in with `rolesAuthorityBinding`. The corresponding connection can pin the same binding to prevent omission. Once opted in, missing configuration, denial, expired proof, invalid signature or unavailable Roles stops the request with no legacy fallback. Existing workflow grants and source authorization remain required. A new request and decision are obtained immediately before each source operation; no allow is returned or cached for reuse.
+An operator-reviewed credential must have `rolesAuthorityBinding`. The corresponding connection can pin the same binding to prevent omission. Missing binding, missing configuration, denial, expired proof, invalid signature or unavailable Roles stops the request with no legacy fallback. Existing workflow grants and source authorization remain required. A new request and decision are obtained immediately before each source operation; no allow is returned or cached for reuse.
 
 Protected environment inputs: MCP_AUTHORITY_REQUEST_PRIVATE_KEY (dedicated gateway key), MCP_ROLES_DECISION_PUBLIC_KEY (pinned Roles verification key), MCP_ROLES_BINDINGS_JSON (explicit enrolled agent/service identities only). Each binding contains id, tenant, subject, actorTokenHash, workspace, principal, credentialId, privateKey, delegationId (optional), and exact permissions with project/resource/action. Keys must be Ed25519; credentialId is the normalized SPKI PEM SHA256. Never retain a person's private key here.
 

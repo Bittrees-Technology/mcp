@@ -575,7 +575,9 @@ test("AI outbox releases the store for dispatch and reconciles a lost response w
     assert.equal(sends, 1);
     const { AiWorker } = await import("../src/service/ai-worker.mjs");
     const { CATALOG } = await import("../src/ecosystem/catalog.mjs");
-    f.engine.aiWorker = new AiWorker(f.store, { transport, resolveActor: () => actor, catalog: CATALOG });
+    actor.rolesAuthorityBinding = 'synthetic-approved';
+    f.engine.aiWorker = new AiWorker(f.store, { transport, resolveActor: () => actor, catalog: CATALOG,
+      rolesConsumer: {execute: async (a,b,s,p,effect) => effect(p)} });
     const automation = await f.engine.act(actor, "automation.setup", {
       name: "Approved local template", projectId: "agent", connectionId: prepared.id, idempotencyKey: "ai-setup",
     });

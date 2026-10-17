@@ -15,7 +15,7 @@ import { CATALOG } from '../../src/ecosystem/catalog.mjs';
 test('connect an approved template, save paused, run and disconnect in the workspace', async ({ page }, info) => {
  const directory = await mkdtemp(join(tmpdir(), 'mcp-browser-'));
  const token = 'synthetic-workspace-key', ownerId = randomUUID(), templateId = randomUUID(), deviceId = randomUUID(), permissionId = randomUUID();
- const actor = { tenant:'test', subject:'operator', audience:'https://mcp.bittrees.org', expiresAt:Date.now()+3600000, projectIds:['agent'], permissions:['catalog:read','profile:read','profile:write','rule:write','automation:read','automation:write','automation:execute'], tokenHash:createHash('sha256').update(token).digest('hex') };
+ const actor = { rolesAuthorityBinding:'synthetic-approved', tenant:'test', subject:'operator', audience:'https://mcp.bittrees.org', expiresAt:Date.now()+3600000, projectIds:['agent'], permissions:['catalog:read','profile:read','profile:write','rule:write','automation:read','automation:write','automation:execute'], tokenHash:createHash('sha256').update(token).digest('hex') };
  const store = new FileStore(join(directory,'state.json'));
  const connections = new AiConnections(store, { secrets:new AiSecrets(randomBytes(32).toString('base64url')), client:{
   begin:async input=>({id:input.id,requestExpiresAt:Date.now()+300000}),
@@ -23,7 +23,7 @@ test('connect an approved template, save paused, run and disconnect in the works
   disconnect:async()=>({revoked:true}),
  }});
  const receipt = input=>({id:input.command.id,grantId:input.grantId,permissionId:input.permissionId,state:'accepted'});
- const engine = new Engine(store,{aiWorker:new AiWorker(store,{transport:{submit:async input=>receipt(input),inspect:async input=>receipt(input)},resolveActor:()=>actor,catalog:CATALOG})});
+ const engine = new Engine(store,{aiWorker:new AiWorker(store,{transport:{submit:async input=>receipt(input),inspect:async input=>receipt(input)},resolveActor:()=>actor,catalog:CATALOG,rolesConsumer:{execute:async(a,b,s,p,effect)=>effect(p)}})});
  const server=createServer(createMcpHandler({engine,credentials:[actor],aiConnections:connections}));
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  const base=`http://127.0.0.1:${server.address().port}`;
