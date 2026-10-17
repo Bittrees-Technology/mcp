@@ -53,3 +53,5 @@ Current live feed validation found 66 tasks across 11 projects; all require appr
 A subsequent adapter implementation adds `task_sync_preview`/`task_sync_execute` behind an empty-by-default dedicated connection configuration. See [task-sync-adapter.md](task-sync-adapter.md). The read-only planning command still never writes. Actual activation remains blocked on CRM source deployment, approved mapping and actor authority.
 
 Worker loops also reserve time for durable finalization: public scheduling/execution stops starting new work after 45 seconds, and AI dispatch starts only when a full transport lease plus database margin fits within the overall worker budget. Remaining work stays pending for the next tick; this does not promise a fixed delivery time.
+
+Project and tool reconciliation share a publication concurrency group. Before pushing a metadata commit, the publisher rebases onto current main and reruns validation; up to three non-forced push attempts handle concurrent code merges. Conflicts fail visibly and preserve the last published catalog.
