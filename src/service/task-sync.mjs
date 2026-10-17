@@ -67,8 +67,11 @@ export class TaskSync {
   let result;
   try{result=await this.rpc(actor,c,'tasks.import_source',prepared.payload,resource,'task:import',prepared.payload.operationId);}
   catch(error){await this.store.transaction(state=>{state.taskImports[identity].status=error.statusCode===403?'denied':'requires-reconciliation'});throw error}
-  if(typeof result.taskId!=='string'||!Number.isInteger(result.version)||result.contentHash!==task.fingerprint)throw fail('CRM acceptance requires reconciliation',502);
+  if(typeof result.taskId!=='string'||!Number.isInteger(result.version)||result.version<1||typeof result.created!=='boolean'||typeof result.unchanged!=='boolean'||result.contentHash!==task.fingerprint){
+   await this.store.transaction(state=>{state.taskImports[identity].status='requires-reconciliation'});
+   throw fail('CRM acceptance requires reconciliation',502);
+  }
   await this.store.transaction(state=>{state.taskImports[identity].status='accepted';state.taskImports[identity].result={taskId:result.taskId,version:result.version};state.taskImports[identity].checkedAt=this.clock()});
-  return {state:'accepted',...result};
+  return {state:'accepted',taskId:result.taskId,version:result.version,created:result.created,unchanged:result.unchanged,replayed:result.replayed===true};
  }
 }
