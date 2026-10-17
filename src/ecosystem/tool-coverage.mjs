@@ -83,6 +83,8 @@ export function searchFunctions(projects, args={}) {
   if(!Number.isInteger(limit)||limit<1||limit>100||!Number.isInteger(offset)||offset<0||offset>10000)throw scopeError('Invalid result page');
   const catalog=functionCatalog(projects), query=(args.query??'').toLowerCase().trim();
   const matches=catalog.functions.filter(f=>(!args.operation||f.operations.includes(args.operation))&&(!query||`${f.id} ${f.description} ${f.operations.join(' ')}`.toLowerCase().includes(query)));
+  const score=f=>!query?0:f.name.toLowerCase()===query?4:f.name.toLowerCase().startsWith(query)?3:f.name.toLowerCase().includes(query)?2:1;
+  matches.sort((a,b)=>score(b)-score(a)||a.id.localeCompare(b.id));
   return {canonicalDiscovery:catalog.canonicalDiscovery,functions:matches.slice(offset,offset+limit),total:matches.length,nextOffset:offset+limit<matches.length?offset+limit:null,gaps:catalog.gaps};
 }
 export function getFunction(projects, id) {

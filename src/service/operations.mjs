@@ -45,8 +45,10 @@ export class Operations {
     return this.store.transaction(state=>{
       const owns=row=>row.tenant===actor.tenant && row.subject===actor.subject;
       const runs=Object.values(state.runs).filter(owns);
-      const pending=runs.filter(r=>['queued','retrying','dispatch_pending','uncertain'].includes(r.status));
-      return {runs:runs.length,auditEntries:state.audit.filter(owns).length,
+      const pending=runs.filter(r=>['queued','retrying','deferred','dispatch_pending','uncertain'].includes(r.status));
+      return {runs:runs.length,auditEntries:state.audit.filter(owns).length, pendingCount:pending.length,blockedCount:runs.filter(r=>["denied","failed"].includes(r.status)).length,
+        oldestDueAt:pending.length?Math.min(...pending.map(r=>r.scheduledFor??r.nextAt??r.createdAt)):null,
+        recordLimit:10000, retention:"Operator-reviewed archival required; no automatic deletion",
         oldestPendingAt:pending.length?Math.min(...pending.map(r=>r.createdAt)):null};
     });
   }

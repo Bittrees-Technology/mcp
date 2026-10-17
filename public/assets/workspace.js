@@ -32,6 +32,7 @@ function renderPermissions() {
  $('save-automation').disabled = busy || !setup;
  $('save-rule').disabled = busy || !allowed('rule:write') || !state.projects.length;
  $('setup-access').textContent = setup ? 'Save now, then enable when ready.' : 'Creating an automation needs profile, rule and automation access for at least one project. Your operator can update your key.';
+ $('capacity-summary').textContent = `Access expires ${time(state.credentialExpiresAt)}. ${state.capacity?.pendingCount??0} pending runs; ${state.capacity?.blockedCount??0} blocked or failed. ${state.capacity?.oldestDueAt ? 'Oldest pending occurrence: '+time(state.capacity.oldestDueAt)+'.' : ''} ${state.capacity?.runs??0} saved runs. History is retained; contact your operator about capacity warnings.`;
  $('access-summary').textContent = `${state.projects.length} project${state.projects.length === 1 ? '' : 's'} available to this workspace`;
 }
 function preview() {
@@ -101,7 +102,7 @@ function renderRules() {
 function renderActivity() {
  $('activity').replaceChildren();
  const labels = { deferred: 'Waiting to retry connection or authorization', accepted: 'Accepted by AI', dispatch_pending: 'Waiting to send to AI', uncertain: 'Checking whether AI accepted this request', dispatching: 'Contacting AI', awaiting_retry: 'Not received by AI — retry available', expired: 'Request expired', succeeded: 'Completed', denied: 'Blocked by permissions or rule', failed: 'Failed after retries', retrying: 'Retry scheduled', queued: 'Waiting for worker', cancelled: 'Cancelled' };
- for (const run of [...state.runs].reverse().slice(0, 20)) {
+ for (const run of [...state.runs].reverse()) {
   const record = state.automations.find(a => a.id === run.automationId); const row = node('article', undefined, 'activity-row');
   row.append(node('strong', record ? nameOf(record) : 'Project update'), node('span', labels[run.status] ?? run.status), node('time', time(run.createdAt)));
   if (run.status === 'deferred') row.append(node('p', `Nothing was sent. Next authorization check: ${time(run.nextAt)}. Automatic retries are limited to three attempts.`, 'muted'));
@@ -113,6 +114,7 @@ function renderActivity() {
   $('activity').append(row);
  }
  if (!state.runs.length) $('activity').append(node('div', 'No runs yet. Enable an automation and choose Run now, or wait for its schedule.', 'work-empty'));
+ $('older-activity').hidden = !state.page?.nextCursor;
  $('history').textContent = JSON.stringify({ profiles: state.profiles, rules: state.rules, automations: state.automations, runs: state.runs, audit: state.audit }, null, 2);
 }
 function clearConsent() {
@@ -196,7 +198,7 @@ function setPage(kind) {
  $('workspace-description').textContent = rules ? 'Decide which projects an automation can read. Turn permissions on or off without editing code.' : 'Save a project update on a schedule, or run it when you need it.';
  $('switch-view').href = rules ? '/automations' : '/rules'; $('switch-view').textContent = rules ? 'View automations' : 'Manage rules';
  document.title = `${rules ? 'Rules' : 'Automations'} · Bittrees MCP`;
- document.querySelectorAll('header nav a').forEach(a => { if (a.getAttribute('href') === '/'+kind) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+ document.querySelectorAll('header nav a').forEach(a => { if (a.getAttribute('href') === '/automations') a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
 }
 function disconnect() {
  clearConsent(); aiConnections = []; $('ai-connections').replaceChildren();
@@ -221,3 +223,5 @@ const polling = startWorkspacePolling({
  canPoll: () => token && state && !busy && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement.tagName),
 });
 setPage(pageKind);
+
+$('older-activity').onclick = () => perform(async()=>{const older=await request('/v1/history?limit=50&cursor='+encodeURIComponent(state.page.nextCursor));state.runs=[...older.runs,...state.runs];state.page=older.page;renderActivity();});

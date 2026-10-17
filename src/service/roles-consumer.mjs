@@ -34,14 +34,15 @@ export class RolesConsumer {
         parametersDigest:createHash('sha256').update(canonical(parameters)).digest('hex'),issuedAt:this.clock(),principal:b.principal,
         credentialId,delegationId:b.delegationId??null,tenant:b.tenant,workspace:b.workspace,project:scope.project,resource:scope.resource,action:scope.action,stage:scope.stage??'execute'};
       const message=Buffer.from(requestMessage(request));
-      const response=await this.request(DECISION_ENDPOINT,{method:'POST',redirect:'error',signal:AbortSignal.timeout(4000),headers:{'content-type':'application/json'},
-        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature:sign(null,message,key).toString('base64')})});
+      let response;try { response=await this.request(DECISION_ENDPOINT,{method:'POST',redirect:'error',signal:AbortSignal.timeout(4000),headers:{'content-type':'application/json'},
+        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature:sign(null,message,key).toString('base64')})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
+      if([502,503,504].includes(response.status))throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});
       if(!response.ok)throw denied();
       const raw=await response.text();if(Buffer.byteLength(raw)>32768)throw denied();
       const decision=verifyDecision(JSON.parse(raw),request,this.decisionKey,this.clock());
       if(decision.allowed!==true)throw denied();
       // No reusable allow token escapes this function; invoke once immediately.
-    } catch {throw denied();}
+    } catch (error) {if(error.transient===true)throw error;throw denied();}
     return effect(parameters);
   }
 }

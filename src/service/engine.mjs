@@ -228,16 +228,24 @@ export class Engine {
         audit(state, actor, operation, record.id, now);
         return record;
       }
-      if (operation === "history")
-        return {
-          profiles: Object.values(state.profiles).filter((r) => owns(r, actor)),
-          rules: Object.values(state.rules).filter((r) => owns(r, actor)),
-          automations: Object.values(state.automations).filter((r) =>
-            owns(r, actor),
-          ),
-          runs: Object.values(state.runs).filter((r) => owns(r, actor)),
-          audit: state.audit.filter((r) => owns(r, actor)),
+      if (operation === "history") {
+        fields(input,["limit","cursor","auditCursor"]);
+        const allRuns=Object.values(state.runs).filter(r=>owns(r,actor));
+        const allAudit=state.audit.filter(r=>owns(r,actor));
+        const paginate=(rows,cursor,timeField)=>{
+          const ordered=rows.toSorted((a,b)=>b[timeField]-a[timeField] || b.id.localeCompare(a.id));
+          const index=cursor?ordered.findIndex(r=>r.id===cursor):-1;
+          if(cursor&&index<0)throw fail("History cursor not found",400);
+          const slice=ordered.slice(index+1,index+1+input.limit);
+          return {rows:slice.reverse(),next:index+1+input.limit<ordered.length?slice[0]?.id:null};
         };
+        if(input.limit!==undefined && (!Number.isInteger(input.limit)||input.limit<1||input.limit>100))throw fail("History limit must be 1 to 100");
+        if((input.cursor||input.auditCursor)&&input.limit===undefined)throw fail("History cursor requires a limit");
+        const runs=input.limit?paginate(allRuns,input.cursor,"createdAt"):null,auditPage=input.limit?paginate(allAudit,input.auditCursor,"at"):null;
+        return {profiles:Object.values(state.profiles).filter(r=>owns(r,actor)),rules:Object.values(state.rules).filter(r=>owns(r,actor)),
+          automations:Object.values(state.automations).filter(r=>owns(r,actor)),runs:runs?.rows??allRuns,audit:auditPage?.rows??allAudit,
+          ...(input.limit?{page:{limit:input.limit,nextCursor:runs.next,auditNextCursor:auditPage.next,totalRuns:allRuns.length,totalAudit:allAudit.length}}:{})};
+      }
       if (operation === "ai.retry") {
         fields(input, ["runId", "confirmed"]);
         if (!this.aiWorker || input.confirmed !== true) throw fail("Confirm AI retry", 409);

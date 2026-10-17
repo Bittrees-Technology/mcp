@@ -36,7 +36,7 @@ test('cron and manual secrets are separate; status reports configuration without
 test('workspace metrics never include another owner',async()=>{
  const f=fixture();f.state.runs={a:{tenant:'a',subject:'a',status:'queued',createdAt:10},b:{tenant:'b',subject:'b',status:'queued',createdAt:1}};
  f.state.audit=[{tenant:'b',subject:'b'}];
- assert.deepEqual(await f.operations.privateMetrics({tenant:'a',subject:'a'}),{runs:1,auditEntries:0,oldestPendingAt:10});
+ const metrics=await f.operations.privateMetrics({tenant:'a',subject:'a'});assert.equal(metrics.runs,1);assert.equal(metrics.auditEntries,0);assert.equal(metrics.oldestPendingAt,10);assert.equal(metrics.pendingCount,1);
 });
 
 test('manual recovery does not conceal a stale scheduler',async()=>{
