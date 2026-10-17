@@ -1,3 +1,4 @@
+import {toolDirectory} from "./tool-directory.mjs";
 import { Operations } from "./operations.mjs";
 import {serviceStatus,statusPage} from "./status.mjs";
 import { functionCatalog } from "../ecosystem/tool-coverage.mjs";
@@ -167,6 +168,7 @@ export function createMcpHandler({
         return send(200, path==='/'?home(catalog):path==='/projects'?projects(catalog):workspace(path.slice(1)), 'text/html');
       if (["GET", "HEAD"].includes(req.method) && ["/reference", "/reference.json"].includes(path))
         return path === "/reference" ? send(200, referencePage(MANAGEMENT_TOOLS), "text/html") : send(200, serviceReference(MANAGEMENT_TOOLS));
+      if(path==='/tools' && ['GET','HEAD'].includes(req.method))return send(200,toolDirectory(catalog,url.searchParams),'text/html');
       const actor = authenticate(req.headers, credentials);
       if (actor?.managed) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:propose");
       if (["/status", "/status.json"].includes(path) && ["GET", "HEAD"].includes(req.method)) {
