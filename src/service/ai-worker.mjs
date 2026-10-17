@@ -74,13 +74,17 @@ export class AiWorker {
     this.outbox.enqueueInState(state, intent);
     run.status = "dispatch_pending";
   }
-  async tick() {
+  async tick({deadline=Date.now()+60000,wallClock=Date.now}={}) {
     const ids = await this.store.transaction((state) => Object.entries(state.aiDispatchOutbox ?? {})
       .filter(([, entry]) => ["queued", "uncertain", "dispatching"].includes(entry.state) &&
         (!entry.lease || entry.lease.expiresAt <= this.clock()) &&
         this.authorized(state, entry.intent, entry.state === "queued" ? "dispatch" : "inspect"))
       .slice(0, 20).map(([id]) => id));
+    let processed=0;
     for (const id of ids) {
+      // Reserve a full dispatch lease and database finalization before host timeout.
+      if(wallClock()+this.outbox.leaseMs+10000>deadline)break;
+      processed++;
       try { await this.outbox.process(id); } catch { /* Current authority may have been withdrawn. */ }
       await this.store.transaction((state) => {
         const entry = state.aiDispatchOutbox[id], run = state.runs[id];
@@ -89,6 +93,6 @@ export class AiWorker {
         if (entry.receipt) run.result = entry.receipt;
       });
     }
-    return ids.length;
+    return processed;
   }
 }

@@ -46,3 +46,16 @@ test('cold database outage preserves public pages, status and empty notification
   assert.equal((await fetch(base+'/v1/history')).status,503);
  }finally{server.close();await once(server,'close');}
 });
+test('worker time budget holds remaining occurrences for a later tick without dropping them',async()=>{
+ const f=await fixture();let wall=0;f.engine.wallClock=()=>wall;
+ const original=f.engine.enqueue.bind(f.engine);f.engine.enqueue=async(...args)=>{const run=await original(...args);wall=46000;return run};
+ const first=await f.engine.tick(()=>f.actor);assert.equal(first.queued,1);assert.equal(first.processed,0);assert.equal(Object.values(f.state.runs)[0].status,'queued');
+ f.engine.enqueue=original;wall=0;await f.engine.tick(()=>f.actor);assert.equal(Object.values(f.state.runs)[0].status,'succeeded');
+});
+test('AI worker reserves enough time for a full lease and finalization',async()=>{
+ const {AiWorker}=await import('../src/service/ai-worker.mjs');let wall=0;
+ const state=emptyState();for(const id of ['one','two','three']){state.runs[id]={};state.aiDispatchOutbox[id]={state:'queued',intent:{}};}
+ const worker=new AiWorker({transaction:async fn=>fn(state)},{transport:{},resolveActor:()=>null,catalog:{}});worker.authorized=()=>true;
+ let attempts=0;worker.outbox.process=async id=>{attempts++;wall+=30000;state.aiDispatchOutbox[id].state='accepted';};
+ assert.equal(await worker.tick({deadline:60000,wallClock:()=>wall}),1);assert.equal(attempts,1);assert.equal(state.aiDispatchOutbox.two.state,'queued');
+});

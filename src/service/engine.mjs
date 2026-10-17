@@ -76,6 +76,7 @@ export class Engine {
         catalogRevision: catalogRevision(catalog),
       }),
       clock = () => Date.now(),
+      wallClock = () => Date.now(),
       aiWorker,
     } = {},
   ) {
@@ -83,6 +84,7 @@ export class Engine {
     this.catalog = catalog;
     this.adapter = adapter;
     this.clock = clock;
+    this.wallClock = wallClock;
     this.aiWorker = aiWorker;
   }
   async act(actor, operation, input = {}) {
@@ -332,10 +334,12 @@ export class Engine {
     return run;
   }
   async tick(resolveActor) {
+    const started=this.wallClock(), engineDeadline=started+45000;
     const result = await this.store.transaction(async (state) => {
       const now = this.clock();
       let scheduled = 0, queued = 0, blocked = 0, deferred = 0, processed = 0;
       for (const automation of Object.values(state.automations)) {
+        if(this.wallClock()>=engineDeadline)break;
         if (automation.status !== "active" || automation.trigger.type !== "schedule" || automation.nextAt > now || scheduled >= 20) continue;
         const actor = resolveActor(automation.tenant, automation.subject);
         const owner = actor ?? {tenant:automation.tenant,subject:automation.subject};
@@ -367,7 +371,7 @@ export class Engine {
       }
       for (const run of Object.values(state.runs)) {
         const automation = state.automations[run.automationId];
-        if (processed >= 20) break;
+        if (processed >= 20 || this.wallClock()>=engineDeadline) break;
         if (
           !["queued", "retrying"].includes(run.status) ||
           run.nextAt > now ||
@@ -456,7 +460,7 @@ export class Engine {
       const jobFailures = Object.values(state.runs).filter(r=>r.attempts?.at(-1)?.at===now && ["denied","failed","retrying"].includes(r.status)).length;
       return { scheduled, attempted:scheduled, queued, blocked, deferred, processed, jobFailures };
     });
-    if (this.aiWorker) result.dispatched = await this.aiWorker.tick();
+    if (this.aiWorker) result.dispatched = await this.aiWorker.tick({deadline:started+105000,wallClock:this.wallClock});
     return result;
   }
 }
