@@ -23,4 +23,20 @@ test('AI enqueue, dispatch and retry obtain distinct checks; queue binding survi
  delete actor.rolesAuthorityBinding;const count=stages.length;await engine.tick(()=>actor);assert.equal(stages.length,count);assert.equal(effects,1);
  await assert.rejects(engine.act(actor,'enqueue',{id:automation.id,idempotencyKey:'downgrade'}),/binding changed/);
  assert.equal(state.runs[run.id].rolesAuthorityBinding,'worker');
+ // A pre-rollout queued record has neither binding; equality alone must not authorize it.
+ delete state.runs[run.id].rolesAuthorityBinding;
+ delete state.automations[automation.id].rolesAuthorityBinding;
+ await engine.tick(()=>actor);assert.equal(stages.length,count);assert.equal(effects,1);
+ await assert.rejects(engine.act(actor,'enqueue',{id:automation.id,idempotencyKey:'legacy'}),/authority is not current/);
+});
+
+test('legacy AI runs and missing Roles configuration cannot bypass the decision check',async()=>{
+ let effects=0;
+ const worker=new AiWorker({}, {transport:{},resolveActor:()=>null,catalog:CATALOG});
+ const effect=()=>{effects++;};
+ for(const stage of ['enqueue','execute']) {
+  await assert.rejects(worker.rolesCheck({}, {}, {}, {}, stage, {}, effect),/authority is not current/);
+  await assert.rejects(worker.rolesCheck({rolesAuthorityBinding:'approved'}, {rolesAuthorityBinding:'approved'}, {}, {}, stage, {}, effect),/authority is not current/);
+ }
+ assert.equal(effects,0);
 });

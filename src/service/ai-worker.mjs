@@ -15,8 +15,7 @@ export class AiWorker {
   async rolesCheck(actor,run,automation,grant,stage,parameters,effect) {
     const binding=run.rolesAuthorityBinding??null;
     if(binding!==(actor?.rolesAuthorityBinding??null))throw denied();
-    if(!binding)return effect(parameters);
-    if(!this.rolesConsumer)throw denied();
+    if(!binding || !this.rolesConsumer)throw denied();
     const operationId=aiCommandId({runId:run.id,grantId:automation.connectionId,...aiActor(actor)});
     return this.rolesConsumer.execute(actor,binding,{project:automation.projectId,operationId,
       resource:`template:${grant.deviceId}:${grant.templateId}:${grant.templateRevision}`,action:'template:dispatch',stage},parameters,effect);
@@ -50,6 +49,7 @@ export class AiWorker {
           automation.tenant !== actor.tenant || automation.subject !== actor.subject ||
           intent.actorId !== aiActor(actor).actorId) return false;
       if (operation === "manage") return true;
+      if (!run.rolesAuthorityBinding || !this.rolesConsumer) return false;
       const connection = this.connection(state, actor, intent.grantId), grant = connection.grant;
       const ruleRecord = state.rules[automation.ruleId], rule = ruleRecord?.versions.at(-1), profile = state.profiles[automation.profileId];
       if ((operation !== "inspect" && automation.status !== "active") || automation.tool !== "run_ai_template" || automation.connectionId !== connection.id ||

@@ -12,7 +12,7 @@ export class RolesConsumer {
   }
   readiness() {
     let keysConfigured=false;try {keysConfigured=createPrivateKey(this.gatewayKey).asymmetricKeyType==='ed25519'&&createPublicKey(this.decisionKey).asymmetricKeyType==='ed25519';}catch{}
-    return {consumerEnforcement:'opt-in-source-and-ai',keysConfigured,configuredBindings:this.bindings.length,enrollment:'not-attested',liveExecution:'not-verified'};
+    return {consumerEnforcement:'required-source-and-ai',keysConfigured,configuredBindings:this.bindings.length,enrollment:'not-attested',liveExecution:'not-verified'};
   }
   async execute(actor,bindingId,scope,parameters,effect) {
     actor=structuredClone(actor);scope=structuredClone(scope);parameters=structuredClone(parameters);
