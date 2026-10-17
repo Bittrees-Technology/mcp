@@ -1,3 +1,5 @@
+> Historical design reference. Active delivery is governed by plans/mcp-status-2026-10-17/execution-plan.md in the Bittrees workspace. All excluded-product rows below are deferred and are not active work.
+
 > Current owner decision, 19 September 2026: Bitlogic, Bittrees Vault, SkillMesh, Metatokens, Wallet, TreeSwap, Builders Advocacy Group, MyCloud and Bittrees Node are excluded from both public sites until explicit reapproval. Historical planning below does not authorize publishing them. The exclusion list is enforced during catalog validation and synchronization. Standalone MCP is owned by the MCP task; only Agent site work is delegated to work.agent.
 
 # Bittrees standalone MCP service and integration plan
@@ -30,32 +32,32 @@ Every row is a proposed scope, not an assertion that its APIs already exist. Rea
 | Governance / Bittrees-Inc | Proposals, public forum context and voting metadata | Prepare proposals/vote payloads; signing and submission retain explicit authority |
 | Research / Bittrees-Research | Public research and scoped member resources | Draft research/contributor submissions and review status |
 | Capital | Public token/portfolio context; authorized treasury views | Transaction preparation and simulation; signing/spending remain separately authorized |
-| Vault | Pool/liquidity documentation and verified read APIs, grouped with Capital where sensible | Prepare swaps/liquidity changes with wallet approval |
-| Bitlogic | Discovery/docs now; authorized accounting reads when implementation resumes | Draft journal/import workflows with accounting permissions; retain prior feature-work deferral |
+| Deferred — Vault (excluded) | Pool/liquidity documentation and verified read APIs, grouped with Capital where sensible | Prepare swaps/liquidity changes with wallet approval |
+| Deferred — Bitlogic (excluded) | Discovery/docs now; authorized accounting reads when implementation resumes | Draft journal/import workflows with accounting permissions; retain prior feature-work deferral |
 | Bounties | Search bounties, requirements and public state | Draft/apply/submit workflows; escrow/settlement separately authorized |
 | Chirpy (legacy catalog ID chat) | Community discovery and authorized conversation reads | Draft messages; sending requires explicit messaging authorization |
 | CryptoDirectory | Search and retrieve directory records as resources | Reviewed directory corrections |
 | IDACC, idacc-site, id-agents, Brain | One product entry with component aliases; release/support resources | Supported local/private adapter for scoped task submission and status; no public raw runtime access |
 | NFTFactory | Public collections/assets and publication requirements | Authorized draft/upload/publish workflows; minting remains wallet-controlled |
-| SkillMesh | Discover existing MCP/OpenAPI/A2A capabilities and compatibility | Federate supported tools after scope and transport review; retain prior feature-work deferral |
+| Deferred — SkillMesh (excluded) | Discover existing MCP/OpenAPI/A2A capabilities and compatibility | Federate supported tools after scope and transport review; retain prior feature-work deferral |
 | TCP | Public project context and authorized planning/scenario reads | Draft scenarios and approved operational jobs |
 | Roles | Public policy description and caller-scoped membership/permission reads | Approved policy-change workflow; catalog inclusion never grants roles |
 | Mercado (local directory marcada) | Public catalog/offers and authorized quote reads | Quote/catalog drafts and approved seller actions |
 | Insights | Private, permission-filtered analytics queries and aggregates | Saved reports with tenant isolation; no default public telemetry |
 | CRM | Authorized contacts, pipeline search and workspace resources | Draft/update records with explicit workspace scopes |
 | AutoNote | Authorized meetings, transcripts and notes | Draft summaries/action items; export/share requires appropriate scopes |
-| Wallet | Public chain/account capability descriptions and caller-approved account context | Prepare/simulate transactions; wallet retains signing and secret custody |
+| Deferred — Wallet (excluded) | Public chain/account capability descriptions and caller-approved account context | Prepare/simulate transactions; wallet retains signing and secret custody |
 | Mail | Caller-authorized mailbox metadata/search via a dedicated adapter | Draft messages; send/delete/provision require distinct permissions |
 | Node (deferred) | Future authorized service inventory, health and job status; no implementation in this pass | Future fixed, scoped operational jobs |
-| MyCloud | Discovery pending source verification; later authorized file metadata/search | Explicitly scoped upload/share operations; no public private-file indexing |
+| Deferred — MyCloud (excluded) | Discovery pending source verification; later authorized file metadata/search | Explicitly scoped upload/share operations; no public private-file indexing |
 | Ecrypt | Documentation and authorized encrypted-record metadata | Encryption/access workflows preserving decryption boundaries and keys |
 | The Verse + the-verse-website | One product entry; public documentation/catalog/game state where an API exists | Game actions or marketplace preparation after API and authority review |
 | Cryptoalegre | Public organizational/resources catalog; resources-first | Reviewed membership/content workflows if supported |
 | Builders Advocacy Group + bag-membership | Public project/membership contract reads | Membership transaction preparation, with separate signing |
 | BTREE ERC20, BGOV, BRGOV, research-contract packages | Verified contract/address resources grouped under Capital/Gov/Research | Reuse parent adapters; no independent server per token contract |
 | WBTC test token | Development-only contract resource, excluded from production capability defaults | Test environment only |
-| Metatokens | Discovery entry pending repository/API assessment | Decide adapter fit after actual product contract is verified |
-| TreeSwap | Public swap capability/quote resources after endpoint verification | Intent preparation and status with separate payment/signing authorization |
+| Deferred — Metatokens (excluded) | Discovery entry pending repository/API assessment | Decide adapter fit after actual product contract is verified |
+| Deferred — TreeSwap (excluded) | Public swap capability/quote resources after endpoint verification | Intent preparation and status with separate payment/signing authorization |
 | IPFS node (repository ipsf-node) | Component of Node: pin/retrieval/replica health | Bounded authorized pin/publish jobs with quotas |
 | bbrf-pt | Pending product/ownership review; no invented tools | Define scope only after source assessment |
 | Archive/archived contract and deployer repositories | Historical resources and aliases, excluded from active defaults | No new server or active tools |

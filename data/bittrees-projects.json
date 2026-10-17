@@ -7,8 +7,8 @@
   "projects": [
     {
       "id": "agent",
-      "name": "Bittrees Agent Gateway",
-      "summary": "Source-grounded onboarding, discovery, contribution, and review gateway for AI agents working across Bittrees projects.",
+      "name": "Bittrees Agent",
+      "summary": "Person and agent onboarding, ecosystem discovery, and reviewed contribution workflows. Integration, automation and rules are owned by the separate MCP service.",
       "lanes": [
         "discovery",
         "research",
@@ -38,8 +38,8 @@
         "contactStatus": "pending"
       },
       "source": {
-        "revision": "1f56a091d12ee346998871df0c3557ed847007be",
-        "observedAt": "2026-09-16T16:45:00Z",
+        "revision": "8de1c9e7f158cab399a4be6237a80ef6d0c24e30",
+        "observedAt": "2026-10-17T00:37:18.123Z",
         "manifestPath": "bittrees.project.json"
       },
       "lifecycle": "preview",
@@ -1172,8 +1172,8 @@
         "contactStatus": "pending"
       },
       "source": {
-        "revision": "d52aaf3850f1311f2d4229c159fb7720868edc6f",
-        "observedAt": "2026-10-16T21:21:44.286Z",
+        "revision": "d852cab4d91f6534aa59bb75a77d25c7e8fd02b4",
+        "observedAt": "2026-10-17T00:37:18.123Z",
         "manifestPath": "bittrees.project.json"
       },
       "lifecycle": "active",
@@ -1455,8 +1455,8 @@
   ],
   "sync": {
     "state": "reconciled",
-    "lastAttemptAt": "2026-10-16T21:21:44.286Z",
-    "lastSuccessAt": "2026-10-16T21:21:44.286Z",
+    "lastAttemptAt": "2026-10-17T00:37:18.123Z",
+    "lastSuccessAt": "2026-10-17T00:37:18.123Z",
     "errors": []
   },
   "excludedComponents": [
