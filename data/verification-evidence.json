@@ -1,0 +1,13 @@
+{
+  "schema": "bittrees.mcp.verification-evidence.v1",
+  "recovery": {
+    "checkedAt": "2026-10-15T18:17:56.679Z",
+    "expiresAt": "2026-11-14T18:17:56.679Z",
+    "scope": "MCP database snapshot restore and NAS read-back; not an execution authorization test",
+    "passed": true,
+    "evidenceDigest": "5d61685813c80caaabc742b123f7c6a8be74c8160fc232eaae7617dc39e23682",
+    "schemaDigest": "68339b9793a847bf74b6d39503b1d8d393964e14ea9cd99b570069745073d2e8"
+  },
+  "execution": null,
+  "enrollment": null
+}

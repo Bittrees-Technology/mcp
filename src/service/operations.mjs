@@ -18,7 +18,7 @@ export class Operations {
         const w=state.operations?.worker;if(w?.attemptId!==id)return;
         const finishedAt=this.clock();
         Object.assign(w,{...(source==='vercel-cron'?{lastCronSuccessAt:finishedAt}:{}),state:'succeeded',leaseUntil:0,finishedAt,lastSuccessAt:finishedAt,lastError:null,
-          samples:[...(w.samples??[]),{startedAt,finishedAt,source}].slice(-12)});
+          lastResult:result, samples:[...(w.samples??[]),{startedAt,finishedAt,source}].slice(-12)});
       });
       return result;
     } catch(error) {
@@ -37,6 +37,7 @@ export class Operations {
         lastStartedAt:w?.startedAt??null,lastFinishedAt:w?.finishedAt??null,lastSuccessAt:w?.lastSuccessAt??null,
         ageSeconds:age===null?null:Math.floor(age/1000),source:w?.source??null,
         observedIntervalsSeconds:samples.slice(1).map((s,i)=>Math.round((s.startedAt-samples[i].startedAt)/1000)),
+        jobOutcomes:w?.lastResult??null, jobState:!w?.lastResult?'not-observed':(w.lastResult.blocked||w.lastResult.deferred||w.lastResult.jobFailures)?'needs-attention':'no-enqueue-blockers',
         lastError:w?.lastError??null};
     });
   }
@@ -44,8 +45,10 @@ export class Operations {
     return this.store.transaction(state=>{
       const owns=row=>row.tenant===actor.tenant && row.subject===actor.subject;
       const runs=Object.values(state.runs).filter(owns);
-      const pending=runs.filter(r=>['queued','retrying','dispatch_pending','uncertain'].includes(r.status));
-      return {runs:runs.length,auditEntries:state.audit.filter(owns).length,
+      const pending=runs.filter(r=>['queued','retrying','deferred','dispatch_pending','uncertain'].includes(r.status));
+      return {runs:runs.length,auditEntries:state.audit.filter(owns).length, pendingCount:pending.length,blockedCount:runs.filter(r=>["denied","failed"].includes(r.status)).length,
+        oldestDueAt:pending.length?Math.min(...pending.map(r=>r.scheduledFor??r.nextAt??r.createdAt)):null,
+        recordLimit:10000, retention:"Operator-reviewed archival required; no automatic deletion",
         oldestPendingAt:pending.length?Math.min(...pending.map(r=>r.createdAt)):null};
     });
   }

@@ -22,7 +22,7 @@ export async function runtime(env = process.env) {
       statement_timeout: 10000,
     });
     store = new PostgresStore(pool, { allowLegacy: !aiConfigured });
-    await store.assertReady();
+    // Transactions validate readiness; public pages and diagnostics must survive a cold database outage.
   } else if (env.NODE_ENV !== "production" && env.MCP_LOCAL_STATE) {
     store = new FileStore(env.MCP_LOCAL_STATE);
   } else

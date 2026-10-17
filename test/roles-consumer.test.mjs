@@ -27,6 +27,10 @@ test('signed denial, expiry, wrong stage/resource/audience, missing source requi
 });
 test('missing enrollment, cross-owner scopes, excluded projects, person keys and unavailable authority fail closed',async()=>{
  for(const change of [f=>f.binding.principal=`person:${randomUUID()}`,f=>f.actor.tenant='other',f=>f.scope.project='wallet',f=>f.scope.resource='other',f=>f.binding.credentialId='0'.repeat(64),f=>f.consumer.gatewayKey=undefined,f=>f.consumer.request=async()=>{throw Error('private error')}]){
- const f=setup();change(f);await assert.rejects(f.consumer.execute(f.actor,'worker',f.scope,{},()=>assert.fail('effect')),/Current Roles execution authority required/);
+ const f=setup();change(f);await assert.rejects(f.consumer.execute(f.actor,'worker',f.scope,{},()=>assert.fail('effect')),/Current Roles execution authority required|Roles temporarily unavailable/);
  }
+});
+test('only transport unavailability is retryable; invalid or denied proofs stay denied',async()=>{
+ for(const status of [403,502,503,504]){const f=setup();f.consumer.request=async()=>new Response('{}',{status});await assert.rejects(f.consumer.execute(f.actor,'worker',f.scope,{},()=>assert.fail('effect')),e=>e.statusCode===(status===403?403:503)&&Boolean(e.transient)===(status!==403));}
+ const f=setup();f.consumer.request=async()=>new Response('{invalid');await assert.rejects(f.consumer.execute(f.actor,'worker',f.scope,{},()=>assert.fail('effect')),e=>e.statusCode===403&&!e.transient);
 });

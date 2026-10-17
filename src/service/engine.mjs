@@ -1,3 +1,4 @@
+import {operationPermission} from "./operation-registry.mjs";
 import { activeExpiry } from "./workflow-authority.mjs";
 import { randomUUID, createHash } from "node:crypto";
 import {
@@ -9,6 +10,7 @@ import {
 export const fail = (message, statusCode = 400) =>
   Object.assign(new Error(message), { statusCode });
 const ID = /^[a-zA-Z0-9_-]{1,100}$/;
+const occurrenceId = (record, key) => createHash("sha256").update(JSON.stringify([record.tenant, record.subject, record.id, key])).digest("hex");
 const tools = ["get_bittrees_project", "run_ai_template"];
 function fields(value, allowed) {
   if (
@@ -86,16 +88,7 @@ export class Engine {
   async act(actor, operation, input = {}) {
     return this.store.transaction(async (state) => {
       const now = this.clock();
-      authorize(
-        actor,
-        operation === "history"
-          ? "automation:read"
-          : operation.startsWith("profile")
-            ? "profile:write"
-            : operation.startsWith("rule")
-              ? "rule:write"
-              : "automation:write",
-      );
+      authorize(actor, operationPermission(operation));
       if (operation === "automation.setup") {
         authorize(actor, "profile:write");
         authorize(actor, "rule:write");
@@ -235,16 +228,24 @@ export class Engine {
         audit(state, actor, operation, record.id, now);
         return record;
       }
-      if (operation === "history")
-        return {
-          profiles: Object.values(state.profiles).filter((r) => owns(r, actor)),
-          rules: Object.values(state.rules).filter((r) => owns(r, actor)),
-          automations: Object.values(state.automations).filter((r) =>
-            owns(r, actor),
-          ),
-          runs: Object.values(state.runs).filter((r) => owns(r, actor)),
-          audit: state.audit.filter((r) => owns(r, actor)),
+      if (operation === "history") {
+        fields(input,["limit","cursor","auditCursor"]);
+        const allRuns=Object.values(state.runs).filter(r=>owns(r,actor));
+        const allAudit=state.audit.filter(r=>owns(r,actor));
+        const paginate=(rows,cursor,timeField)=>{
+          const ordered=rows.toSorted((a,b)=>b[timeField]-a[timeField] || b.id.localeCompare(a.id));
+          const index=cursor?ordered.findIndex(r=>r.id===cursor):-1;
+          if(cursor&&index<0)throw fail("History cursor not found",400);
+          const slice=ordered.slice(index+1,index+1+input.limit);
+          return {rows:slice.reverse(),next:index+1+input.limit<ordered.length?slice[0]?.id:null};
         };
+        if(input.limit!==undefined && (!Number.isInteger(input.limit)||input.limit<1||input.limit>100))throw fail("History limit must be 1 to 100");
+        if((input.cursor||input.auditCursor)&&input.limit===undefined)throw fail("History cursor requires a limit");
+        const runs=input.limit?paginate(allRuns,input.cursor,"createdAt"):null,auditPage=input.limit?paginate(allAudit,input.auditCursor,"at"):null;
+        return {profiles:Object.values(state.profiles).filter(r=>owns(r,actor)),rules:Object.values(state.rules).filter(r=>owns(r,actor)),
+          automations:Object.values(state.automations).filter(r=>owns(r,actor)),runs:runs?.rows??allRuns,audit:auditPage?.rows??allAudit,
+          ...(input.limit?{page:{limit:input.limit,nextCursor:runs.next,auditNextCursor:auditPage.next,totalRuns:allRuns.length,totalAudit:allAudit.length}}:{})};
+      }
       if (operation === "ai.retry") {
         fields(input, ["runId", "confirmed"]);
         if (!this.aiWorker || input.confirmed !== true) throw fail("Confirm AI retry", 409);
@@ -265,7 +266,7 @@ export class Engine {
           resume: "active",
           cancel: "cancelled",
         }[operation];
-        if (operation === "resume" && record.trigger.type === "schedule")
+        if (operation === "resume" && record.trigger.type === "schedule" && !Object.values(state.runs).some(r=>r.automationId===record.id && r.status==="deferred"))
           record.nextAt = now + record.trigger.intervalSeconds * 1000;
         if (operation === "cancel") {
           for (const entry of Object.values(state.aiDispatchOutbox ?? {})) {
@@ -282,7 +283,7 @@ export class Engine {
           for (const run of Object.values(state.runs))
             if (
               run.automationId === record.id &&
-              ["queued", "retrying"].includes(run.status)
+              ["queued", "retrying", "deferred"].includes(run.status)
             )
               run.status = "cancelled";
         audit(state, actor, operation, record.id, now);
@@ -305,18 +306,10 @@ export class Engine {
   }
   async enqueue(state, record, idempotencyKey, now, actor) {
     if(record.tool==="run_ai_template" && (record.rolesAuthorityBinding??null)!==(actor?.rolesAuthorityBinding??null))throw fail("Automation Roles binding changed",403);
-    const id = createHash("sha256")
-      .update(
-        JSON.stringify([
-          record.tenant,
-          record.subject,
-          record.id,
-          idempotencyKey,
-        ]),
-      )
-      .digest("hex");
-    if (state.runs[id]) return state.runs[id];
-    if (Object.keys(state.runs).length >= 10000)
+    const id = occurrenceId(record, idempotencyKey);
+    const existing = state.runs[id];
+    if (existing && existing.status !== "deferred") return existing;
+    if (!existing && Object.keys(state.runs).length >= 10000)
       throw fail("Run capacity reached; operator archival required", 503);
     const run = {
       id,
@@ -327,7 +320,8 @@ export class Engine {
       status: "queued",
       attempts: [],
       nextAt: now,
-      createdAt: now,
+      createdAt: existing?.createdAt ?? now,
+      ...(existing ? {scheduledFor:existing.scheduledFor, enqueueAttempts:existing.enqueueAttempts} : {}),
     };
     if(record.tool==="run_ai_template") {
       if(!this.aiWorker)throw fail("AI worker unavailable",403);
@@ -340,27 +334,35 @@ export class Engine {
   async tick(resolveActor) {
     const result = await this.store.transaction(async (state) => {
       const now = this.clock();
-      let scheduled = 0,
-        processed = 0;
+      let scheduled = 0, queued = 0, blocked = 0, deferred = 0, processed = 0;
       for (const automation of Object.values(state.automations)) {
+        if (automation.status !== "active" || automation.trigger.type !== "schedule" || automation.nextAt > now || scheduled >= 20) continue;
         const actor = resolveActor(automation.tenant, automation.subject);
-        if (
-          automation.status === "active" &&
-          automation.trigger.type === "schedule" &&
-          automation.nextAt <= now &&
-          scheduled < 20
-        ) {
-          // Missed intervals coalesce into one run, avoiding catch-up storms.
-          try {await this.enqueue(
-            state,
-            automation,
-            `schedule-${automation.nextAt}`,
-            now,
-            actor ?? { tenant: automation.tenant, subject: automation.subject },
-          );
-          } catch {audit(state,actor??{tenant:automation.tenant,subject:automation.subject},"schedule-denied",automation.id,now);}
-          scheduled++;
+        const owner = actor ?? {tenant:automation.tenant,subject:automation.subject};
+        const scheduledFor = automation.nextAt, key = `schedule-${scheduledFor}`, id = occurrenceId(automation,key);
+        const prior = state.runs[id];
+        if (prior?.status === "deferred" && prior.nextAt > now) continue;
+        scheduled++;
+        try {
+          authorize(actor,"automation:execute");
+          const run = await this.enqueue(state,automation,key,now,owner);
+          run.scheduledFor = scheduledFor;
+          queued++;
+          // Coalesce missed intervals; only advance after a recorded terminal or queued outcome.
           automation.nextAt = now + automation.trigger.intervalSeconds * 1000;
+        } catch (error) {
+          // Capacity failures must fail the worker visibly, never drop an occurrence.
+          if (!prior && Object.keys(state.runs).length >= 10000) throw error;
+          const attempts = [...(prior?.enqueueAttempts ?? []), {at:now}];
+          const transient = error.transient === true || [502,503,504].includes(error.statusCode);
+          const status = transient && attempts.length < 3 ? "deferred" : transient ? "failed" : "denied";
+          attempts.at(-1).outcome = status;
+          attempts.at(-1).reason = transient ? "Authorization or connection temporarily unavailable" : "Current access does not allow this scheduled action";
+          state.runs[id] = {id,tenant:automation.tenant,subject:automation.subject,automationId:automation.id,
+            rolesAuthorityBinding:actor?.rolesAuthorityBinding ?? null,status,attempts:[],enqueueAttempts:attempts,
+            createdAt:prior?.createdAt ?? now,scheduledFor,nextAt:now+Math.min(900000,300000*2**(attempts.length-1))};
+          if(status === "deferred") deferred++; else {blocked++;automation.nextAt=now+automation.trigger.intervalSeconds*1000;}
+          audit(state,owner,"schedule-outcome",id,now,{status,scheduledFor});
         }
       }
       for (const run of Object.values(state.runs)) {
@@ -451,7 +453,8 @@ export class Engine {
           { status: run.status, ruleVersion: attempt.ruleVersion },
         );
       }
-      return { scheduled, processed };
+      const jobFailures = Object.values(state.runs).filter(r=>r.attempts?.at(-1)?.at===now && ["denied","failed","retrying"].includes(r.status)).length;
+      return { scheduled, attempted:scheduled, queued, blocked, deferred, processed, jobFailures };
     });
     if (this.aiWorker) result.dispatched = await this.aiWorker.tick();
     return result;
