@@ -45,3 +45,27 @@ test('ordinary backlog import does not need AI-task permission and missing mappi
  await assert.rejects(f.gateway.call(f.actor,['crm','agent'],'task_sync_execute',args));
  assert.equal(f.calls.filter(c=>c.params.name==='tasks.import_source').length,0);
 });
+
+test('native device completes bounded challenges with fresh proofs and lease denial prevents imports',async()=>{
+ const {generateKeyPairSync,createHash,randomUUID,sign}=await import('node:crypto');
+ const {RolesConsumer}=await import('../src/service/roles-consumer.mjs');
+ const {requestMessage,decisionMessage}=await import('../src/service/roles-proof.mjs');
+ const pair=()=>generateKeyPairSync('ed25519',{publicKeyEncoding:{type:'spki',format:'pem'},privateKeyEncoding:{type:'pkcs8',format:'pem'}});
+ const f=setup(),device=pair(),gateway=pair(),roles=pair(),seen=new Set();let allowed=true;
+ const binding={id:'approved',tenant:f.actor.tenant,subject:f.actor.subject,actorTokenHash:f.actor.tokenHash,workspace:'bittrees',principal:`agent:${randomUUID()}`,credentialId:createHash('sha256').update(device.publicKey).digest('hex'),publicKey:device.publicKey,leaseId:randomUUID(),runtimeBindingDigest:'b'.repeat(64),permissions:[{project:'crm',resource:'workspace:projects',action:'task:read'},{project:'crm',resource:`project:${projectId}`,action:'task:read'},{project:'crm',resource:`project:${projectId}`,action:'task:import'}]};
+ f.gateway.rolesConsumer=new RolesConsumer({bindings:[binding],gatewayKey:gateway.privateKey,decisionKey:roles.publicKey,request:async(url,options)=>{
+  const {request,runtimeAttestation}=JSON.parse(options.body);assert.equal(runtimeAttestation.request.requestDigest,createHash('sha256').update((await import('../src/service/roles-proof.mjs')).canonical(request)).digest('hex'));assert.equal(request.leaseId,binding.leaseId);assert.equal(request.runtimeBindingDigest,binding.runtimeBindingDigest);assert.ok(!seen.has(request.requestId),'each retry needs fresh nonce');seen.add(request.requestId);
+  const now=Date.now(),decision={version:1,issuer:'https://roles.bittrees.org',audience:'https://mcp.bittrees.org',request,checkedAt:now,expiresAt:now+5000,allowed,requiresSourceAuthorization:true};
+  return Response.json({decision,signature:sign(null,Buffer.from(decisionMessage(decision)),roles.privateKey).toString('base64')});
+ }});
+ async function invoke(name,args){const challenges=[];for(let attempt=0;attempt<4;attempt++){
+  const proofs=challenges.map(c=>{const request={...c.request,requestId:randomUUID(),issuedAt:Date.now()};return {request,signature:sign(null,Buffer.from(requestMessage(request)),device.privateKey).toString('base64'),attestation:{request:{requestDigest:createHash('sha256').update(requestMessage(request).split('\n').slice(1).join('\n')).digest('hex')},signature:'synthetic-attestation-verified-by-Roles'}}});
+  try{return {result:await f.gateway.call({...f.actor,rolesProof:{proofs}},['crm','agent'],name,args),challenges}}
+  catch(error){if(error.statusCode!==428)throw error;assert.equal(error.deviceChallenge.type,'roles-proof-required');challenges.push(error.deviceChallenge);assert.ok(challenges.length<=3);}
+ }assert.fail('exceeded bounded continuation');}
+ const preview=await invoke('task_sync_preview',{});assert.equal(preview.challenges.length,1);
+ const task=preview.result.tasks[0],args={sourceId:task.sourceId,expectedFingerprint:task.fingerprint,confirmed:true};
+ const imported=await invoke('task_sync_execute',args);assert.equal(imported.challenges.length,3);assert.equal(imported.result.state,'accepted');
+ assert.equal(f.calls.filter(c=>c.params.name==='tasks.import_source').length,1);
+ allowed=false;await assert.rejects(invoke('task_sync_execute',args),e=>e.statusCode===403);assert.equal(f.calls.filter(c=>c.params.name==='tasks.import_source').length,1);
+});
