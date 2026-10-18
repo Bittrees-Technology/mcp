@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "reviewedAt": "2026-10-18T09:52:30.673Z",
+  "reviewedAt": "2026-10-18T14:09:00.210Z",
   "connections": [
     {
       "projectId": "roles",
@@ -256,7 +256,7 @@
       "state": "synced",
       "sourceRevision": "83500a3f67b316c5f4d77f36445c098c7da63b66",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -264,7 +264,7 @@
       "state": "synced",
       "sourceRevision": "81d645c52aea6fb95c38a14915bff6175e797e8b1afea5e8727ff03cc80f2b7e",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -272,7 +272,7 @@
       "state": "synced",
       "sourceRevision": "61a2ff760f7b34446148e7a79998daea2a771a85",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -280,7 +280,7 @@
       "state": "synced",
       "sourceRevision": "9d77128191ffb728a394a118a0f9886382982343",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -288,7 +288,7 @@
       "state": "synced",
       "sourceRevision": "7553279cd8fcf95050c3dc4d163f0cb920cc5703",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -296,7 +296,7 @@
       "state": "synced",
       "sourceRevision": "f69e1757284b3aabab2a3d67b22b73c696849421",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -304,15 +304,15 @@
       "state": "synced",
       "sourceRevision": "80e0e58478a480ff4a5af99bb47a9190a518c81d",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
       "projectId": "crypto-directory",
       "state": "synced",
-      "sourceRevision": "7446e51d7ebfd3003222f5011be3fe537028ce13",
+      "sourceRevision": "5f0208f85592e893449cec92056eab492964479e",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -320,7 +320,7 @@
       "state": "synced",
       "sourceRevision": "49b909bb348f2a5887570897ae250e0527df44a7",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -328,7 +328,7 @@
       "state": "synced",
       "sourceRevision": "11bd99616b4c1427bdc5b327070306f43ed48e3238b689f66c48e3294a3d8d4b",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -336,7 +336,7 @@
       "state": "synced",
       "sourceRevision": "0e73ad325143286cf97cee9e19f3b793cb8fdacc269147d47f9ae52b40ba2431",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 2
     },
     {
@@ -344,7 +344,7 @@
       "state": "synced",
       "sourceRevision": "80a49efbbed0d78f792374522f6000b7b56a91ad3d8ea20e1e138f486dbf7153",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -352,7 +352,7 @@
       "state": "synced",
       "sourceRevision": "0a20f5c98b0edb90200e6e8b436631850effe776",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 21
     },
     {
@@ -360,7 +360,7 @@
       "state": "synced",
       "sourceRevision": "1581250d29019a8bf337c860cadbad6d59be664d",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 3
     },
     {
@@ -368,7 +368,7 @@
       "state": "synced",
       "sourceRevision": "fc39dbaee096c35b358843b2c96cc6e78e65c2cd",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 3
     },
     {
@@ -376,7 +376,7 @@
       "state": "synced",
       "sourceRevision": "c574560024f5f5881951ca897634bf94a63b6368",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -384,21 +384,21 @@
       "state": "synced",
       "sourceRevision": "ef9449092fe78e983e74fcf15cfecc4e9e167ff1",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
       "projectId": "the-verse",
       "state": "unavailable-or-invalid",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "retainedPrevious": true
     },
     {
       "projectId": "mcp",
       "state": "synced",
-      "sourceRevision": "18f373626695899bc8f159b15ed51774f1f1233f",
+      "sourceRevision": "f39d7e25ffe9baa0737c7fa85146a3b0c84745ea",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 12
     },
     {
@@ -406,15 +406,15 @@
       "state": "synced",
       "sourceRevision": "1681174971702b007ab8d48fc5a113e59f027fb80478b683e3981f15f26d1165",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 6
     },
     {
       "projectId": "news",
       "state": "synced",
-      "sourceRevision": "81e6530fd6ff68190647cc73ae7e22183b4a35d5",
+      "sourceRevision": "c570547d810709fa3a33d3ddcb3fe8f1ceb01fb5",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 23
     },
     {
@@ -422,15 +422,15 @@
       "state": "synced",
       "sourceRevision": "4afd8be954f826863446bcd167dd3870f1b03c7ca6f75cbe30a476d45b117e21",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 6
     },
     {
       "projectId": "ai",
       "state": "synced",
-      "sourceRevision": "ccda241f50e6ab5be0bf340d6a4f4a5dfb03d6d2",
+      "sourceRevision": "ba9018ac5341599f78ef1373825c9ccb1fe71860",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -438,7 +438,7 @@
       "state": "synced",
       "sourceRevision": "e414292a64188378b15bba424f754427714fb627405f8ea9d7c08eb727b361dd",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     },
     {
@@ -446,7 +446,7 @@
       "state": "synced",
       "sourceRevision": "213b24777762614796547ddeaff9f635b2b21fa26e264aebe6a93085218c9e9a",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T09:52:30.673Z",
+      "checkedAt": "2026-10-18T14:09:00.210Z",
       "toolCount": 0
     }
   ]
