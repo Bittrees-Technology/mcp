@@ -16,6 +16,7 @@ export class RolesConsumer {
   }
   async execute(actor,bindingId,scope,parameters,effect) {
     actor=structuredClone(actor);scope=structuredClone(scope);parameters=structuredClone(parameters);
+    let envelope;
     try {
       const b=this.bindings.find(b=>b.id===bindingId);
       if(!b||b.tenant!==actor.tenant||b.subject!==actor.subject||b.actorTokenHash!==actor.tokenHash||
@@ -60,10 +61,11 @@ export class RolesConsumer {
       if([502,503,504].includes(response.status))throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});
       if(!response.ok)throw denied();
       const raw=await response.text();if(Buffer.byteLength(raw)>32768)throw denied();
-      const decision=verifyDecision(JSON.parse(raw),request,this.decisionKey,this.clock());
+      envelope=JSON.parse(raw);
+      const decision=verifyDecision(envelope,request,this.decisionKey,this.clock());
       if(decision.allowed!==true)throw denied();
-      // No reusable allow token escapes this function; invoke once immediately.
+      // Pass the verified envelope only to the immediate effect for downstream verification.
     } catch (error) {if(error.transient===true||error.deviceChallenge)throw error;throw denied();}
-    return effect(parameters);
+    return effect(parameters,envelope);
   }
 }

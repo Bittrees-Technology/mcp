@@ -194,3 +194,9 @@ Use `/status` for observed operational readiness and `/tools` to search approved
 Use [Explore](https://mcp.bittrees.org/explore) for projects and functions, Connect for client setup, Automations for workspace actions, and Status for evidence and blockers. `automation_setup` creates a paused automation atomically. `/v1/history?limit=50` offers owner-scoped activity pages. Shared operation definitions drive management route schemas, field guards and MCP tool definitions.
 
 See [execution and status rollout](docs/gateway-execution-rollout.md) and [guarded task imports](docs/task-sync-adapter.md). Task imports and AI production execution require separately approved actors, mappings and source consent; deploying code does not activate them.
+
+### Device-held Workflows queue access
+
+`MCP_WORKFLOW_DEVICES_JSON` configures narrowly scoped source connections. Each entry contains `tenant`, `subject`, `actorTokenHash`, a server-only Workflows `token`, and `connections: [{connectionId, workflowId}]`. The transport credential must select project `workflow`, permission `workflow:execute`, and an exact `rolesAuthorityBinding` using the enrolled device public key. A `deviceManaged: true, expiresAt: null` credential is accepted only for catalog/workflow permissions; it does not replace current Roles or source authorization.
+
+The `workflow_claim`, `workflow_renew` and `workflow_complete` tools call only the fixed Workflows endpoint. Every call needs a device-held proof and current signed Roles decision. Tokens and source connections must be provisioned only after reviewing the owner, device and exact workflow; no defaults activate access. Keep the source token on the gateway. Revocation, policy replacement and parent expiry stop execution even when the standing delegation has no scheduled expiry.

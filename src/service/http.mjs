@@ -35,7 +35,7 @@ export function validateCredentials(credentials) {
       !actor.subject ||
       identities.has(identity) ||
       actor.audience !== ORIGIN ||
-      !(Number.isFinite(actor.expiresAt) || (actor.managed === true && actor.expiresAt === null && actor.permissions?.every(p => ["catalog:read", "sources:propose", "sources:execute"].includes(p)))) ||
+      !(Number.isFinite(actor.expiresAt) || (actor.deviceManaged===true && actor.expiresAt===null && typeof actor.rolesAuthorityBinding==='string' && actor.permissions?.every(p=>["catalog:read","workflow:execute"].includes(p))) || (actor.managed === true && actor.expiresAt === null && actor.permissions?.every(p => ["catalog:read", "sources:propose", "sources:execute"].includes(p)))) ||
       !Array.isArray(actor.projectIds) ||
       !Array.isArray(actor.permissions)
     )
@@ -86,6 +86,7 @@ export function createMcpHandler({
   aiConnections,
   sourceConnections,
   taskSync,
+  workflowDevices,
   catalog = CATALOG,
   release = "development",
 } = {}) {
@@ -372,6 +373,11 @@ export function createMcpHandler({
           throw fail("Unsupported notification");
         }
         const sourceProjects = resolveSelection(catalog, profile).projects.map(p => p.id);
+        if(message.method === "tools/call" && message.params?.name?.startsWith("workflow_")) {
+          if(!workflowDevices)throw fail("Workflow device connection is not configured",403);
+          const data=await workflowDevices.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
+          return send(200,{jsonrpc:"2.0",id:message.id,result:{structuredContent:data,content:[{type:"text",text:JSON.stringify(data)}]}});
+        }
         if(message.method === "tools/call" && message.params?.name?.startsWith("task_sync_")) {
           if(!taskSync)throw fail("Task sync is not configured",403);
           const data=await taskSync.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
@@ -461,6 +467,7 @@ export function createMcpHandler({
             ...result.result.tools,
             ...(sourceConnections?.list(actor, sourceProjects) ?? []),
             ...(taskSync?.list(actor, sourceProjects) ?? []),
+            ...(workflowDevices?.list(actor, sourceProjects) ?? []),
             ...management.map(({ permission, operation, ...tool }) => tool),
           ];
         return send(200, result);
