@@ -13,3 +13,11 @@ AI automations persist their Roles binding on both automation and run. Enqueue a
 Not complete: interactive person signing/enrollment UI; production actor enrollment and exact permission approval. Public project context remains public. The framework-only TLD policy proposal creates no actor permission and does not resolve these requirements.
 
 Verification helpers are copied from reviewed Roles commit 73a97846ab2c82846d3824476381e24660c5a69e. Tests use isolated keys and signed decisions, verify both request signatures, exact argument binding, new request IDs on retries, denial, expiry, wrong stage/audience/resource, missing source requirement, invalid signer, cross-owner access and excluded projects. Source adapter tests prove no fallback on revocation or missing configuration.
+
+## Device-held signing keys
+
+A reviewed binding may use `publicKey` instead of `privateKey`. Configuring both is rejected. The local device retains its private key and submits `X-Bittrees-Agent-Proof`, base64url JSON `{request,signature}`, alongside its existing transport credential. Sign `requestMessage(request)` using the enrolled device key. The full request must match the actual adapter operation, server-computed parameter digest, binding, stage and audience; only its fresh request ID and issuance time come from the device. Roles consumes the request ID, preventing proof replay. Proofs are request-scoped and are never added to the configured actor or saved as standing authority.
+
+Missing, altered, forged or stale device proofs deny execution; there is no server-key fallback. Existing server-held worker bindings retain their current behavior. An until-revoked Roles enrollment does not change transport credentials, source grants, template approval or policy validity.
+
+This is the device-proof transport foundation, not a completed Workflows queue integration. Background schedulers cannot reuse an HTTP proof: the local worker must obtain each authorized operation and sign a new proof for its execution attempt. Workflows claiming, device enrollment UI, completion evidence and successor dispatch still need their integration before production enablement. Adapters which generate their own unpredictable operation IDs need a preparation contract before device-held signing can be used.

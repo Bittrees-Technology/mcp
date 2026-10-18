@@ -54,7 +54,12 @@ export function authenticate(headers, credentials) {
   );
   if (!actor || !activeExpiry(actor))
     throw fail("Invalid or expired service credential", 401);
-  return actor;
+  const encoded=headers['x-bittrees-agent-proof'];
+  if(encoded===undefined)return actor;
+  if(typeof encoded!=='string'||encoded.length>8192||!/^[A-Za-z0-9_-]+$/.test(encoded))throw fail("Invalid device proof",401);
+  let rolesProof;try{rolesProof=JSON.parse(Buffer.from(encoded,'base64url').toString('utf8'));}catch{throw fail("Invalid device proof",401);}
+  // Request-scoped only: never mutate or persist the configured actor.
+  return {...actor,rolesProof};
 }
 async function readBody(req) {
   if (!/^application\/json(?:;|$)/i.test(req.headers["content-type"] ?? ""))
