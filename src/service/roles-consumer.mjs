@@ -1,5 +1,5 @@
 import {createHash,createPrivateKey,createPublicKey,randomUUID,sign} from 'node:crypto';
-import {canonical,requestMessage,verifyDecision,DECISION_ENDPOINT} from './roles-proof.mjs';
+import {canonical,requestMessage,verifyDecision,verifyEd25519,DECISION_ENDPOINT} from './roles-proof.mjs';
 import {CATALOG,eligible} from '../ecosystem/catalog.mjs';
 const denied=()=>Object.assign(new Error('Current Roles execution authority required'),{statusCode:403});
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
@@ -26,16 +26,28 @@ export class RolesConsumer {
         typeof scope.resource!=='string'||!scope.resource.length||scope.resource.length>512||/[\x00-\x1f*]/.test(scope.resource)||
         (b.delegationId!=null&&!uuid.test(b.delegationId))||
         !b.permissions?.some(p=>p.project===scope.project&&p.resource===scope.resource&&p.action===scope.action))throw denied();
-      const key=createPrivateKey(b.privateKey),gateway=createPrivateKey(this.gatewayKey);
+      const deviceHeld=b.publicKey!=null;
+      if(deviceHeld&&b.privateKey!=null)throw denied();
+      const key=deviceHeld?createPublicKey(b.publicKey):createPrivateKey(b.privateKey),gateway=createPrivateKey(this.gatewayKey);
       if(key.asymmetricKeyType!=='ed25519'||gateway.asymmetricKeyType!=='ed25519')throw denied();
-      const credentialId=createHash('sha256').update(createPublicKey(key).export({type:'spki',format:'pem'})).digest('hex');
+      const publicKey=deviceHeld?key:createPublicKey(key);
+      const credentialId=createHash('sha256').update(publicKey.export({type:'spki',format:'pem'})).digest('hex');
       if(credentialId!==b.credentialId)throw denied();
       const request={version:1,source:'mcp.bittrees.org',audience:DECISION_ENDPOINT,requestId:randomUUID(),operationId:scope.operationId,
         parametersDigest:createHash('sha256').update(canonical(parameters)).digest('hex'),issuedAt:this.clock(),principal:b.principal,
         credentialId,delegationId:b.delegationId??null,tenant:b.tenant,workspace:b.workspace,project:scope.project,resource:scope.resource,action:scope.action,stage:scope.stage??'execute'};
+      let principalSignature;
+      if(deviceHeld) {
+        const proof=actor.rolesProof, supplied=proof?.request;
+        if(!supplied||!uuid.test(supplied.requestId)||!Number.isSafeInteger(supplied.issuedAt)||Math.abs(this.clock()-supplied.issuedAt)>15000)throw denied();
+        request.requestId=supplied.requestId;request.issuedAt=supplied.issuedAt;
+        if(canonical(request)!==canonical(supplied)||!verifyEd25519(requestMessage(request),proof.signature,b.publicKey))throw denied();
+        principalSignature=proof.signature;
+      }
       const message=Buffer.from(requestMessage(request));
+      if(!deviceHeld)principalSignature=sign(null,message,key).toString('base64');
       let response;try { response=await this.request(DECISION_ENDPOINT,{method:'POST',redirect:'error',signal:AbortSignal.timeout(4000),headers:{'content-type':'application/json'},
-        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature:sign(null,message,key).toString('base64')})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
+        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
       if([502,503,504].includes(response.status))throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});
       if(!response.ok)throw denied();
       const raw=await response.text();if(Buffer.byteLength(raw)>32768)throw denied();
