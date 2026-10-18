@@ -146,6 +146,13 @@ export function createMcpHandler({
       if (["GET", "HEAD"].includes(req.method) && ["/reference", "/reference.json"].includes(path))
         return path === "/reference" ? send(200, referencePage(MANAGEMENT_TOOLS), "text/html") : send(200, serviceReference(MANAGEMENT_TOOLS));
       if(path==='/tools' && ['GET','HEAD'].includes(req.method))return send(200,toolDirectory(catalog,url.searchParams),'text/html');
+      if(path==='/v1/task-sync/connect'&&req.method==='POST'){
+        if(req.headers.cookie||req.headers.authorization||url.search||req.headers.origin)throw fail('Use the native device connection',400);
+        if(!taskSync)throw fail('Task sync is not configured',403);
+        const {connectTaskSync}=await import('./task-sync-connect.mjs');
+        const input=await readBody(req);
+        return send(200,await connectTaskSync(input,{credentials,rolesConsumer:taskSync.rolesConsumer,connections:taskSync.connections}));
+      }
       const actor = authenticate(req.headers, credentials);
       if (actor?.managed) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:propose");
       if (["/status", "/status.json"].includes(path) && ["GET", "HEAD"].includes(req.method)) {
@@ -471,7 +478,7 @@ export function createMcpHandler({
               id: message.id ?? null,
               error: { code: error.jsonRpcCode ?? -32000, message: text, ...(error.deviceChallenge?{data:error.deviceChallenge}:{}) },
             }
-          : { error: text },
+          : { error: text, ...(error.deviceChallenge?{challenge:error.deviceChallenge}:{}) },
       );
     }
   };
