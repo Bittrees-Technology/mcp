@@ -29,6 +29,7 @@ export class RolesConsumer {
       if((b.leaseId!=null||b.runtimeBindingDigest!=null)&&(!uuid.test(b.leaseId??'')||!(/^[a-f0-9]{64}$/).test(b.runtimeBindingDigest??'')||b.delegationId!=null))throw denied();
       const deviceHeld=b.publicKey!=null;
       if(deviceHeld&&b.privateKey!=null)throw denied();
+      if(b.leaseId&&!deviceHeld)throw denied();
       if(deviceHeld&&scope.deviceChallenge===true&&!b.leaseId)throw denied();
       const key=deviceHeld?createPublicKey(b.publicKey):createPrivateKey(b.privateKey),gateway=createPrivateKey(this.gatewayKey);
       if(key.asymmetricKeyType!=='ed25519'||gateway.asymmetricKeyType!=='ed25519')throw denied();
@@ -38,7 +39,7 @@ export class RolesConsumer {
       const request={version:1,source:'mcp.bittrees.org',audience:DECISION_ENDPOINT,requestId:randomUUID(),operationId:scope.operationId,
         parametersDigest:createHash('sha256').update(canonical(parameters)).digest('hex'),issuedAt:this.clock(),principal:b.principal,
         credentialId,delegationId:b.delegationId??null,...(b.leaseId?{leaseId:b.leaseId,runtimeBindingDigest:b.runtimeBindingDigest}:{}),tenant:b.tenant,workspace:b.workspace,project:scope.project,resource:scope.resource,action:scope.action,stage:scope.stage??'execute'};
-      let principalSignature;
+      let principalSignature,runtimeAttestation;
       if(deviceHeld) {
         const proofs=actor.rolesProof?.proofs??(actor.rolesProof?[actor.rolesProof]:[]);
         if(!Array.isArray(proofs)||proofs.length>3)throw denied();
@@ -50,11 +51,12 @@ export class RolesConsumer {
         request.requestId=supplied.requestId;request.issuedAt=supplied.issuedAt;
         if(canonical(request)!==canonical(supplied)||!verifyEd25519(requestMessage(request),proof.signature,b.publicKey))throw denied();
         principalSignature=proof.signature;
+        if(b.leaseId){runtimeAttestation=proof.attestation;if(!runtimeAttestation?.request||typeof runtimeAttestation.signature!=='string'||JSON.stringify(runtimeAttestation).length>4096)throw denied();}
       }
       const message=Buffer.from(requestMessage(request));
       if(!deviceHeld)principalSignature=sign(null,message,key).toString('base64');
       let response;try { response=await this.request(DECISION_ENDPOINT,{method:'POST',redirect:'error',signal:AbortSignal.timeout(4000),headers:{'content-type':'application/json'},
-        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
+        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature,...(runtimeAttestation?{runtimeAttestation}:{})})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
       if([502,503,504].includes(response.status))throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});
       if(!response.ok)throw denied();
       const raw=await response.text();if(Buffer.byteLength(raw)>32768)throw denied();
