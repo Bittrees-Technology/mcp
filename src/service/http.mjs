@@ -56,8 +56,9 @@ export function authenticate(headers, credentials) {
     throw fail("Invalid or expired service credential", 401);
   const encoded=headers['x-bittrees-agent-proof'];
   if(encoded===undefined)return actor;
-  if(typeof encoded!=='string'||encoded.length>8192||!/^[A-Za-z0-9_-]+$/.test(encoded))throw fail("Invalid device proof",401);
+  if(typeof encoded!=='string'||encoded.length>16384||!/^[A-Za-z0-9_-]+$/.test(encoded))throw fail("Invalid device proof",401);
   let rolesProof;try{rolesProof=JSON.parse(Buffer.from(encoded,'base64url').toString('utf8'));}catch{throw fail("Invalid device proof",401);}
+  if(rolesProof?.proofs!==undefined&&(!Array.isArray(rolesProof.proofs)||rolesProof.proofs.length>3))throw fail("Invalid device proof bundle",401);
   // Request-scoped only: never mutate or persist the configured actor.
   return {...actor,rolesProof};
 }
@@ -468,7 +469,7 @@ export function createMcpHandler({
           ? {
               jsonrpc: "2.0",
               id: message.id ?? null,
-              error: { code: error.jsonRpcCode ?? -32000, message: text },
+              error: { code: error.jsonRpcCode ?? -32000, message: text, ...(error.deviceChallenge?{data:error.deviceChallenge}:{}) },
             }
           : { error: text },
       );

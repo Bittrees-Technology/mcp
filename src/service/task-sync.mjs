@@ -19,9 +19,16 @@ export class TaskSync {
   return c;
  }
  list(actor,projects){return TASK_SYNC_TOOLS.filter(t=>{try{this.connection(actor,projects,t.permission);this.connection(actor,projects,'task-sync:read');return true}catch{return false}}).map(({permission,...tool})=>tool);}
- async rpc(actor,c,name,args,resource,action,operationId=randomUUID()){
+ async rpc(actor,c,name,args,resource,action,operationId){
   if(this.connection(actor,actor.projectIds,action==='task:import'?'task-sync:write':'task-sync:read')!==c)throw fail("Task sync connection changed",403);
-  return this.rolesConsumer.execute(actor,actor.rolesAuthorityBinding,{project:'crm',resource,action,operationId,stage:'execute'}, {tool:name,arguments:args},async payload=>{
+  const parameters={tool:name,arguments:args};
+  if(!operationId){
+   const proofs=actor.rolesProof?.proofs??(actor.rolesProof?[actor.rolesProof]:[]);
+   const matching=Array.isArray(proofs)?proofs.filter(p=>p?.request?.project==='crm'&&p.request.resource===resource&&p.request.action===action&&p.request.parametersDigest===hash(parameters)):[];
+   if(matching.length>1)throw fail('Ambiguous device proofs',403);
+   operationId=matching[0]?.request?.operationId??randomUUID();
+  }
+  return this.rolesConsumer.execute(actor,actor.rolesAuthorityBinding,{project:'crm',resource,action,operationId,stage:'execute',deviceChallenge:true}, parameters,async payload=>{
    const r=await this.request(CRM,{method:'POST',headers:{authorization:`Bearer ${c.token}`,'content-type':'application/json'},redirect:'error',signal:AbortSignal.timeout(15000),body:JSON.stringify({jsonrpc:'2.0',id:operationId,method:'tools/call',params:{name:payload.tool,arguments:payload.arguments}})});
    const text=await r.text();if(!r.ok||text.length>250000)throw fail('CRM task request unavailable; retain the original retry identity',503);
    let data;try{data=JSON.parse(text)}catch{throw fail('Invalid CRM response',502)}
@@ -66,7 +73,7 @@ export class TaskSync {
   });
   let result;
   try{result=await this.rpc(actor,c,'tasks.import_source',prepared.payload,resource,'task:import',prepared.payload.operationId);}
-  catch(error){await this.store.transaction(state=>{state.taskImports[identity].status=error.statusCode===403?'denied':'requires-reconciliation'});throw error}
+  catch(error){if(error.statusCode!==428)await this.store.transaction(state=>{state.taskImports[identity].status=error.statusCode===403?'denied':'requires-reconciliation'});throw error}
   if(typeof result.taskId!=='string'||!Number.isInteger(result.version)||result.version<1||typeof result.created!=='boolean'||typeof result.unchanged!=='boolean'||result.contentHash!==task.fingerprint){
    await this.store.transaction(state=>{state.taskImports[identity].status='requires-reconciliation'});
    throw fail('CRM acceptance requires reconciliation',502);

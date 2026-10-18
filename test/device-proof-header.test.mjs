@@ -8,5 +8,5 @@ test('device proofs remain request-scoped and malformed headers fail closed',()=
  const headers={authorization:'Bearer '+token,'x-bittrees-agent-proof':Buffer.from(JSON.stringify(proof)).toString('base64url')};
  const result=authenticate(headers,[actor]);assert.deepEqual(result.rolesProof,proof);assert.equal(actor.rolesProof,undefined);
  assert.equal(authenticate({authorization:headers.authorization},[actor]).rolesProof,undefined);
- for(const encoded of ['*','a'.repeat(8193),Buffer.from('invalid JSON').toString('base64url'),['abc']])assert.throws(()=>authenticate({...headers,'x-bittrees-agent-proof':encoded},[actor]));
+ for(const encoded of ['*','a'.repeat(16385),Buffer.from('invalid JSON').toString('base64url'),['abc']])assert.throws(()=>authenticate({...headers,'x-bittrees-agent-proof':encoded},[actor]));
 });

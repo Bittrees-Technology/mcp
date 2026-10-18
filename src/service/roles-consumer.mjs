@@ -26,8 +26,10 @@ export class RolesConsumer {
         typeof scope.resource!=='string'||!scope.resource.length||scope.resource.length>512||/[\x00-\x1f*]/.test(scope.resource)||
         (b.delegationId!=null&&!uuid.test(b.delegationId))||
         !b.permissions?.some(p=>p.project===scope.project&&p.resource===scope.resource&&p.action===scope.action))throw denied();
+      if((b.leaseId!=null||b.runtimeBindingDigest!=null)&&(!uuid.test(b.leaseId??'')||!(/^[a-f0-9]{64}$/).test(b.runtimeBindingDigest??'')||b.delegationId!=null))throw denied();
       const deviceHeld=b.publicKey!=null;
       if(deviceHeld&&b.privateKey!=null)throw denied();
+      if(deviceHeld&&scope.deviceChallenge===true&&!b.leaseId)throw denied();
       const key=deviceHeld?createPublicKey(b.publicKey):createPrivateKey(b.privateKey),gateway=createPrivateKey(this.gatewayKey);
       if(key.asymmetricKeyType!=='ed25519'||gateway.asymmetricKeyType!=='ed25519')throw denied();
       const publicKey=deviceHeld?key:createPublicKey(key);
@@ -35,10 +37,15 @@ export class RolesConsumer {
       if(credentialId!==b.credentialId)throw denied();
       const request={version:1,source:'mcp.bittrees.org',audience:DECISION_ENDPOINT,requestId:randomUUID(),operationId:scope.operationId,
         parametersDigest:createHash('sha256').update(canonical(parameters)).digest('hex'),issuedAt:this.clock(),principal:b.principal,
-        credentialId,delegationId:b.delegationId??null,tenant:b.tenant,workspace:b.workspace,project:scope.project,resource:scope.resource,action:scope.action,stage:scope.stage??'execute'};
+        credentialId,delegationId:b.delegationId??null,...(b.leaseId?{leaseId:b.leaseId,runtimeBindingDigest:b.runtimeBindingDigest}:{}),tenant:b.tenant,workspace:b.workspace,project:scope.project,resource:scope.resource,action:scope.action,stage:scope.stage??'execute'};
       let principalSignature;
       if(deviceHeld) {
-        const proof=actor.rolesProof, supplied=proof?.request;
+        const proofs=actor.rolesProof?.proofs??(actor.rolesProof?[actor.rolesProof]:[]);
+        if(!Array.isArray(proofs)||proofs.length>3)throw denied();
+        const matches=proofs.filter(p=>p?.request?.project===request.project&&p.request.resource===request.resource&&p.request.action===request.action&&p.request.parametersDigest===request.parametersDigest);
+        if(matches.length>1)throw denied();
+        const proof=matches[0], supplied=proof?.request;
+        if(!supplied&&scope.deviceChallenge===true)throw Object.assign(new Error('Local device signature required'),{statusCode:428,deviceChallenge:{type:'roles-proof-required',request,parameters}});
         if(!supplied||!uuid.test(supplied.requestId)||!Number.isSafeInteger(supplied.issuedAt)||Math.abs(this.clock()-supplied.issuedAt)>15000)throw denied();
         request.requestId=supplied.requestId;request.issuedAt=supplied.issuedAt;
         if(canonical(request)!==canonical(supplied)||!verifyEd25519(requestMessage(request),proof.signature,b.publicKey))throw denied();
@@ -54,7 +61,7 @@ export class RolesConsumer {
       const decision=verifyDecision(JSON.parse(raw),request,this.decisionKey,this.clock());
       if(decision.allowed!==true)throw denied();
       // No reusable allow token escapes this function; invoke once immediately.
-    } catch (error) {if(error.transient===true)throw error;throw denied();}
+    } catch (error) {if(error.transient===true||error.deviceChallenge)throw error;throw denied();}
     return effect(parameters);
   }
 }
