@@ -56,8 +56,9 @@ export function authenticate(headers, credentials) {
     throw fail("Invalid or expired service credential", 401);
   const encoded=headers['x-bittrees-agent-proof'];
   if(encoded===undefined)return actor;
-  if(typeof encoded!=='string'||encoded.length>8192||!/^[A-Za-z0-9_-]+$/.test(encoded))throw fail("Invalid device proof",401);
+  if(typeof encoded!=='string'||encoded.length>16384||!/^[A-Za-z0-9_-]+$/.test(encoded))throw fail("Invalid device proof",401);
   let rolesProof;try{rolesProof=JSON.parse(Buffer.from(encoded,'base64url').toString('utf8'));}catch{throw fail("Invalid device proof",401);}
+  if(rolesProof?.proofs!==undefined&&(!Array.isArray(rolesProof.proofs)||rolesProof.proofs.length>3))throw fail("Invalid device proof bundle",401);
   // Request-scoped only: never mutate or persist the configured actor.
   return {...actor,rolesProof};
 }
@@ -146,6 +147,13 @@ export function createMcpHandler({
       if (["GET", "HEAD"].includes(req.method) && ["/reference", "/reference.json"].includes(path))
         return path === "/reference" ? send(200, referencePage(MANAGEMENT_TOOLS), "text/html") : send(200, serviceReference(MANAGEMENT_TOOLS));
       if(path==='/tools' && ['GET','HEAD'].includes(req.method))return send(200,toolDirectory(catalog,url.searchParams),'text/html');
+      if(path==='/v1/task-sync/connect'&&req.method==='POST'){
+        if(req.headers.cookie||req.headers.authorization||url.search||req.headers.origin)throw fail('Use the native device connection',400);
+        if(!taskSync)throw fail('Task sync is not configured',403);
+        const {connectTaskSync}=await import('./task-sync-connect.mjs');
+        const input=await readBody(req);
+        return send(200,await connectTaskSync(input,{credentials,rolesConsumer:taskSync.rolesConsumer,connections:taskSync.connections}));
+      }
       const actor = authenticate(req.headers, credentials);
       if (actor?.managed) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:propose");
       if (["/status", "/status.json"].includes(path) && ["GET", "HEAD"].includes(req.method)) {
@@ -475,9 +483,9 @@ export function createMcpHandler({
           ? {
               jsonrpc: "2.0",
               id: message.id ?? null,
-              error: { code: error.jsonRpcCode ?? -32000, message: text },
+              error: { code: error.jsonRpcCode ?? -32000, message: text, ...(error.deviceChallenge?{data:error.deviceChallenge}:{}) },
             }
-          : { error: text },
+          : { error: text, ...(error.deviceChallenge?{challenge:error.deviceChallenge}:{}) },
       );
     }
   };
