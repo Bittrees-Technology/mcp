@@ -9,5 +9,5 @@ export async function checkWorkflowAuthority(token, audience, scope, request = f
   return result;
 }
 export function activeExpiry(grant, now=Date.now()) {
-  return (grant.managed === true && grant.expiresAt === null) || (Number.isFinite(grant.expiresAt) && grant.expiresAt > now);
+  return ((grant.managed === true || grant.deviceManaged === true) && grant.expiresAt === null) || (Number.isFinite(grant.expiresAt) && grant.expiresAt > now);
 }
