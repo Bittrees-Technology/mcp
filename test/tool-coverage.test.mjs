@@ -41,3 +41,15 @@ test('central search is paginated, exact and restricted to selected apps', () =>
  assert.equal(call('search_bittrees_tools',{query:'calendar'},'mode=selected&projects=crm').total,0);
  assert.throws(()=>call('search_bittrees_tools',{limit:101}));
 });
+test('gateway-owned workflow route survives an empty source manifest without granting execution',()=>{
+ const plan=call('plan_bittrees_tool_use',{projectId:'workflow',operation:'sync'},'mode=selected&projects=workflow');
+ assert.equal(plan.executionAllowed,false);assert.equal(plan.routes.length,1);
+ assert.deepEqual(plan.routes[0].tools,['workflow_claim','workflow_renew']);
+ assert.equal(plan.routes[0].transport,'managed-mcp');
+ const tool=call('get_bittrees_tool',{id:'workflow:workflow_complete'},'mode=selected&projects=workflow');
+ assert.equal(tool.schemaDiscovery.authority,'gateway');assert.equal(tool.execution,'source-authorized-connection-required');
+ assert.match(tool.description,/current Roles action authority/);assert.match(tool.description,/No registration, grant/);
+ assert.equal(call('search_bittrees_tools',{query:'workflow_'},'mode=selected&projects=workflow').total,3);
+ assert.equal(call('search_bittrees_tools',{query:'workflow_'},'mode=selected&projects=crm').total,0);
+ assert.equal(call('plan_bittrees_tool_use',{projectId:'workflow',operation:'publish'}).routes.length,0);
+});

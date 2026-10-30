@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { scopeError } from './catalog.mjs';
+import { WORKFLOW_DEVICE_CONNECTION } from './workflow-device-route.mjs';
 const registry = JSON.parse(readFileSync(new URL('../../data/tool-coverage.json', import.meta.url), 'utf8'));
 export const OPERATIONS = ['read', 'create', 'update', 'complete', 'research', 'sync', 'publish', 'prepare', 'delete'];
 const policy = {
@@ -11,6 +12,7 @@ const policy = {
 };
 export function coverageFor(project) {
   const connections = registry.connections.filter(c => c.projectId === project.id);
+  if(project.id==='workflow'&&!connections.some(c=>c.transport==='managed-mcp'&&c.endpoint===WORKFLOW_DEVICE_CONNECTION.endpoint))connections.push(structuredClone(WORKFLOW_DEVICE_CONNECTION));
   for (const c of connections) {
     const u = new URL(c.endpoint);
     const managed = c.transport === 'managed-mcp' && c.endpoint === 'https://mcp.bittrees.org/mcp';
@@ -63,7 +65,7 @@ export function functionCatalog(projects) {
         transport:c.transport, endpoint:c.endpoint, description:c.boundary,
         verification:c.verification, source:c.source, sync:p.sync,
         ...(c.setup ? {setup:c.setup} : {}),
-        schemaDiscovery:{method:'tools/list',authority:'source-app',requiresExistingConnection:true},
+        schemaDiscovery:{method:'tools/list',authority:c.transport==='managed-mcp'?'gateway':'source-app',requiresExistingConnection:true},
         execution:'source-authorized-connection-required',
       });
     }

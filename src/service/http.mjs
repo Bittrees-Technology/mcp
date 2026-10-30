@@ -374,6 +374,7 @@ export function createMcpHandler({
         }
         const sourceProjects = resolveSelection(catalog, profile).projects.map(p => p.id);
         if(message.method === "tools/call" && message.params?.name?.startsWith("workflow_")) {
+          if(["origin","cookie","content-encoding"].some(k=>Object.hasOwn(req.headers,k)))throw fail("Use the native workflow device connection",403);
           if(!workflowDevices)throw fail("Workflow device connection is not configured",403);
           const data=await workflowDevices.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
           return send(200,{jsonrpc:"2.0",id:message.id,result:{structuredContent:data,content:[{type:"text",text:JSON.stringify(data)}]}});
