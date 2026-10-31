@@ -241,7 +241,12 @@
       "repository": "Bittrees-Technology/workflow",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": [],
+      "routes": [
+        {
+          "transport": "managed-mcp",
+          "endpoint": "https://mcp.bittrees.org/mcp"
+        }
+      ],
       "publicManifestUrl": "https://workflow.bittrees.org/.well-known/bittrees-tools.json"
     },
     {

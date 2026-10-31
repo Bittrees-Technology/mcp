@@ -3,8 +3,7 @@ import {createHash} from 'node:crypto';
 import {functionCatalog} from '../ecosystem/tool-coverage.mjs';
 import {eligible} from '../ecosystem/catalog.mjs';
 const read=name=>JSON.parse(readFileSync(new URL(`../../data/${name}.json`,import.meta.url),'utf8'));
-export function projectCapabilities(catalog){
- const directory=functionCatalog(catalog.projects.filter(eligible)),sync=read('tool-sync-status'),sources=read('catalog-sources').sources;
+export function projectCapabilities(catalog,{directory=functionCatalog(catalog.projects.filter(eligible)),sync=read('tool-sync-status'),sources=read('catalog-sources').sources}={}){
  return catalog.projects.map(p=>{
   const tools=directory.functions.filter(f=>f.projectId===p.id),observed=sync.apps.find(a=>a.projectId===p.id);
   const disposition=p.approval!=='approved'?'pending-review':observed && observed.state!=='synced'?'blocked':tools.length?'adapter-available':observed?.state==='synced'?'resources-only':'not-enrolled';
