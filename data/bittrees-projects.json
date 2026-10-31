@@ -39,7 +39,7 @@
       },
       "source": {
         "revision": "16e36d97030fb30a6be8b2e1ed4d0ba5a51a5164",
-        "observedAt": "2026-10-31T05:55:41.968Z",
+        "observedAt": "2026-10-31T12:46:20.991Z",
         "manifestPath": "bittrees.project.json"
       },
       "lifecycle": "preview",
@@ -1172,8 +1172,8 @@
         "contactStatus": "pending"
       },
       "source": {
-        "revision": "9b48c892c751be4dafd65b6f47c3b54ea05adbb9",
-        "observedAt": "2026-10-31T05:55:41.968Z",
+        "revision": "014265ab1a587b2fd833e81b8f2619491cb9f329",
+        "observedAt": "2026-10-31T12:46:20.991Z",
         "manifestPath": "bittrees.project.json"
       },
       "lifecycle": "active",
@@ -1455,8 +1455,8 @@
   ],
   "sync": {
     "state": "reconciled",
-    "lastAttemptAt": "2026-10-31T05:55:41.968Z",
-    "lastSuccessAt": "2026-10-31T05:55:41.968Z",
+    "lastAttemptAt": "2026-10-31T12:46:20.991Z",
+    "lastSuccessAt": "2026-10-31T12:46:20.991Z",
     "errors": []
   },
   "excludedComponents": [
