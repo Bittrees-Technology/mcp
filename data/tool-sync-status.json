@@ -1,14 +1,14 @@
 {
   "canonicalDiscovery": "https://mcp.bittrees.org/mcp",
-  "checkedAt": "2026-10-18T17:31:57.819Z",
-  "state": "partial",
+  "checkedAt": "2026-10-31T10:26:08.573Z",
+  "state": "synced",
   "apps": [
     {
       "projectId": "agent",
       "state": "synced",
-      "sourceRevision": "83500a3f67b316c5f4d77f36445c098c7da63b66",
+      "sourceRevision": "16e36d97030fb30a6be8b2e1ed4d0ba5a51a5164",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
@@ -16,63 +16,63 @@
       "state": "synced",
       "sourceRevision": "81d645c52aea6fb95c38a14915bff6175e797e8b1afea5e8727ff03cc80f2b7e",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "bittrees-gov",
       "state": "synced",
-      "sourceRevision": "74213daecd3f486c883f46be49943afb1f44609b",
+      "sourceRevision": "64a733ce4db7611b87804d88354b4197ae77ed92",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "bittrees-org",
       "state": "synced",
-      "sourceRevision": "9d77128191ffb728a394a118a0f9886382982343",
+      "sourceRevision": "da71a2d70036d7007d279057994259c13eb5d960",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "bittrees-research",
       "state": "synced",
-      "sourceRevision": "1bab182505ecc8db7f71580e85fd35afb6fc63d1",
+      "sourceRevision": "0434c418ce72c8873ed6b23a6aac53076b8ff466",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "bounties",
       "state": "synced",
-      "sourceRevision": "f69e1757284b3aabab2a3d67b22b73c696849421",
+      "sourceRevision": "d8d43ed5768c4163b5be97c9f4abf4757c21fdc5",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "chat",
       "state": "synced",
-      "sourceRevision": "ccda887c41f4c141bd4133551441c4dcc3d328ae",
+      "sourceRevision": "0dc0ad36f033d1fe0cf8fb1548f0b42d544b5e2e",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "crypto-directory",
       "state": "synced",
-      "sourceRevision": "71732dafe82117a72c8e419e2e98bdbfa53b444c",
+      "sourceRevision": "4f0810f265dc60c2d6bd5f56ce43dbafa0329b28",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "nftfactory",
       "state": "synced",
-      "sourceRevision": "49b909bb348f2a5887570897ae250e0527df44a7",
+      "sourceRevision": "5d52ffd8e352c1681cd17a1989b62185b2383d0b",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
@@ -80,7 +80,7 @@
       "state": "synced",
       "sourceRevision": "11bd99616b4c1427bdc5b327070306f43ed48e3238b689f66c48e3294a3d8d4b",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
@@ -88,7 +88,7 @@
       "state": "synced",
       "sourceRevision": "0e73ad325143286cf97cee9e19f3b793cb8fdacc269147d47f9ae52b40ba2431",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 2
     },
     {
@@ -96,61 +96,63 @@
       "state": "synced",
       "sourceRevision": "80a49efbbed0d78f792374522f6000b7b56a91ad3d8ea20e1e138f486dbf7153",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "crm",
       "state": "synced",
-      "sourceRevision": "a3f4fce717df4bdef5ea412cb23ca9e787e4624f",
+      "sourceRevision": "bd7b5135120e2cea254609b9188c3f5b68040bb5",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 21
     },
     {
       "projectId": "autonote",
       "state": "synced",
-      "sourceRevision": "1581250d29019a8bf337c860cadbad6d59be664d",
+      "sourceRevision": "2cf66e23a93cd6e581145fe02227fea5e1119028",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 3
     },
     {
       "projectId": "mercado",
       "state": "synced",
-      "sourceRevision": "fc39dbaee096c35b358843b2c96cc6e78e65c2cd",
+      "sourceRevision": "ddd577cf3df9eba0f502ce29a6fb261cf6075280",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 3
     },
     {
       "projectId": "ecrypt",
       "state": "synced",
-      "sourceRevision": "c574560024f5f5881951ca897634bf94a63b6368",
+      "sourceRevision": "ca799f80d17ec6f7583de153754121ce0749444e",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "cryptoalegre",
       "state": "synced",
-      "sourceRevision": "ef9449092fe78e983e74fcf15cfecc4e9e167ff1",
+      "sourceRevision": "594589e0ef23065365abbc3cb6a9aca72afa4f1b",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
       "projectId": "the-verse",
-      "state": "unavailable-or-invalid",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
-      "retainedPrevious": true
+      "state": "synced",
+      "sourceRevision": "c1dba81f86348ea5aa13f2ef360e2fcc6017b8de",
+      "revisionType": "git-commit",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
+      "toolCount": 0
     },
     {
       "projectId": "mcp",
       "state": "synced",
-      "sourceRevision": "cbb1e02b240f15cba6495488cd7012d2fc453315",
+      "sourceRevision": "6719764ea13cfd2b787ffce274762188c25fadb6",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 12
     },
     {
@@ -158,15 +160,15 @@
       "state": "synced",
       "sourceRevision": "1681174971702b007ab8d48fc5a113e59f027fb80478b683e3981f15f26d1165",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 6
     },
     {
       "projectId": "news",
       "state": "synced",
-      "sourceRevision": "7ec4f4f173a888848e3716b8a4f8ddcf6aef578a",
+      "sourceRevision": "b5fad5d2b51a74015cea5898d3a7e43592986874",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 23
     },
     {
@@ -174,15 +176,15 @@
       "state": "synced",
       "sourceRevision": "4afd8be954f826863446bcd167dd3870f1b03c7ca6f75cbe30a476d45b117e21",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 6
     },
     {
       "projectId": "ai",
       "state": "synced",
-      "sourceRevision": "bf993f984fd9407f1df1fb460b5df2746d5eb56f",
+      "sourceRevision": "bf2c48068b462200229e5a79ebce3e0df11e9028",
       "revisionType": "git-commit",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
@@ -190,7 +192,7 @@
       "state": "synced",
       "sourceRevision": "e414292a64188378b15bba424f754427714fb627405f8ea9d7c08eb727b361dd",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     },
     {
@@ -198,7 +200,7 @@
       "state": "synced",
       "sourceRevision": "213b24777762614796547ddeaff9f635b2b21fa26e264aebe6a93085218c9e9a",
       "revisionType": "manifest-sha256",
-      "checkedAt": "2026-10-18T17:31:57.819Z",
+      "checkedAt": "2026-10-31T10:26:08.573Z",
       "toolCount": 0
     }
   ]

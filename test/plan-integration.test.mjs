@@ -20,7 +20,15 @@ test('atomic MCP setup shares REST checks and connection scope; history paginati
  }finally{server.close();await once(server,'close');}
 });
 test('readiness distinguishes source failure, resources and public gateway; evidence expires',()=>{
- const projects=projectCapabilities(CATALOG);assert.equal(projects.find(p=>p.id==='mcp').execution,'public-discovery-available');assert.equal(projects.find(p=>p.id==='the-verse').toolSync,'unavailable-or-invalid');
+ // Source publication is expected to recover; readiness tests must not pin a
+ // real project's transient sync outcome or prevent a recovered manifest publishing.
+ const fixtures={directory:{functions:[{projectId:'crm'}]},sync:{apps:[{projectId:'crm',state:'unavailable-or-invalid'},{projectId:'agent',state:'synced'}]},sources:[]};
+ const projects=projectCapabilities(CATALOG,fixtures);
+ assert.equal(projects.find(p=>p.id==='mcp').execution,'public-discovery-available');
+ assert.equal(projects.find(p=>p.id==='crm').disposition,'blocked');
+ assert.equal(projects.find(p=>p.id==='agent').disposition,'resources-only');
+ const recovered=projectCapabilities(CATALOG,{...fixtures,sync:{apps:[{projectId:'crm',state:'synced'}]}});
+ assert.equal(recovered.find(p=>p.id==='crm').disposition,'adapter-available');
  assert.equal(verificationEvidence({clock:()=>Date.parse('2026-10-17')}).recovery.state,'restore-verified-for-recorded-schema');
  assert.equal(verificationEvidence({clock:()=>Date.parse('2027-01-01')}).recovery.state,'restore-verification-expired-or-schema-changed');
  assert.equal(verificationEvidence({release:'new'}).execution.state,'not-verified');

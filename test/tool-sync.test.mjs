@@ -2,10 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {validateToolManifest,reconcileToolManifests} from '../src/ecosystem/tool-sync.mjs';
+import {WORKFLOW_DEVICE_CONNECTION} from '../src/ecosystem/workflow-device-route.mjs';
 const read=p=>JSON.parse(readFileSync(new URL(p,import.meta.url)));
 const policy=read('../data/tool-sources.json'),previous=read('../data/tool-coverage.json');
 const source=policy.sources.find(s=>s.id==='crm');
 const manifest={schema:'bittrees.app-tools.v1',version:1,projectId:'crm',canonicalDiscovery:'https://mcp.bittrees.org/mcp',connections:previous.connections.filter(c=>c.projectId==='crm')};
+test('Workflows can publish the already reviewed gateway queue route without adding an endpoint',()=>{
+ const workflow=policy.sources.find(s=>s.id==='workflow');
+ const value={schema:'bittrees.app-tools.v1',version:1,projectId:'workflow',canonicalDiscovery:'https://mcp.bittrees.org/mcp',connections:[structuredClone(WORKFLOW_DEVICE_CONNECTION)]};
+ assert.equal(validateToolManifest(value,workflow),value);
+ const changed=structuredClone(value);changed.connections[0].endpoint='https://workflow.bittrees.org/arbitrary';assert.throws(()=>validateToolManifest(changed,workflow));
+});
 test('sync validates source identity and never accepts new endpoints or setup commands',()=>{
  assert.equal(validateToolManifest(manifest,source),manifest);
  for(const mutate of [m=>m.projectId='calendar',m=>m.connections[0].endpoint='https://attacker.example/mcp',m=>m.connections[0].setup={command:'sh'},m=>m.connections[0].operations.read=['invalid tool']]){const m=structuredClone(manifest);mutate(m);assert.throws(()=>validateToolManifest(m,source));}
