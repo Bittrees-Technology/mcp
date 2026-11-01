@@ -1,0 +1,48 @@
+{
+  "schema": "bittrees.agent.task-source-sites.v1",
+  "source": "https://agent.bittrees.org",
+  "reviewedSourceCommit": "41e97a8a9128b66e5978314317e7ec1ff58b4638",
+  "observedFeedRevision": "64d129f59f449b4449b3b5960df2fece54506150afcfc09c45f30b75b83bff8e",
+  "sites": [
+    {
+      "projectId": "agent",
+      "siteUrl": "https://agent.bittrees.org"
+    },
+    {
+      "projectId": "bittrees-capital",
+      "siteUrl": "https://capital.bittrees.org"
+    },
+    {
+      "projectId": "bittrees-gov",
+      "siteUrl": "https://gov.bittrees.org"
+    },
+    {
+      "projectId": "bittrees-org",
+      "siteUrl": "https://bittrees.org"
+    },
+    {
+      "projectId": "bittrees-research",
+      "siteUrl": "https://research.bittrees.org"
+    },
+    {
+      "projectId": "bounties",
+      "siteUrl": "https://bounties.bittrees.org"
+    },
+    {
+      "projectId": "chat",
+      "siteUrl": "https://chirpy.bittrees.org"
+    },
+    {
+      "projectId": "crypto-directory",
+      "siteUrl": null
+    },
+    {
+      "projectId": "nftfactory",
+      "siteUrl": "https://nftfactory.org"
+    },
+    {
+      "projectId": "tcp",
+      "siteUrl": "https://tcp.bittrees.org"
+    }
+  ]
+}

@@ -46,7 +46,8 @@
           },
           "operations": {
             "read": [
-              "gov.list_public_forum_posts"
+              "gov.list_public_forum_posts",
+              "gov.get_public_forum_thread"
             ]
           }
         }
