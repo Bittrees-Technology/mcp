@@ -53,7 +53,7 @@ test('configuration changes or redirects during a private read never release the
  await assert.rejects(huge.reads.call(huge.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));
 });
 test('legacy source responses without exact execution receipts never release private data',async()=>{
- for(const headers of [{},{'Request-Id':'wrong','Operation-Id':'wrong','Decision-Digest':'0'.repeat(64)}]){
+ for(const headers of [{},{'X-Bittrees-Mcp-Request-Id':'wrong','X-Bittrees-Mcp-Operation-Id':'wrong','X-Bittrees-Mcp-Decision-Digest':'0'.repeat(64)}]){
   const f=privateFixture();let calls=0;const original=f.reads.request;f.reads.request=async(url,options)=>{if(url.endsWith('/operations'))return original(url,options);calls++;return Response.json({sensitive:'synthetic-only'},{headers});};
   await assert.rejects(f.reads.call(f.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(calls,1);
  }
