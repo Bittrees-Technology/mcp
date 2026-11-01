@@ -66,3 +66,5 @@ model: two steps, lost-reply reconciliation without regeneration, successor and
 source/delegation revocation denial. Its identities, policies and source grants
 were synthetic and in memory. It is controlled pilot evidence, not production
 enrollment, deployment or live user authority.
+
+The gateway independently revalidates the original signed Roles decision before source dispatch and synchronously after the final source-response read and current-connection check. Result delivery must still be within the signed expiry, for the exact tenant, workflow, action, operation ID and canonical argument digest. A source mutation may already have committed while authorized even when its response arrives too late. In that case the gateway returns409 without private results; retain the original logical operation and reconcile under fresh proof. Never treat a held delivery as proof that nothing happened or silently create another job, model run or operation ID.

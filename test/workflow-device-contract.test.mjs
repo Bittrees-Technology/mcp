@@ -1,3 +1,4 @@
+import{workflowAuthorityFixture}from'./fixtures/workflow-authority-fixture.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
@@ -35,13 +36,7 @@ test('a stalled source read aborts without awaiting a stalled cancellation',asyn
  const pending=readWorkflowDeviceResponse(new Response(stream,{headers:{'content-type':'application/json'}}),'workflow_claim',control.signal);
  control.abort(Error('deadline'));await assert.rejects(pending,/deadline/);assert.equal(cancelled,true);
 });
-function setup(){
- const args=base(),actor={tenant:'t',subject:'device',tokenHash:'h',audience:'https://mcp.bittrees.org',expiresAt:Date.now()+60000,permissions:['workflow:execute'],projectIds:['workflow'],rolesAuthorityBinding:'binding'};
- const c={tenant:'t',subject:'device',actorTokenHash:'h',token:'s'.repeat(32),connections:[{connectionId:args.connectionId,workflowId:args.workflowId}]};
- let checks=0,forwards=0,before=()=>{},reply=()=>Response.json({job:null});
- const adapter=new WorkflowDevices({connections:[c],rolesConsumer:{execute:async(a,b,s,p,effect)=>{checks++;await before();return effect(p,{})}},request:async()=>{forwards++;return reply()}});
- return {args,actor,c,adapter,checks:()=>checks,forwards:()=>forwards,before:fn=>before=fn,reply:fn=>reply=fn};
-}
+const setup=()=>workflowAuthorityFixture({args:base()});
 test('revoked configuration during Roles checks denies dispatch; scope mutation cannot switch source',async()=>{
  const f=setup();f.before(()=>{f.c.connections=[]});await assert.rejects(f.adapter.call(f.actor,['workflow'],'workflow_claim',f.args));assert.equal(f.forwards(),0);
  const g=setup();g.before(()=>{g.args.workflowId='injected'});await g.adapter.call(g.actor,['workflow'],'workflow_claim',g.args);assert.equal(g.forwards(),1,'caller arguments were snapshotted before await');
