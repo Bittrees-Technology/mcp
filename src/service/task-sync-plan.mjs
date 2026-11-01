@@ -1,6 +1,10 @@
+import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {CATALOG,eligible} from '../ecosystem/catalog.mjs';
 import {canonical} from './roles-proof.mjs';
+// Source-site identity is reviewed separately from a directory's current public URL.
+// This recognition grants no CRM mapping, source consent or task import authority.
+const sourceSites=JSON.parse(readFileSync(new URL('../../data/agent-task-source-sites.json',import.meta.url),'utf8')).sites;
 const fail=message=>{throw new Error(message)};
 const digest=value=>createHash('sha256').update(canonical(value)).digest('hex');
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
@@ -11,7 +15,8 @@ export function planTaskSync(envelope,{catalog=CATALOG,mappings=[],previous=[],n
  const seenProjects=new Set(),seenTasks=new Set(),tasks=[];
  for(const group of feed.projects){
   const project=catalog.projects.find(p=>p.id===group.projectId&&eligible(p));
-  if(!project||seenProjects.has(group.projectId)||(group.siteUrl===null ? project.publicUrl!==null : !project.publicUrl || new URL(group.siteUrl).origin!==new URL(project.publicUrl).origin)||!Array.isArray(group.tasks))fail('Unapproved, duplicate or mismatched source project');
+  const site=sourceSites.find(p=>p.projectId===group.projectId);
+  if(!project||seenProjects.has(group.projectId)||(!site||group.siteUrl!==site.siteUrl)||!Array.isArray(group.tasks))fail('Unapproved, duplicate or mismatched source project');
   seenProjects.add(group.projectId);
   const candidates=mappings.filter(m=>m.sourceProjectId===project.id&&m.sourceSiteUrl===group.siteUrl&&m.approved===true&&m.expiresAt>now&&uuid.test(m.crmProjectId)&&uuid.test(m.workspaceId));
   const mapping=candidates.length===1?candidates[0]:null;
@@ -30,6 +35,6 @@ export function planTaskSync(envelope,{catalog=CATALOG,mappings=[],previous=[],n
  }
  const retained=previous.filter(p=>!seenTasks.has(p.sourceId)).map(p=>({sourceId:p.sourceId,state:'retain-for-review'}));
  return {schema:'bittrees.mcp.task-sync-plan.v1',source:feed.source,revision:feed.revision,checkedAt:new Date(now).toISOString(),writeEnabled:false,
-  blocker:'CRM currently creates/updates AI draft/review tasks only. Ordinary backlog import requires a reviewed source capability and an enrolled, authorized MCP actor.',tasks,retained,
+  blocker:'Ordinary backlog import requires current source consent, an exact approved CRM project mapping and an enrolled, authorized MCP actor; this plan grants none of them.',tasks,retained,
   policy:{deleteOnMissing:false,completeOnMissing:false,preserveOwnerFields:true,automaticProjectCreation:false}};
 }

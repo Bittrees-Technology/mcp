@@ -16,3 +16,10 @@ test('missing tasks remain retained and owner edits and remapping require review
  assert.equal(planTaskSync(feed(),{mappings:[mapping],previous:[{...prior,crmProjectId:'other'}]}).tasks[0].state,'mapping-conflict');
  const f=feed();f.data.projects[0].tasks=[];assert.deepEqual(planTaskSync(f,{previous:[prior]}).retained,[{sourceId:task.sourceId,state:'retain-for-review'}]);
 });
+test('reviewed Agent source-site identity survives public directory URL changes without broadening mapping or retired authority',()=>{
+ const f=feed();f.data.projects[0]={projectId:'crypto-directory',siteUrl:null,tasks:[{...task,sourceId:'agent-readiness:crypto-directory:task',projectId:'crypto-directory'}]};
+ const planned=planTaskSync(f);assert.equal(planned.tasks.length,1);assert.equal(planned.tasks[0].state,'mapping-required');assert.equal(planned.tasks[0].destination,null);
+ for(const siteUrl of ['https://cd.bittrees.org','https://other.invalid']){const changed=structuredClone(f);changed.data.projects[0].siteUrl=siteUrl;assert.throws(()=>planTaskSync(changed));}
+ const nulled=feed();nulled.data.projects[0].siteUrl=null;assert.throws(()=>planTaskSync(nulled));
+ const retired=feed();retired.data.projects[0].projectId='id-agent-control-center';assert.throws(()=>planTaskSync(retired));
+});
