@@ -47,7 +47,8 @@
           "operations": {
             "read": [
               "gov.list_public_forum_posts",
-              "gov.get_public_forum_thread"
+              "gov.get_public_forum_thread",
+              "gov.search_public_forum"
             ]
           }
         }
