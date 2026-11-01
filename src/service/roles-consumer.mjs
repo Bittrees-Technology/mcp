@@ -16,7 +16,7 @@ export class RolesConsumer {
   }
   async execute(actor,bindingId,scope,parameters,effect) {
     actor=structuredClone(actor);scope=structuredClone(scope);parameters=structuredClone(parameters);
-    let envelope;
+    let envelope, proofContext;
     try {
       const b=this.bindings.find(b=>b.id===bindingId);
       if(!b||b.tenant!==actor.tenant||b.subject!==actor.subject||b.actorTokenHash!==actor.tokenHash||
@@ -56,16 +56,20 @@ export class RolesConsumer {
       }
       const message=Buffer.from(requestMessage(request));
       if(!deviceHeld)principalSignature=sign(null,message,key).toString('base64');
+      const gatewaySignature=sign(null,message,gateway).toString('base64');
       let response;try { response=await this.request(DECISION_ENDPOINT,{method:'POST',redirect:'error',signal:AbortSignal.timeout(4000),headers:{'content-type':'application/json'},
-        body:JSON.stringify({request,signature:sign(null,message,gateway).toString('base64'),principalSignature,...(runtimeAttestation?{runtimeAttestation}:{})})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
+        body:JSON.stringify({request,signature:gatewaySignature,principalSignature,...(runtimeAttestation?{runtimeAttestation}:{})})}); } catch {throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});}
       if([502,503,504].includes(response.status))throw Object.assign(new Error('Roles temporarily unavailable'),{statusCode:503,transient:true});
       if(!response.ok)throw denied();
       const raw=await response.text();if(Buffer.byteLength(raw)>32768)throw denied();
       envelope=JSON.parse(raw);
       const decision=verifyDecision(envelope,request,this.decisionKey,this.clock());
       if(decision.allowed!==true)throw denied();
-      // Pass the verified envelope only to the immediate effect for downstream verification.
+      // Retain only public signed material for an immediate typed source verifier.
+      // No private keys or signer capability leave this consumer. Existing effects
+      // still receive the same first two arguments.
+      proofContext=structuredClone({request,signature:gatewaySignature,principalSignature,decisionEnvelope:envelope});
     } catch (error) {if(error.transient===true||error.deviceChallenge)throw error;throw denied();}
-    return effect(parameters,envelope);
+    return effect(parameters,envelope,proofContext);
   }
 }
