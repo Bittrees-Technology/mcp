@@ -31,7 +31,13 @@ export class RolesConsumer {
       const deviceHeld=b.publicKey!=null;
       if(deviceHeld&&b.privateKey!=null)throw denied();
       if(b.leaseId&&!deviceHeld)throw denied();
-      if(deviceHeld&&scope.deviceChallenge===true&&!b.leaseId)throw denied();
+      const delegatedReadChallenge=scope.delegatedDeviceReadChallenge===true && scope.deviceChallenge===true &&
+        uuid.test(b.delegationId??'') && !b.leaseId && !b.runtimeBindingDigest && deviceHeld && b.privateKey==null &&
+        (scope.stage??'execute')==='execute' &&
+        ((scope.project==='mail' && scope.resource==='mail:selected-read' && ['mail.read_selected_metadata','mail.read_selected_plain'].includes(scope.action)) ||
+         (scope.project==='insights' && scope.resource==='analytics:permissioned' && ['analytics.read','analytics.export'].includes(scope.action)));
+      if(scope.delegatedDeviceReadChallenge!==undefined&&!delegatedReadChallenge)throw denied();
+      if(deviceHeld&&scope.deviceChallenge===true&&!b.leaseId&&!delegatedReadChallenge)throw denied();
       const key=deviceHeld?createPublicKey(b.publicKey):createPrivateKey(b.privateKey),gateway=createPrivateKey(this.gatewayKey);
       if(key.asymmetricKeyType!=='ed25519'||gateway.asymmetricKeyType!=='ed25519')throw denied();
       const publicKey=deviceHeld?key:createPublicKey(key);

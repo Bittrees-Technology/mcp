@@ -29,7 +29,7 @@ export function privateFixture(source='insights'){
   assert.ok(!JSON.stringify(proof).includes('PRIVATE KEY'));
   const expected=source==='mail'?mailContext(connection,args.params.arguments,o.headers['x-bittrees-mcp-operation-id']):insightsContext(connection,url.endsWith('export-analytics')?'insights.export_analytics':'insights.read_analytics',args);
   assert.equal(proof.request.parametersDigest,hash(canonical(expected)));await sourceVerifier({proof,parameters:expected,body:args,options:o,url});sourceEffect++;now+=delay;
-  return Response.json(source==='mail'?{jsonrpc:'2.0',id:args.id,result:{structuredContent:{metadata:{subject:'synthetic'}}}}:{summary:{views:3}},{headers:{'Request-Id':proof.request.requestId,'Operation-Id':proof.request.operationId,'Decision-Digest':hash(canonical(proof.decisionEnvelope))}});
+  return Response.json(source==='mail'?{jsonrpc:'2.0',id:args.id,result:{structuredContent:{metadata:{subject:'synthetic'}}}}:{summary:{views:3}},{headers:{'X-Bittrees-Mcp-Request-Id':proof.request.requestId,'X-Bittrees-Mcp-Operation-Id':proof.request.operationId,'X-Bittrees-Mcp-Decision-Digest':hash(canonical(proof.decisionEnvelope))}});
  }});
  return {actor,binding,connection,consumer,reads,calls,proofs,gateway,principal,roles,clock:()=>now,setNow:x=>now=x,setDelay:x=>delay=x,setSourceVerifier:fn=>sourceVerifier=fn,denyRoles:()=>denyRoles=true,alterChallenge:fn=>alterChallenge=fn,effects:()=>sourceEffect};
 }
