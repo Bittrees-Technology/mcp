@@ -61,7 +61,7 @@ export async function runtime(env = process.env) {
     taskSync:new TaskSync(store,{rolesConsumer,connections:JSON.parse(env.MCP_TASK_SYNC_CONNECTIONS_JSON || "[]")}),
     rolesReadiness:rolesConsumer.readiness(),
     sourceConnections: new SourceConnections([...JSON.parse(env.MCP_SOURCE_CONNECTIONS_JSON || "[]"), ...JSON.parse(env.MCP_QUALIFIED_CONNECTIONS_JSON || "[]")], fetch, rolesConsumer),
-    privateReads:new PrivateReads({enabled:env.MCP_PRIVATE_READS_ENABLED==='true',connections:JSON.parse(env.MCP_PRIVATE_READ_CONNECTIONS_JSON||'[]'),rolesConsumer}),
+    privateReads:new PrivateReads({enabled:env.MCP_PRIVATE_READS_ENABLED==='true',deviceEnabled:env.MCP_PRIVATE_DEVICE_READS_ENABLED==='true',store,connections:JSON.parse(env.MCP_PRIVATE_READ_CONNECTIONS_JSON||'[]'),rolesConsumer}),
     engine: new Engine(store, { aiWorker }),
     credentials,
     workerToken: env.MCP_WORKER_TOKEN,

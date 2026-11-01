@@ -387,7 +387,10 @@ export function createMcpHandler({
         }
         if (message.method === "tools/call" && message.params?.name?.startsWith("private_")) {
           if (["origin","cookie","content-encoding"].some(k=>Object.hasOwn(req.headers,k)) || !privateReads) throw fail("Private reads unavailable",403);
-          const data=await privateReads.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
+          const resume=req.headers['x-bittrees-private-operation'];
+          if(resume!==undefined&&(typeof resume!=='string'||resume.length>36))throw fail('Invalid private operation reference',403);
+          const options=resume===undefined?{}:resume==='new'?{fresh:true}:{operationId:resume};
+          const data=await privateReads.call(actor,sourceProjects,message.params.name,message.params.arguments??{},options);
           return send(200,{jsonrpc:"2.0",id:message.id,result:{structuredContent:data,content:[{type:"text",text:JSON.stringify(data)}]}});
         }
         if (message.method === "tools/call" && message.params?.name?.startsWith("source_")) {
