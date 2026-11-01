@@ -85,7 +85,27 @@
       "repository": "Bittrees-Technology/crypto-directory",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [
+        {
+          "transport": "local-mcp-adapter",
+          "endpoint": "https://cd.bittrees.org/data/projects.json",
+          "setup": {
+            "command": "node",
+            "args": [
+              "integrations/crypto-directory-read-mcp.mjs"
+            ],
+            "authentication": "none"
+          },
+          "operations": {
+            "read": [
+              "directory.search",
+              "directory.get_listing",
+              "directory.list_categories",
+              "directory.read_release"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "nftfactory",

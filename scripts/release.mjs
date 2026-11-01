@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import {verifySelectedAgentResources} from "./release-contract.mjs";
 import { writeFile, mkdir } from "node:fs/promises";
 const exec = promisify(execFile);
 const target = new URL(process.env.MCP_TARGET_DEPLOYMENT);
@@ -84,13 +85,7 @@ async function verify(base) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "resources/list" }),
   });
-  if (
-    result.result?.resources?.length !== 2 ||
-    !result.result.resources.every((r) =>
-      r.uri.startsWith("https://mcp.bittrees.org/"),
-    )
-  )
-    throw new Error("Scoped MCP verification failed");
+  verifySelectedAgentResources(result);
   return health;
 }
 const preflight = await verify(target);
