@@ -404,12 +404,14 @@
         "research",
         "awareness"
       ],
-      "availability": "repository",
+      "availability": "public-site",
       "repositoryUrl": "https://github.com/Bittrees-Technology/crypto-directory",
-      "publicUrl": null,
+      "publicUrl": "https://cd.bittrees.org",
       "sourceEvidence": [
         "repository README",
-        "IDACC project catalog"
+        "IDACC project catalog",
+        "https://cd.bittrees.org/release.json",
+        "https://github.com/Bittrees-Technology/crypto-directory/blob/07c6743afc7f89cf0268fff204b68adae5bedc2c/bittrees.tools.json"
       ],
       "aliases": [],
       "affiliation": "related",
@@ -425,9 +427,9 @@
         "contactStatus": "pending"
       },
       "source": {
-        "revision": "f05872180c3c02e9b97d6695048697f6c1aa9c07",
-        "observedAt": "2026-09-16T16:45:00Z",
-        "manifestPath": "bittrees.project.json"
+        "revision": "07c6743afc7f89cf0268fff204b68adae5bedc2c",
+        "observedAt": "2026-11-01T12:16:37.436Z",
+        "manifestPath": "bittrees.tools.json"
       },
       "lifecycle": "preview",
       "health": {

@@ -9,8 +9,8 @@ function fixture(id){
  const source=policy.find(s=>s.id===id),route=source.routes[0];
  return {source,manifest:{schema:'bittrees.app-tools.v1',version:1,projectId:id,canonicalDiscovery:'https://mcp.bittrees.org/mcp',connections:[{projectId:id,transport:route.transport,endpoint:route.endpoint,setup:structuredClone(route.setup),operations:structuredClone(route.operations),source:`https://github.com/${source.repository}/blob/main/bittrees.tools.json`,verification:'fixture-only',boundary:'Bounded public read-only projection; no private data or writes.'}]}};
 }
-test('public Agent, Gov and TCP routes accept only reviewed read operations and preserve the last good manifest on expansion',()=>{
- for(const id of ['agent','bittrees-gov','tcp']){
+test('public Agent, Gov, TCP and CryptoDirectory routes accept only reviewed read operations and preserve the last good manifest on expansion',()=>{
+ for(const id of ['agent','bittrees-gov','tcp','crypto-directory']){
   const {source,manifest}=fixture(id);assert.equal(validateToolManifest(manifest,source),manifest);
   for(const change of [c=>c.endpoint+='?url=https://other.invalid',c=>c.setup=undefined,c=>c.setup.command='sh',c=>c.operations.create=['records.write'],c=>c.operations.read.push('private.read'),c=>c.operations.delete=['records.delete']]){
    const bad=structuredClone(manifest);change(bad.connections[0]);assert.throws(()=>validateToolManifest(bad,source));
