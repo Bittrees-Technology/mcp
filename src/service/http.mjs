@@ -85,6 +85,7 @@ export function createMcpHandler({
   observeRoles = async () => ({state:"not-checked",consumerEnforcement:"not-integrated"}),
   aiConnections,
   sourceConnections,
+  privateReads,
   taskSync,
   workflowDevices,
   catalog = CATALOG,
@@ -384,6 +385,11 @@ export function createMcpHandler({
           const data=await taskSync.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
           return send(200,{jsonrpc:"2.0",id:message.id,result:{structuredContent:data,content:[{type:"text",text:JSON.stringify(data)}]}});
         }
+        if (message.method === "tools/call" && message.params?.name?.startsWith("private_")) {
+          if (["origin","cookie","content-encoding"].some(k=>Object.hasOwn(req.headers,k)) || !privateReads) throw fail("Private reads unavailable",403);
+          const data=await privateReads.call(actor,sourceProjects,message.params.name,message.params.arguments??{});
+          return send(200,{jsonrpc:"2.0",id:message.id,result:{structuredContent:data,content:[{type:"text",text:JSON.stringify(data)}]}});
+        }
         if (message.method === "tools/call" && message.params?.name?.startsWith("source_")) {
           if (actor?.managed && message.params.name.endsWith("_execute")) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:execute");
           if (!sourceConnections) throw fail("Source connections disabled", 403);
@@ -467,6 +473,7 @@ export function createMcpHandler({
           result.result.tools = [
             ...result.result.tools,
             ...(sourceConnections?.list(actor, sourceProjects) ?? []),
+            ...(privateReads?.list(actor, sourceProjects) ?? []),
             ...(taskSync?.list(actor, sourceProjects) ?? []),
             ...(workflowDevices?.list(actor, sourceProjects) ?? []),
             ...management.map(({ permission, operation, ...tool }) => tool),
