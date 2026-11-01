@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { scopeError } from './catalog.mjs';
 import { WORKFLOW_DEVICE_CONNECTION } from './workflow-device-route.mjs';
+import {connectionRequirements,connectionInstructions} from './connection-requirements.mjs';
 const registry = JSON.parse(readFileSync(new URL('../../data/tool-coverage.json', import.meta.url), 'utf8'));
 export const OPERATIONS = ['read', 'create', 'update', 'complete', 'research', 'sync', 'publish', 'prepare', 'delete'];
 const policy = {
@@ -38,7 +39,8 @@ export function toolCoverage(projects) {
 export function planToolUse(project, operation) {
   if (!OPERATIONS.includes(operation)) throw scopeError('Unsupported operation');
   const coverage = coverageFor(project);
-  const routes = coverage.connections.filter(c => c.operations[operation]?.length).map(c => ({
+ const connections=coverage.connections.filter(c => c.operations[operation]?.length);
+ const routes = connections.map(c => ({
     transport: c.transport, endpoint: c.endpoint, tools: c.operations[operation],
     source: c.source, verification: c.verification, boundary: c.boundary, ...(c.setup ? {setup:c.setup} : {}),
   }));
@@ -47,7 +49,7 @@ export function planToolUse(project, operation) {
     status: routes.length ? 'discover-app-tools-first' : 'coverage-gap',
     executionAllowed: false,
     nextAction: routes.length
-      ? 'Use the existing scoped app credential for initialize and tools/list. Match current schemas and permissions before calling tools. If missing or denied, report the exact gap; do not grant access or silently use a browser.'
+      ? connectionInstructions(connections)
       : 'No reviewed route for this operation. Inspect or add a scoped app MCP/API adapter. Do not treat public catalog access as permission for this action.',
   };
 }
@@ -65,8 +67,7 @@ export function functionCatalog(projects) {
         transport:c.transport, endpoint:c.endpoint, description:c.boundary,
         verification:c.verification, source:c.source, sync:p.sync,
         ...(c.setup ? {setup:c.setup} : {}),
-        schemaDiscovery:{method:'tools/list',authority:c.transport==='managed-mcp'?'gateway':'source-app',requiresExistingConnection:true},
-        execution:'source-authorized-connection-required',
+        ...connectionRequirements(c),
       });
     }
   }

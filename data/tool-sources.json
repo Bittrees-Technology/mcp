@@ -6,7 +6,23 @@
       "repository": "Bittrees-Technology/agent",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://agent.bittrees.org/api/public-mcp",
+          "setup": {
+            "authentication": "none"
+          },
+          "operations": {
+            "read": [
+              "agent.list_projects",
+              "agent.list_opportunities",
+              "agent.get_opportunity",
+              "agent.list_tasks"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "bittrees-capital",
@@ -21,7 +37,20 @@
       "repository": "Bittrees-Technology/Bittrees-Inc",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": []
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://gov.bittrees.org/api/public-mcp",
+          "setup": {
+            "authentication": "none"
+          },
+          "operations": {
+            "read": [
+              "gov.list_public_forum_posts"
+            ]
+          }
+        }
+      ]
     },
     {
       "id": "bittrees-org",
@@ -70,7 +99,22 @@
       "repository": "Bittrees-Technology/tcp",
       "branch": "main",
       "manifestPath": "bittrees.tools.json",
-      "routes": [],
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://tcp.bittrees.org/api/mcp",
+          "setup": {
+            "authentication": "none"
+          },
+          "operations": {
+            "read": [
+              "tcp.read_assumptions",
+              "tcp.evaluate_site",
+              "tcp.compare_scenarios"
+            ]
+          }
+        }
+      ],
       "publicManifestUrl": "https://tcp.bittrees.org/.well-known/bittrees-tools.json"
     },
     {

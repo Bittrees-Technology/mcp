@@ -14,8 +14,10 @@ export function validateToolManifest(value,source) {
   if(Object.keys(c).some(k=>!allowed.has(k)))throw Error('Unsupported connection field');
   const route=source.routes.find(r=>r.endpoint===c.endpoint&&r.transport===c.transport);
   if(JSON.stringify(c.setup??null)!==JSON.stringify(route.setup??null))throw Error('Connection setup requires review');
+  if(c.setup?.authentication==='none'&&(!route.operations||Object.keys(c.operations).some(op=>op!=='read')))throw Error('Public reads require an exact reviewed operation allowlist');
   for(const [op,tools] of Object.entries(c.operations)){
    if(!operations.has(op)||!Array.isArray(tools)||tools.length>200||tools.some(t=>typeof t!=='string'||!/^[A-Za-z0-9_.-]{1,120}$/.test(t)))throw Error('Invalid operation tools');
+   if(route.operations&&tools.some(tool=>!route.operations[op]?.includes(tool)))throw Error('Tool operation requires source review');
    for(const t of tools){if(owners.has(t)&&owners.get(t)!==routeKey)throw Error('Ambiguous tool route');owners.set(t,routeKey);names.add(t);}
   }
  }
