@@ -1,6 +1,6 @@
-import {randomUUID,createHash} from 'node:crypto';
+import {createHash,createPublicKey,createPrivateKey} from 'node:crypto';
 import {canonical,verifyDecision,verifyEd25519,requestMessage} from './roles-proof.mjs';
-import {HEX,UUID,INSIGHTS_AUDIENCE,MAIL_AUDIENCE,deny,insightsSchema,insightsSelection,insightsContext,mailSchema,mailArguments,mailChallenge} from './private-read-contract.mjs';
+import {HEX,UUID,INSIGHTS_AUDIENCE,MAIL_AUDIENCE,deny,insightsSchema,insightsSelection,insightsContext,insightsChallenge,mailSchema,mailArguments,mailChallenge} from './private-read-contract.mjs';
 const families={private_insights_read_analytics:{source:'insights',operation:'insights.read_analytics',action:'analytics.read',resource:'analytics:permissioned',endpoint:INSIGHTS_AUDIENCE+'/read-analytics',schema:insightsSchema(false)},private_insights_export_analytics:{source:'insights',operation:'insights.export_analytics',action:'analytics.export',resource:'analytics:permissioned',endpoint:INSIGHTS_AUDIENCE+'/export-analytics',schema:insightsSchema(true)},private_mail_read_selected_message:{source:'mail',operation:'mail.read_selected_message',endpoint:MAIL_AUDIENCE,schema:mailSchema}};
 const validToken=t=>typeof t==='string'&&t.length>=32&&t.length<=4096&&!/[\s\x00-\x1f\x7f]/.test(t);
 // Default-off, no connection provisioning, grants, retry, or general URL forwarding.
@@ -10,7 +10,13 @@ export class PrivateReads {
   if(this.enabled!==true||(!Number.isSafeInteger(actor?.expiresAt)||actor.expiresAt<=this.clock())&&!(actor?.managed===true&&actor.expiresAt===null)||!actor?.permissions?.includes('sources:propose')||!actor.rolesAuthorityBinding||!projects.includes(f.source)||!actor.projectIds?.includes(f.source)||!this.rolesConsumer)return deny();
   const matches=this.connections.filter(c=>c.enabled===true&&c.source===f.source&&c.tenant===actor.tenant&&c.subject===actor.subject&&c.actorTokenHash===actor.tokenHash&&c.rolesAuthorityBinding===actor.rolesAuthorityBinding);
   if(matches.length!==1)return deny();const c=matches[0];
+  // This v1 transport has no durable device challenge/resume protocol. Never
+  // obtain a device private key or regenerate an operation to bypass that hold.
+  const binding=this.rolesConsumer.bindings?.find(b=>b.id===c.rolesAuthorityBinding);
+  if(!binding?.permissions?.some(p=>p.project===f.source&&p.resource===(f.resource??'mail:selected-read')&&(f.action?p.action===f.action:['mail.read_selected_metadata','mail.read_selected_plain'].includes(p.action))))return deny();
+  if(c.proofMode!=='gateway-held-delegated-v1'||!binding||!UUID.test(binding.delegationId)||binding.publicKey!=null||binding.leaseId!=null||binding.runtimeBindingDigest!=null||typeof binding.privateKey!=='string')return deny();
   if(!Number.isSafeInteger(c.expiresAt)||c.expiresAt<=this.clock()||!validToken(c.token)||!c.operations?.includes(f.operation)||!c.gatewayPublicKey||!c.actorPublicKey)return deny();
+  try{if(createPublicKey(createPrivateKey(binding.privateKey)).export({type:'spki',format:'pem'})!==createPublicKey(c.actorPublicKey).export({type:'spki',format:'pem'})||createPublicKey(createPrivateKey(this.rolesConsumer.gatewayKey)).export({type:'spki',format:'pem'})!==createPublicKey(c.gatewayPublicKey).export({type:'spki',format:'pem'}))return deny();}catch{return deny();}
   if(f.source==='insights'?(!UUID.test(c.connectionId)||!HEX.test(c.connectionBindingDigest)):(![c.connectionId,c.mailboxBinding,c.selectionRevision].every(v=>typeof v==='string'&&HEX.test(v))))return deny();
   return c;
  }
@@ -26,12 +32,14 @@ export class PrivateReads {
  async call(actor,projects,name,args){
   const f=families[name];if(!Object.hasOwn(families,name))return deny();const c=structuredClone(this.connection(actor,projects,f));
   const parameters=f.source==='insights'?insightsSelection(args,f.action==='analytics.export'):mailArguments(args);
+  const action=f.action??(parameters.content==='plain'?'mail.read_selected_plain':'mail.read_selected_metadata');
+  if(!this.rolesConsumer.bindings.find(b=>b.id===c.rolesAuthorityBinding)?.permissions?.some(p=>p.project===f.source&&p.resource===(f.resource??'mail:selected-read')&&p.action===action))return deny();
   let operationId,context;
   if(f.source==='mail'){
    // Challenge is consent/binding preparation, never message retrieval or authority.
    const response=await this.json(MAIL_AUDIENCE+'/operations',c,parameters);context=mailChallenge(c,parameters,response,this.clock());operationId=context.operationId;
-  }else{operationId=randomUUID();context=insightsContext(c,f.operation,parameters);}
-  const scope={project:f.source,operationId,resource:f.resource??'mail:selected-read',action:f.action??(parameters.content==='plain'?'mail.read_selected_plain':'mail.read_selected_metadata'),stage:'execute'};
+  }else{const response=await this.json(INSIGHTS_AUDIENCE+'/operations',c,{operation:f.operation,arguments:parameters});context=insightsChallenge(c,f.operation,parameters,response,this.clock());operationId=response.operationId;}
+  const scope={project:f.source,operationId,resource:f.resource??'mail:selected-read',action,stage:'execute'};
   return this.rolesConsumer.execute(actor,c.rolesAuthorityBinding,scope,context,async(payload,envelope,proof)=>{
    const recheck=()=>{
     if(canonical(this.connection(actor,projects,f))!==canonical(c))return deny();

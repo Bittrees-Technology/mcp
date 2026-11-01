@@ -25,3 +25,9 @@ export function mailChallenge(c,args,response,now){
  if(response.version!==1||!UUID.test(response.operationId)||!Number.isSafeInteger(response.expiresAt)||response.expiresAt<=now||response.expiresAt>now+60000||response.expiresAt>c.expiresAt)deny();
  const expected=mailContext(c,args,response.operationId);if(canonical(response.parameters)!==canonical(expected))deny();return expected;
 }
+
+export function insightsChallenge(c,operation,selection,response,now){
+ exact(response,['version','operationId','parameters','expiresAt']);
+ if(response.version!==1||!UUID.test(response.operationId)||!Number.isSafeInteger(response.expiresAt)||response.expiresAt<=now||response.expiresAt>now+60000||response.expiresAt>c.expiresAt)deny();
+ const expected=insightsContext(c,operation,selection);if(canonical(response.parameters)!==canonical(expected))deny();return expected;
+}

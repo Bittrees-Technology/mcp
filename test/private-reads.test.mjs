@@ -9,7 +9,7 @@ test('actual Roles consumer retains only original public proofs and private fami
  const f=privateFixture();assert.equal(f.reads.list(f.actor,['insights']).length,2);
  await f.reads.call(f.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']});
  await f.reads.call(f.actor,['insights'],'private_insights_export_analytics',{siteIds:['site'],dataset:'summary',format:'csv'});
- assert.deepEqual(f.calls.map(x=>x.url),[INSIGHTS_AUDIENCE+'/read-analytics',INSIGHTS_AUDIENCE+'/export-analytics']);
+ assert.deepEqual(f.calls.map(x=>x.url),[INSIGHTS_AUDIENCE+'/operations',INSIGHTS_AUDIENCE+'/read-analytics',INSIGHTS_AUDIENCE+'/operations',INSIGHTS_AUDIENCE+'/export-analytics']);
  assert.notEqual(f.proofs[0].request.requestId,f.proofs[1].request.requestId);assert.notEqual(f.proofs[0].request.action,f.proofs[1].request.action);
  const m=privateFixture('mail');await m.reads.call(m.actor,['mail'],'private_mail_read_selected_message',mailArgs);
  assert.deepEqual(m.calls.map(x=>x.url),[MAIL_AUDIENCE+'/operations',MAIL_AUDIENCE]);
@@ -34,19 +34,19 @@ test('source challenges must exactly bind source-issued selection, descriptor an
  }
 });
 test('denied authority and late private results are discarded with no retry or exposure',async()=>{
- const f=privateFixture();f.denyRoles();await assert.rejects(f.reads.call(f.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(f.calls.length,0);
- const late=privateFixture();late.setDelay(5000);await assert.rejects(late.reads.call(late.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(late.calls.length,1);assert.equal(late.effects(),1);
+ const f=privateFixture();f.denyRoles();await assert.rejects(f.reads.call(f.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(f.calls.length,1);assert.equal(f.effects(),0);
+ const late=privateFixture();late.setDelay(5000);await assert.rejects(late.reads.call(late.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(late.calls.length,2);assert.equal(late.effects(),1);
  const wrong=privateFixture();wrong.connection.actorPublicKey=keys().publicKey;await assert.rejects(wrong.reads.call(wrong.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(wrong.calls.length,0);
 });
 test('metadata consent cannot become plain-text authority and read consent cannot become export authority',async()=>{
  const m=privateFixture('mail');m.binding.permissions=m.binding.permissions.filter(p=>p.action==='mail.read_selected_metadata');
- await assert.rejects(m.reads.call(m.actor,['mail'],'private_mail_read_selected_message',{...mailArgs,content:'plain'}));assert.equal(m.calls.length,1);assert.equal(m.effects(),0);
+ await assert.rejects(m.reads.call(m.actor,['mail'],'private_mail_read_selected_message',{...mailArgs,content:'plain'}));assert.equal(m.calls.length,0);assert.equal(m.effects(),0);
  const f=privateFixture();f.binding.permissions=f.binding.permissions.filter(p=>p.action==='analytics.read');
  await assert.rejects(f.reads.call(f.actor,['insights'],'private_insights_export_analytics',{siteIds:['site'],dataset:'summary',format:'json'}));assert.equal(f.calls.length,0);
 });
 test('configuration changes or redirects during a private read never release the returned data',async()=>{
  const changed=privateFixture();changed.setSourceVerifier(async()=>{changed.connection.connectionBindingDigest='0'.repeat(64);});
- await assert.rejects(changed.reads.call(changed.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(changed.calls.length,1);
+ await assert.rejects(changed.reads.call(changed.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(changed.calls.length,2);
  const redirect=privateFixture();redirect.reads.request=async()=>new Response(null,{status:302,headers:{location:'https://other.invalid'}});
  await assert.rejects(redirect.reads.call(redirect.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));
  const huge=privateFixture();huge.reads.request=async()=>new Response('x'.repeat(512001));
@@ -54,7 +54,12 @@ test('configuration changes or redirects during a private read never release the
 });
 test('legacy source responses without exact execution receipts never release private data',async()=>{
  for(const headers of [{},{'Request-Id':'wrong','Operation-Id':'wrong','Decision-Digest':'0'.repeat(64)}]){
-  const f=privateFixture();let calls=0;f.reads.request=async()=>{calls++;return Response.json({sensitive:'synthetic-only'},{headers});};
+  const f=privateFixture();let calls=0;const original=f.reads.request;f.reads.request=async(url,options)=>{if(url.endsWith('/operations'))return original(url,options);calls++;return Response.json({sensitive:'synthetic-only'},{headers});};
   await assert.rejects(f.reads.call(f.actor,['insights'],'private_insights_read_analytics',{siteIds:['site']}));assert.equal(calls,1);
+ }
+});
+test('device-held and lease actors cannot silently fall back to gateway key custody or new operation IDs',async()=>{
+ for(const change of [f=>f.connection.proofMode=undefined,f=>{f.binding.publicKey=f.principal.publicKey;delete f.binding.privateKey;},f=>f.binding.leaseId=randomUUID(),f=>f.binding.runtimeBindingDigest='0'.repeat(64),f=>f.binding.delegationId=null]){
+  const f=privateFixture('mail');change(f);assert.deepEqual(f.reads.list(f.actor,['mail']),[]);await assert.rejects(f.reads.call(f.actor,['mail'],'private_mail_read_selected_message',mailArgs));assert.equal(f.calls.length,0);
  }
 });
