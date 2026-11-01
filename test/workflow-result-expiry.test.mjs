@@ -1,0 +1,19 @@
+import test from'node:test';import assert from'node:assert/strict';import{createHash,randomUUID,generateKeyPairSync}from'node:crypto';
+import{canonical}from'../src/service/roles-proof.mjs';import{workflowAuthorityFixture}from'./fixtures/workflow-authority-fixture.mjs';
+function operation(op){const f=workflowAuthorityFixture(),input={title:'synthetic private claim',instruction:'PRIVATE_WORKFLOW_INSTRUCTION'};const inputHash=createHash('sha256').update(canonical(input)).digest('hex');const args={...f.args,...(op==='claim'?{}:{jobId:randomUUID(),leaseId:randomUUID()}),...(op==='complete'?{evidence:{model:'fixture',modelDigest:'fixture-model',inputHash,output:'synthetic private output'}}:{})};const leaseUntil=new Date(f.clock()+60000).toISOString();const result=op==='claim'?{job:{id:randomUUID(),runId:randomUUID(),stepIndex:0,leaseId:randomUUID(),leaseUntil,input,inputHash}}:op==='renew'?{leaseUntil}:{completed:true,runId:randomUUID(),followUpQueued:false};return {f,args,result,name:'workflow_'+op};}
+for(const op of ['claim','renew','complete']){
+ test(op+': fresh exact Roles decision delivers the valid source result',async()=>{const {f,args,result,name}=operation(op);f.reply(()=>Response.json(result));assert.deepEqual(await f.adapter.call(f.actor,['workflow'],name,args),result);assert.equal(f.forwards(),1);});
+ test(op+': a legitimately committed source effect is retained when delayed delivery crosses proof expiry',async()=>{
+  const {f,args,result,name}=operation(op);let committed;
+  f.reply(body=>{committed={operationId:body.arguments.operationId,at:f.clock(),result};return new Response(new ReadableStream({async start(controller){await new Promise(r=>setTimeout(r,2));f.advance(5000);controller.enqueue(Buffer.from(JSON.stringify(result)));controller.close();}}),{headers:{'content-type':'application/json'}});});
+  let returned;await assert.rejects(async()=>{returned=await f.adapter.call(f.actor,['workflow'],name,args);},e=>e.statusCode===409&&/reconcile the original operation/.test(e.message)&&!e.message.includes('PRIVATE_WORKFLOW_INSTRUCTION'));
+  assert.equal(returned,undefined);assert.equal(f.forwards(),1);assert.equal(committed.operationId,args.operationId);assert.ok(committed.at<f.lastDecision().decision.expiresAt);assert.equal(f.checks(),1);
+ });
+}
+test('decision key rotation during delivery holds the result without source replay',async()=>{const{f,args,result,name}=operation('claim');f.reply(()=>{f.consumer.decisionKey=generateKeyPairSync('ed25519').publicKey.export({type:'spki',format:'pem'});return Response.json(result);});await assert.rejects(f.adapter.call(f.actor,['workflow'],name,args),e=>e.statusCode===409);assert.equal(f.forwards(),1);});
+for(const op of ['claim','renew','complete'])test(op+': explicit reconciliation uses fresh proof and the same logical operation without a second source mutation',async()=>{
+ const{f,args,result,name}=operation(op);let committed=0,saved,firstRequest;
+ f.reply(body=>{if(saved){assert.equal(body.arguments.operationId,saved.operationId);return Response.json(saved.result);}committed++;firstRequest=body.decision.decision.request;saved={operationId:body.arguments.operationId,result};return new Response(new ReadableStream({async start(controller){await new Promise(r=>setTimeout(r,2));f.advance(5000);controller.enqueue(Buffer.from(JSON.stringify(result)));controller.close();}}),{headers:{'content-type':'application/json'}});});
+ await assert.rejects(f.adapter.call(f.actor,['workflow'],name,args),e=>e.statusCode===409);assert.equal(f.forwards(),1,'no automatic replay');
+ assert.deepEqual(await f.adapter.call(f.actor,['workflow'],name,args),result);assert.equal(committed,1);assert.equal(f.forwards(),2);assert.equal(f.lastDecision().decision.request.operationId,firstRequest.operationId);assert.notEqual(f.lastDecision().decision.request.requestId,firstRequest.requestId);
+});
