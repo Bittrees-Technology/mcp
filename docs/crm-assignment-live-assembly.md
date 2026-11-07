@@ -5,23 +5,32 @@ validator are not a configured live service. Keep the production route unavailab
 until its complete host assembly is present. Existing native identity, task import,
 shared sign-in and ordinary dataset permission are separate from this capability.
 
-## Composition still required
+## Composition and remaining acceptance
 
-1. CRM must expose the internal assignment issuer through a fixed protected source
-   adapter. Authenticate the existing owner/source connection, check current native
-   workspace membership and explicit AI assignment, task/project revisions, current
-   Roles authorization and approved workflow version in the transaction. Verify
-   the exact current Workflows run/lease before accepting a result. Keep the
-   source signing key on CRM. Do not use the source eligibility endpoint as action
-   authority or create assignments from arbitrary caller IDs.
-2. The MCP production runtime must construct the assignment gateway from an exact
-   owner-approved actor/connection/workflow/assignment binding. Its resolver must
-   independently recheck current Roles/source permission, connection revocation,
-   credential identity and expiry. The resolver is called before and after each
-   protected dispatch; retain one configured source adapter identity. A changed
-   binding blocks the reply, including a reply to a potentially committed write.
-   Reconcile only the original operation with fresh permission. Never retry the
-   source write inside the gateway.
+1. CRM now implements a fixed protected source route with current dataset/project
+   consent, owner/workspace/record access, exact assignment revisions, Roles
+   decisions and independently signed running/completed Workflows proofs. Its
+   explicit schema migration and feature remain unactivated. Deployment and real
+   configured source acceptance remain required.
+2. `configuredCrmAssignments` now constructs the production MCP handler. It is
+   default off unless `MCP_CRM_ASSIGNMENTS_ENABLED=true`. The server-only
+   `MCP_CRM_ASSIGNMENTS_JSON` contains exact actor token hash/tenant/subject,
+   Roles binding, device credential/runtime lease/digest, connection, source
+   owner/dataset/workspace, reviewed assignment tuples, fifteen-minute approval,
+   separate completeTask approval, and existing source/Workflows transport
+   credentials. No request supplies these fields or an endpoint URL. The actual
+   Roles binding must be device-held and purpose-correct; a private server-side
+   principal key is rejected. Configuration is admission scope, never a grant.
+
+   One fresh native Roles decision wraps each typed operation. Source intake and
+   task reads precede central intake/claim; writes require an independently signed
+   current Workflows lease. Central completion verifies the original source
+   receipt first. Separately approved finalize/finalization calls obtain completed
+   lease proofs and perform source status write/read, without repeating central
+   completion. GET reconciliation retains the same original IDs and cannot issue
+   a write. Current configuration, local Roles binding and signed decision expiry
+   are checked before and after every fixed TLS dispatch. No write retry occurs
+   inside the handler. Missing/revoked/changed bindings fail closed.
 3. The normal native launcher must construct the broker from an already enrolled,
    purpose-correct device and protected existing credentials. Bind source/action
    permissions, reviewed workflow revision, pinned model, independent validator,
@@ -47,3 +56,9 @@ lookup, protected task read, committed-result reply and Workflows reply;
 replacement of each scope field; and original-operation receipt reconciliation.
 These checks prevent stale connection use. They are not proof of a configured
 production issuer, current Roles decisions or live acceptance.
+
+The host assembly tests exercise actual RolesConsumer native challenge/resume and
+signed decision verification, fixed endpoint/custody separation, intake/write/
+central completion/finalization, parameter boundaries, approval loss, local Roles
+binding replacement and expiry after a potentially committed reply. The local
+fixture uses synthetic signers and responses; it is not live source acceptance.
