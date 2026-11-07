@@ -481,3 +481,13 @@ test("actual Roles consumer challenges then resumes an exact native read with on
   await assert.rejects(f.call({ kind: "intake" }), { statusCode: 428 });
   assert.equal(f.calls.length, 1);
 });
+
+test("model lease admission reads current Workflows state without claim, renewal or source mutation", async () => {
+  const f = fixture();
+  await f.call({ kind: "lease", ...f.ref, resultDigest: "d".repeat(64) });
+  assert.equal(f.decisions(), 1);
+  assert.equal(f.calls.length, 1);
+  assert.ok(f.calls[0].url.endsWith("/crm-result-lease"));
+  assert.equal(f.calls[0].body.operation, "receipt");
+  assert.equal(f.calls[0].body.crmOperationId, f.ref.crmOperationId);
+});

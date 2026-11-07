@@ -62,3 +62,11 @@ signed decision verification, fixed endpoint/custody separation, intake/write/
 central completion/finalization, parameter boundaries, approval loss, local Roles
 binding replacement and expiry after a potentially committed reply. The local
 fixture uses synthetic signers and responses; it is not live source acceptance.
+
+The typed `lease` operation obtains only the existing signed read-only Workflows
+result-lease proof under exact `workflow_crm_result_read` Roles parameters. It
+retains the original assignment/run/lease/future CRM result-operation ID and
+expected result digest. No source result is read or written, claim replayed,
+lease renewed or job completed. The native helper separately checks current CRM
+source input before using the proof for model-start admission. A lease proof is
+not a CRM source grant, model permission or independent work validation.

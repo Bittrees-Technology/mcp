@@ -58,6 +58,7 @@ export function crmAssignmentOperation(raw) {
     claim: ["operationId"],
     write: [...lease, "result"],
     receipt: lease,
+    lease: [...lease, "resultDigest"],
     complete: [...lease, "operationId", "resultDigest", "expiresAt"],
     completion: [...lease, "operationId", "resultDigest"],
     finalize: [...lease, "operationId", "resultDigest", "expiresAt"],
@@ -118,7 +119,7 @@ export function crmAssignmentParameters(a, connectionId, o) {
     leaseId: o.leaseId,
     crmOperationId: o.crmOperationId,
   };
-  if (["write", "receipt"].includes(o.kind))
+  if (["write", "receipt", "lease"].includes(o.kind))
     return {
       action: "workflow:complete",
       operationId: o.crmOperationId,
@@ -422,6 +423,20 @@ export function configuredCrmAssignments({
             );
           return result;
         };
+        if (o.kind === "lease")
+          return call(
+            WORKFLOWS + "/api/task-runs/" + o.runId + "/crm-result-lease",
+            c.workflowToken,
+            {
+              assignment: a,
+              connectionId: c.connectionId,
+              runId: o.runId,
+              leaseId: o.leaseId,
+              crmOperationId: o.crmOperationId,
+              operation: "receipt",
+              resultDigest: o.resultDigest,
+            },
+          );
         const base = "/api/task-assignments/" + a.assignmentId;
         if (o.kind === "task") {
           const task = await source("task");
