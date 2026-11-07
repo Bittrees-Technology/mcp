@@ -9,9 +9,13 @@ const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
 const allowed=new Set(['intake','claim','task','write','receipt','complete','completion']);
 
 /** Default-off protected gateway. resolve must bind the enrolled actor to a
- * reviewed assignment and source transport. CRM retains its signing key. */
+ * reviewed assignment and source transport. resolve is rechecked before and
+ * after protected dispatch and must return the same configured source adapter.
+ * Current source/Role authorization belongs in that resolver and source service;
+ * this continuity check never manufactures a permission. CRM retains its key. */
 export function createCrmAssignmentGateway({resolve,rolesConsumer,request=fetch,now=Date.now}){
  return async (actor,input)=>{
+  actor=structuredClone(actor);input=structuredClone(input);
   if(!input||!allowed.has(input.kind)||!uuid.test(input.assignmentId??'')||
      !actor?.rolesAuthorityBinding||!actor.projectIds?.includes('crm')||!actor.projectIds?.includes('workflow'))
    throw fail('Protected CRM assignment binding required',403);
@@ -22,10 +26,19 @@ export function createCrmAssignmentGateway({resolve,rolesConsumer,request=fetch,
      !/^[\x21-\x7e]{32,4096}$/.test(session.workflowToken??''))
    throw fail('Current CRM assignment binding required',403);
   const {crm,connectionId,workflowToken}=session;
+  const fingerprint=value=>digest({actorTokenHash:value.actorTokenHash,binding:value.binding,
+   connectionId:value.connectionId,principal:value.principal,workflowId:value.workflowId,
+   projectId:value.projectId,expiresAt:value.expiresAt,workflowTokenDigest:digest(value.workflowToken)});
+  const pinned=fingerprint(session);
   const id=input.assignmentId,kind=input.kind;
-  const current=()=>{if(session.expiresAt<=now())throw fail('CRM assignment connection expired',403);};
+  const current=async()=>{
+   authorize(actor,'workflow:execute');
+   const fresh=await resolve(actor,id);
+   if(!fresh||fresh.expiresAt<=now()||fingerprint(fresh)!==pinned||fresh.crm!==crm)
+    throw fail('CRM assignment connection revoked or changed; reconcile the original operation',403);
+  };
   const call=async(path,method,{body,operationId,crmProof,decision}={})=>{
-   current();
+   await current();
    const headers={Authorization:'Bearer '+workflowToken,Accept:'application/json',
     ...(body?{'Content-Type':'application/json'}:{}),
     ...(operationId?{'Idempotency-Key':operationId}:{}),
@@ -39,17 +52,20 @@ export function createCrmAssignmentGateway({resolve,rolesConsumer,request=fetch,
    const chunks=[];let size=0;
    try{for(;;){const next=await reader.read();if(next.done)break;size+=next.value.length;if(size>16000)throw fail('Oversized Workflows receipt',502);chunks.push(next.value);}}
    finally{await reader.cancel();}
+   await current();
    return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));
   };
+  await current();
   const {assignment,envelope}=await crm.assignment(id,connectionId);
-  current();
+  await current();
   if(assignment.assignmentId!==id||assignment.principal!==session.principal||
      assignment.workflowId!==session.workflowId||assignment.projectId!==session.projectId)
    throw fail('CRM assignment no longer matches the reviewed connection',403);
   const assignmentDigest=digest(assignment);
   if(kind==='task'){
+   await current();
    const task=await crm.task(id,connectionId);
-   current();
+   await current();
    if(digest(task.assignment)!==assignmentDigest)throw fail('CRM assignment changed during read',409);
    return task;
   }
@@ -66,12 +82,14 @@ export function createCrmAssignmentGateway({resolve,rolesConsumer,request=fetch,
   if(![runId,leaseId,crmOperationId].every(x=>typeof x==='string'&&uuid.test(x)))throw fail('Exact CRM result binding required',400);
   const resultInput={assignmentId:id,connectionId,runId,leaseId,crmOperationId};
   if(kind==='write'){
+   await current();
    const result=await crm.result({...resultInput,result:input.result},{write:true});
-   current();
+   await current();
    return result.receipt;
   }
+  await current();
   const result=await crm.result(resultInput);
-  current();
+  await current();
   if(kind==='receipt')return result.receipt;
   const {operationId}=input;
   if(!uuid.test(operationId??'')||result.receipt.resultDigest!==input.resultDigest)throw fail('Completion differs from the CRM receipt',409);
