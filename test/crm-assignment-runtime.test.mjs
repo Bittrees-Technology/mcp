@@ -187,6 +187,7 @@ function fixture() {
     after: (f) => (after = f),
     expire: () => (time += 6000),
     decisions: () => decisions,
+    clock: () => time,
   };
 }
 test("disabled or missing assembly does not inspect configuration or contact sources", () => {
@@ -277,12 +278,14 @@ test("finalization and read recovery use the original completion ID with distinc
   );
 });
 test("source status approval, runtime identity, scope and actor changes deny before private dispatch", async () => {
-  for (const mutate of [
-    (f) => (f.c.completeTask = false),
-    (f) => (f.roles.bindings[0].leaseId = randomUUID()),
-    (f) => (f.c.assignments[0].principal = "agent:" + randomUUID()),
-    (f) => (f.actor.projectIds = ["crm"]),
-    (f) => (f.c.expiresAt = Date.now() - 1),
+  for (const [reason, mutate] of [
+    ["status scope removed", (f) => (f.c.completeTask = false)],
+    ["runtime lease changed", (f) => (f.roles.bindings[0].leaseId = randomUUID())],
+    ["principal changed", (f) => (f.c.assignments[0].principal = "agent:" + randomUUID())],
+    ["project scope removed", (f) => (f.actor.projectIds = ["crm"])],
+    // Expiry is inclusive and must use the same injected clock as admission.
+    // Wall-clock time can advance during fixture signing on a busy runner.
+    ["expiry at admission clock", (f) => (f.c.expiresAt = f.clock())],
   ]) {
     const f = fixture();
     mutate(f);
@@ -295,8 +298,9 @@ test("source status approval, runtime identity, scope and actor changes deny bef
         resultDigest: "d".repeat(64),
       }),
       { statusCode: 403 },
+      reason,
     );
-    assert.equal(f.calls.length, 0);
+    assert.equal(f.calls.length, 0, reason);
   }
 });
 test("revocation or expiry during a committed reply holds without retry; receipt keeps original IDs", async () => {
