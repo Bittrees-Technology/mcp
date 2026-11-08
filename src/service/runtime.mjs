@@ -1,3 +1,4 @@
+import {configuredCrmAssignments} from './crm-assignment-runtime.mjs';
 import {WorkflowDevices} from './workflow-devices.mjs';
 import {configuredCredentials} from './credential-config.mjs';
 import {TaskSync} from "./task-sync.mjs";
@@ -57,6 +58,7 @@ export async function runtime(env = process.env) {
   }
   return createMcpHandler({
     aiConnections,
+    crmAssignments:configuredCrmAssignments({env,rolesConsumer}),
     workflowDevices:new WorkflowDevices({rolesConsumer,connections:JSON.parse(env.MCP_WORKFLOW_DEVICES_JSON || "[]")}),
     taskSync:new TaskSync(store,{rolesConsumer,connections:JSON.parse(env.MCP_TASK_SYNC_CONNECTIONS_JSON || "[]")}),
     rolesReadiness:rolesConsumer.readiness(),

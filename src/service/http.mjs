@@ -87,6 +87,7 @@ export function createMcpHandler({
   sourceConnections,
   privateReads,
   taskSync,
+  crmAssignments,
   workflowDevices,
   catalog = CATALOG,
   release = "development",
@@ -156,6 +157,12 @@ export function createMcpHandler({
         return send(200,await connectTaskSync(input,{credentials,rolesConsumer:taskSync.rolesConsumer,connections:taskSync.connections}));
       }
       const actor = authenticate(req.headers, credentials);
+      if(path==='/v1/crm-assignments'){
+        if(!crmAssignments||!actor||actor.managed||Object.hasOwn(req.headers,'cookie')||Object.hasOwn(req.headers,'origin')||url.search)
+          throw fail('Protected CRM assignment gateway unavailable',403);
+        if(req.method!=='POST')throw fail('Method not allowed',405);
+        return send(200,await crmAssignments(actor,await readBody(req)));
+      }
       if (actor?.managed) await checkWorkflowAuthority(req.headers.authorization.slice(7), "mcp", "sources:propose");
       if (["/status", "/status.json"].includes(path) && ["GET", "HEAD"].includes(req.method)) {
         const report = await status();
