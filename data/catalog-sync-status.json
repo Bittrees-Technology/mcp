@@ -1,14 +1,14 @@
 {
   "state": "reconciled",
-  "lastAttemptAt": "2026-11-12T07:24:02.772Z",
-  "lastSuccessAt": "2026-11-12T07:24:02.772Z",
+  "lastAttemptAt": "2026-11-12T20:06:09.713Z",
+  "lastSuccessAt": "2026-11-12T20:06:09.713Z",
   "errors": [],
   "changes": [
     {
       "id": "mcp",
-      "revision": "f4632a469bd44f01f77f091222f5407346f21167",
+      "revision": "e6c90d84eaa606b31c413a1fea6cb7ac18b90dd4",
       "change": "updated"
     }
   ],
-  "revision": "46e44b35a4d618ed950b6ed98ed5be713cdb903ed9e7718cb04c7f5065265875"
+  "revision": "7c948c0678a7fa48e823a87987893d18a78d03edac57aa1985fc59af5343d0fa"
 }
