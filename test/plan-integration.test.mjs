@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {createServer} from 'node:http';import {once} from 'node:events';import {createHash} from 'node:crypto';
 import {Engine} from '../src/service/engine.mjs';import {emptyState} from '../src/service/store.mjs';import {createMcpHandler} from '../src/service/http.mjs';
-import {projectCapabilities,verificationEvidence} from '../src/service/capabilities.mjs';import {CATALOG} from '../src/ecosystem/catalog.mjs';
-import {searchFunctions} from '../src/ecosystem/tool-coverage.mjs';
+import {projectCapabilities,verificationEvidence} from '../src/service/capabilities.mjs';import {CATALOG,catalogView,selectionFromParams} from '../src/ecosystem/catalog.mjs';
+import {searchFunctions,planToolUse} from '../src/ecosystem/tool-coverage.mjs';
 test('atomic MCP setup shares REST checks and connection scope; history pagination is owner isolated',async()=>{
  const token='synthetic-plan-test-token',actor={tenant:'test',subject:'owner',audience:'https://mcp.bittrees.org',expiresAt:Date.now()+3600000,projectIds:['agent','crm'],permissions:['catalog:read','profile:write','rule:write','automation:write','automation:read'],tokenHash:createHash('sha256').update(token).digest('hex')};
  const state=emptyState(),engine=new Engine({transaction:async fn=>fn(state)});
@@ -33,4 +33,18 @@ test('readiness distinguishes source failure, resources and public gateway; evid
  assert.equal(verificationEvidence({clock:()=>Date.parse('2027-01-01')}).recovery.state,'restore-verification-expired-or-schema-changed');
  assert.equal(verificationEvidence({release:'new'}).execution.state,'not-verified');
  const results=searchFunctions(CATALOG.projects.filter(p=>p.id==='crm'),{query:'tasks'});assert.ok(results.functions[0].name.includes('tasks'));
+});
+
+test('Kioski selection publishes a source-owned MCP route without granting account access',()=>{
+ const select = id => catalogView(CATALOG,selectionFromParams(new URLSearchParams({mode:'selected',projects:id}))).projects;
+ const [kioski] = select('kioski');
+ assert.equal(kioski.id,'kioski');
+ const plan = planToolUse(kioski,'publish');
+ assert.equal(plan.executionAllowed,false);
+ assert.deepEqual(plan.routes[0].tools,['kioski.publish_draft']);
+ const {functions} = searchFunctions([kioski],{query:'kioski.reply'});
+ assert.equal(functions[0].endpoint,'https://kioski.bittrees.org/api/mcp');
+ assert.equal(functions[0].schemaDiscovery.requiresCredentials,true);
+ assert.equal(functions[0].setup.authorizeAt,'https://kioski.bittrees.org/?settings=agent-access');
+ assert.equal(searchFunctions(select('agent'),{query:'kioski.reply'}).total,0);
 });

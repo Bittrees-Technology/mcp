@@ -1,6 +1,6 @@
 {
   "canonicalDiscovery": "https://mcp.bittrees.org/mcp",
-  "checkedAt": "2026-11-18T14:31:50.378Z",
+  "checkedAt": "2026-11-18T22:02:42.490Z",
   "state": "synced",
   "apps": [
     {
@@ -202,6 +202,14 @@
       "revisionType": "manifest-sha256",
       "checkedAt": "2026-11-18T14:31:50.378Z",
       "toolCount": 0
+    },
+    {
+      "projectId": "kioski",
+      "state": "synced",
+      "sourceRevision": "91091cb3e5ee2ddbd9500fcaa0921bd35d1f164450cf0dfc79afa61f80cdc2da",
+      "revisionType": "manifest-sha256",
+      "checkedAt": "2026-11-18T22:02:42.490Z",
+      "toolCount": 16
     }
   ]
 }

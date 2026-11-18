@@ -15,6 +15,7 @@ Use the existing app connection and its live `initialize` / `tools/list` before 
 | Roles | Local MCP adapter: own access and explicitly scoped policy reading | Existing scoped grant; administration excluded |
 | AutoNote | Local MCP adapter: transcript, review status and receipt | Existing meeting grant; approval and publication excluded |
 | Mercado | Existing managed MCP proposal preview/status | Exact source connection required; no new publication authority |
+| Kioski | Native MCP for public catalog, owned listings, and buyer–seller chat | Sign in to Kioski and create a seven-day connection under **Account → Agent access**. Connect directly to the listed endpoint with the Kioski token and the selected scopes. |
 | AI, Workflows, Insights and other selected catalog apps | Public context and explicit coverage-gap reporting | Source API adapters need contract review before adding operations |
 
 The catalog includes AI, Workflows, Calendar, News and TLD as public project contexts. Existing excluded or pending apps remain excluded/pending. Every selected project gets a coverage result; unknown is never reported as implemented. Catalog selection does not expose a private record.

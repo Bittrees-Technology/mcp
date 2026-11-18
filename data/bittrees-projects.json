@@ -1453,6 +1453,57 @@
         }
       ],
       "authScopes": []
+    },
+    {
+      "id": "kioski",
+      "name": "Kioski",
+      "summary": "Marketplace for goods with seller listings and private buyer–seller chat.",
+      "lanes": [
+        "discovery"
+      ],
+      "availability": "public-site",
+      "repositoryUrl": "https://github.com/Bittrees-Technology/kioski",
+      "publicUrl": "https://kioski.bittrees.org",
+      "sourceEvidence": [
+        "https://github.com/Bittrees-Technology/kioski/blob/9a5c4aa0a036744d7ecaf79455dfd396473c7516/README.md"
+      ],
+      "aliases": [],
+      "affiliation": "bittrees",
+      "approval": "approved",
+      "components": [],
+      "affiliationEvidence": [
+        "https://github.com/Bittrees-Technology/kioski/blob/9a5c4aa0a036744d7ecaf79455dfd396473c7516/README.md"
+      ],
+      "owner": {
+        "repositoryController": "Bittrees-Technology",
+        "accountableContact": null,
+        "contactStatus": "pending"
+      },
+      "source": {
+        "revision": "4aab5e59dc22d93be15bf7e5f09ff877deecc950",
+        "observedAt": "2026-11-18T22:02:42.490Z",
+        "manifestPath": "bittrees.tools.json"
+      },
+      "lifecycle": "active",
+      "health": {
+        "status": "reachable",
+        "checkedAt": "2026-11-18T22:02:42.490Z"
+      },
+      "adapter": {
+        "type": "catalog-resource",
+        "status": "ready",
+        "privateReads": "not-implemented",
+        "actions": "not-implemented"
+      },
+      "capabilities": [
+        {
+          "id": "project.context",
+          "kind": "resource",
+          "scope": "public:catalog",
+          "status": "ready"
+        }
+      ],
+      "authScopes": []
     }
   ],
   "sync": {

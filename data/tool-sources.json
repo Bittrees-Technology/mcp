@@ -322,6 +322,52 @@
       "manifestPath": "bittrees.tools.json",
       "routes": [],
       "publicManifestUrl": "https://mail.bittrees.org/.well-known/bittrees-tools.json"
+    },
+    {
+      "id": "kioski",
+      "repository": "Bittrees-Technology/kioski",
+      "branch": "main",
+      "manifestPath": "bittrees.tools.json",
+      "routes": [
+        {
+          "transport": "mcp",
+          "endpoint": "https://kioski.bittrees.org/api/mcp",
+          "setup": {
+            "authentication": "bearer",
+            "authorizeAt": "https://kioski.bittrees.org/?settings=agent-access",
+            "environmentName": "KIOSKI_MCP_TOKEN"
+          },
+          "operations": {
+            "read": [
+              "kioski.list_markets",
+              "kioski.list_categories",
+              "kioski.search_listings",
+              "kioski.get_listing",
+              "kioski.list_my_listings",
+              "kioski.get_my_listing",
+              "kioski.list_conversations",
+              "kioski.read_conversation"
+            ],
+            "create": [
+              "kioski.create_draft",
+              "kioski.contact_seller",
+              "kioski.reply"
+            ],
+            "update": [
+              "kioski.save_draft",
+              "kioski.update_listing",
+              "kioski.change_listing_state"
+            ],
+            "publish": [
+              "kioski.publish_draft"
+            ],
+            "delete": [
+              "kioski.delete_draft"
+            ]
+          }
+        }
+      ],
+      "publicManifestUrl": "https://kioski.bittrees.org/.well-known/bittrees-tools.json"
     }
   ]
 }
